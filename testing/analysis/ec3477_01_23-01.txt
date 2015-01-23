@@ -1,0 +1,114 @@
+--------------------
+6c:b0:ce:bc:8c:ee,NETGEAR03,-47,99
+c0:4a:00:d0:48:be,ELM,-55,99
+e0:91:f5:ca:88:3e,Hyeon Chai Kim,-55,99
+f0:25:72:70:a6:9f,PAL3.0,-70,66
+f0:25:72:70:a6:9d,eduroam,-70,66
+f0:25:72:70:a6:90,PAL3.0,-74,57
+c0:c1:c0:ae:cb:5a,ET47-PC_Network,-80,44
+00:23:69:37:8e:59,AsburyBeeks,-82,39
+80:37:73:d6:7a:b5,NETGEAR38,-83,37
+2c:b0:5d:2f:95:72,CJ Wifi,-86,30
+00:18:e7:cf:50:1c,perception,-86,30
+16:43:85:b0:55:6b,Goldmine514,-87,28
+40:3c:fc:02:f3:b3,TeeSteve's Network,-87,28
+2c:59:e5:b2:c4:6c,HP-Print-6C-Photosmart 5520,-88,26
+ec:1a:59:a9:fc:b9,nav421,-88,26
+f8:1a:67:bd:eb:f0,Yuki&Kelcie,-89,24
+20:aa:4b:11:88:bd,Anru,-89,24
+00:40:5a:b0:fc:0d,myLGNetFC0F,-92,17
+f0:25:72:70:a6:9b,Purdue Guest Network,-70,66
+f0:25:72:70:a6:99,attwifi,-70,66
+ec:1a:59:a7:65:1b,point5hoodrats,-60,88
+ec:1a:59:ab:00:23,purdue IT,-78,48
+4c:60:de:4f:d9:94,Gary_NETGEAR,-79,46
+c8:d7:19:a3:98:b4,PurpleCheetah,-89,24
+d8:50:e6:59:ca:c0,WinterIsComing,-87,28
+ec:1a:59:06:2c:7c,belkin.c7c,-91,19
+
+--------------------
+6c:b0:ce:bc:8c:ee,NETGEAR03,-57,94
+c0:4a:00:d0:48:be,ELM,-49,99
+e0:91:f5:ca:88:3e,Hyeon Chai Kim,-66,74
+c0:c1:c0:ae:cb:5a,ET47-PC_Network,-81,41
+20:aa:4b:11:88:bd,Anru,-77,50
+ec:1a:59:a7:65:1b,point5hoodrats,-76,52
+ec:1a:59:ab:00:23,purdue IT,-89,24
+4c:60:de:4f:d9:94,Gary_NETGEAR,-79,46
+c8:d7:19:a3:98:b4,PurpleCheetah,-89,24
+d8:50:e6:59:ca:c0,WinterIsComing,-87,28
+ec:1a:59:06:2c:7c,belkin.c7c,-91,19
+c8:d7:19:a3:98:b3,PurpleCheetah,-83,37
+08:86:3b:fd:60:db,belkin.0da.guests,-90,22
+
+--------------------
+6c:b0:ce:bc:8c:ee,NETGEAR03,-57,94
+c0:4a:00:d0:48:be,ELM,-49,99
+e0:91:f5:ca:88:3e,Hyeon Chai Kim,-66,74
+c0:c1:c0:ae:cb:5a,ET47-PC_Network,-81,41
+20:aa:4b:11:88:bd,Anru,-77,50
+ec:1a:59:a7:65:1b,point5hoodrats,-76,52
+ec:1a:59:ab:00:23,purdue IT,-89,24
+c8:d7:19:a3:98:b3,PurpleCheetah,-83,37
+08:86:3b:fd:60:db,belkin.0da.guests,-90,22
+20:aa:4b:d9:85:35,I spy Wifi,-57,94
+f0:25:72:70:a6:9d,eduroam,-63,81
+f0:25:72:70:a6:9f,PAL3.0,-64,79
+f0:25:72:70:a6:92,eduroam,-68,70
+b4:75:0e:ef:12:5d,SungJoon,-73,59
+48:f8:b3:8c:4a:66,Providence_yu,-75,55
+84:1b:5e:39:f3:4c,NETGEAR02-5G,-80,44
+f0:d1:a9:0e:1f:3c,,-77,50
+20:aa:4b:d9:85:36,I spy Wifi,-82,39
+80:37:73:d6:7a:b4,NETGEAR38-5G,-83,37
+80:37:73:d6:7a:b5,NETGEAR38,-79,46
+84:1b:5e:39:f3:4d,NETGEAR02,-81,41
+5c:96:9d:6a:70:1f,Wivatar: The Last Fibender,-81,41
+5c:96:9d:6a:70:20,Wivatar: The Last Fibender,-86,30
+58:6d:8f:3d:00:6b,,-89,24
+20:aa:4b:d9:85:37,I spy Wifi-guest,-57,94
+f0:25:72:70:a6:99,attwifi,-63,81
+f0:25:72:70:a6:9b,Purdue Guest Network,-63,81
+f0:25:72:70:a6:96,attwifi,-68,70
+f0:25:72:70:a6:94,Purdue Guest Network,-69,68
+02:26:16:0c:8a:0b,HPJ610a.FAE52E,-87,28
+
+--------------------
+20:aa:4b:d9:85:35,I spy Wifi,-57,94
+f0:25:72:70:a6:9d,eduroam,-63,81
+f0:25:72:70:a6:9f,PAL3.0,-64,79
+f0:25:72:70:a6:92,eduroam,-68,70
+b4:75:0e:ef:12:5d,SungJoon,-73,59
+48:f8:b3:8c:4a:66,Providence_yu,-75,55
+84:1b:5e:39:f3:4c,NETGEAR02-5G,-80,44
+f0:d1:a9:0e:1f:3c,,-77,50
+20:aa:4b:d9:85:36,I spy Wifi,-82,39
+80:37:73:d6:7a:b4,NETGEAR38-5G,-83,37
+80:37:73:d6:7a:b5,NETGEAR38,-79,46
+84:1b:5e:39:f3:4d,NETGEAR02,-81,41
+5c:96:9d:6a:70:1f,Wivatar: The Last Fibender,-81,41
+5c:96:9d:6a:70:20,Wivatar: The Last Fibender,-86,30
+58:6d:8f:3d:00:6b,,-89,24
+20:aa:4b:d9:85:37,I spy Wifi-guest,-57,94
+f0:25:72:70:a6:99,attwifi,-63,81
+f0:25:72:70:a6:9b,Purdue Guest Network,-63,81
+f0:25:72:70:a6:96,attwifi,-68,70
+f0:25:72:70:a6:94,Purdue Guest Network,-69,68
+02:26:16:0c:8a:0b,HPJ610a.FAE52E,-87,28
+
+--------------------
+00:1c:c2:0f:2e:9e,Sun,-52,99
+98:fc:11:ce:e8:a4,mulgogi,-56,96
+a0:21:b7:86:36:9e,GreenMario'sMansion,-59,90
+e0:06:e6:c1:44:ae,fungi,-69,68
+8c:21:0a:7d:d6:40,cdyxy,-71,63
+68:7f:74:4f:fe:af,ShortDolphin,-72,61
+ec:1a:59:a9:d6:e7,belkin.6e7,-75,55
+20:aa:4b:9e:ed:10,Bhavna Wireless,-79,46
+c4:6e:1f:e7:e6:94,TP-LINK_E7E694,-82,39
+c4:3d:c7:71:c6:d2,XUAN,-83,37
+28:c6:8e:85:f4:72,NETGEAR92,-83,37
+6c:b0:ce:e9:3f:e3,NETGEAR65-5G,-90,22
+68:7f:74:4f:fe:b0,ShortDolphin-guest,-60,88
+20:aa:4b:9e:ed:11,Bhavna Wireless-guest,-79,46
+

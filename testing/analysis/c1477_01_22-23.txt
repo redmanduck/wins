@@ -1,0 +1,37 @@
+nullf0:25:72:7d:4f:39,attwifi,-84,35
+f0:25:72:7d:8a:c4,Purdue Guest Network,-80,44
+f0:25:72:7d:88:74,Purdue Guest Network,-66,74
+f0:25:72:7d:19:fd,eduroam,-64,79
+90:84:0d:da:8d:d7,R57Station,-89,24
+f0:25:72:7d:fc:5b,Purdue Guest Network,-79,46
+f0:25:72:7d:19:f9,attwifi,-65,77
+f0:25:72:7d:19:fb,Purdue Guest Network,-64,79
+f0:25:72:7d:88:7f,PAL3.0,-66,74
+f0:25:72:7d:88:7d,eduroam,-67,72
+f0:25:72:7d:19:f2,eduroam,-67,72
+f0:25:72:7d:19:ff,PAL3.0,-64,79
+f0:25:72:7d:fc:5d,eduroam,-80,44
+f0:25:72:70:a5:60,PAL3.0,-85,33
+f0:25:72:7d:8b:3d,eduroam,-83,37
+ec:88:8f:fa:76:ca,HeHeHe,-83,37
+f0:25:72:7d:19:f4,Purdue Guest Network,-67,72
+f0:25:72:7d:19:f6,attwifi,-67,72
+f0:25:72:7d:88:79,attwifi,-67,72
+f0:25:72:7d:88:7b,Purdue Guest Network,-67,72
+f0:25:72:7d:fc:59,attwifi,-80,44
+f0:25:72:70:a5:69,attwifi,-77,50
+f0:25:72:70:a5:6b,Purdue Guest Network,-77,50
+f0:25:72:7d:4f:36,attwifi,-81,41
+f0:25:72:7d:4f:34,Purdue Guest Network,-82,39
+f0:25:72:70:c5:b4,Purdue Guest Network,-81,41
+00:22:75:43:1f:68,qobi-cccp,-83,37
+f0:25:72:70:a5:6d,eduroam,-76,52
+f0:25:72:7d:8b:32,eduroam,-86,30
+f0:25:72:70:c5:b9,attwifi,-86,30
+f0:25:72:70:c2:a4,Purdue Guest Network,-84,35
+f0:25:72:7d:4f:32,eduroam,-82,39
+f0:25:72:7d:8b:39,attwifi,-82,39
+f0:25:72:7d:8b:3b,Purdue Guest Network,-83,37
+f0:25:72:7d:ea:44,Purdue Guest Network,-85,33
+f0:25:72:7d:8b:34,Purdue Guest Network,-86,30
+
