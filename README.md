@@ -1,2 +1,2 @@
-# ECE477 Team 7
+# Project WINS
 Autonomous indoor navigation robot
