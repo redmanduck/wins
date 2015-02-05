@@ -1,9 +1,12 @@
 #include <bcm2835.h>
+#include <stdlib.h>
+#include <iostream>
 #include <stdio.h>
+using namespace std;
 
 int main(){
   if (!bcm2835_init()) {
-        printf("oops, could not init bcm2835\n");
+        cout << "oops!";
         return 1;
   }
   
@@ -14,15 +17,18 @@ int main(){
   bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);
   bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
   
-  uint8_t mosi[10] = { 0x60, 0x10, 0xFF, 0xAA, 0x0A };
-  uint8_t miso[10] = { 0 };
+  char mosi[10] = { 0xFF, 0xAB, 0xAC, 0xCC, 0x0 , 0x0, 0x0, 0x0, 0x00 };
+  char miso[10] = { 0 };
 
-  bcm2835_spi_transfernb(mosi, miso, 10);
+  bcm2835_spi_transfernb(mosi, miso, 4);
 
+  printf("RX: ");
   int i = 0;
   for(i = 0; i < 10; i++){
     printf("0x%x " ,miso[i]);
   }
+
+  printf("\n");
 
   bcm2835_spi_end();
   bcm2835_close();
