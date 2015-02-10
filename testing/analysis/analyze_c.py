@@ -1,5 +1,5 @@
-#!/usr/local/bin/python2.7
 #!/usr/bin/env python
+#!/usr/local/bin/python2.7
 
 import sys
 import collections
@@ -87,16 +87,28 @@ def predicted_loc(data, loc_data):
     pred[1] += loc * weight
 
   for loc in locs:
-    weight = locs[loc]['prob_total']
+    weight = locs[loc]['prob_total'] * locs[loc]['precision_total'] * locs[loc]['precision_total']
     # print weight
     total_precision[2] += locs[loc]['precision_total']
     total_weight[2] += weight
-    pred[2] += loc * locs[loc]['prob_total']
+    pred[2] += loc * weight
+
+#  max_weight = 0
+#  for loc in locs:
+#    weight = locs[loc]['prob_total'] * locs[loc]['precision_total']
+#    if (weight > max_weight):
+#      max_weight = weight
+#      max_i = loc
+#    total_precision[2] += locs[loc]['precision_total']
+#    total_weight[2] += weight
+#    pred[2] += loc * locs[loc]['prob_total']
+#  pred[2] = max_i
+#  total_precision[2] = locs[max_i]['precision_total']
 
   for p in range(3):
     pred[p] /= total_weight[p]
   total_precision = [ 1 / p for p in total_precision ]
-  total_weight = [ 1 / w for w in total_weight ]
+  # total_weight = [ 1 / w for w in total_weight ]
 
   return pred, total_precision
 
