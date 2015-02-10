@@ -6,17 +6,7 @@
 #include <utility>
 #include <vector>
 
-struct Point;
-
-
 using namespace std;
-
-struct Point {
-  int x;
-  int y;
-
-  bool operator==(const Point& other) const;
-};
 
 struct PointEstimate {
   int x_mean;
@@ -24,16 +14,5 @@ struct PointEstimate {
   int y_mean;
   float y_var;
 };
-
-namespace std {
-
-  template <>
-  struct hash<Point>
-  {
-    std::size_t operator()(const Point& p) const {
-      return std::hash<long>()((((long)p.x) << sizeof(int)) + p.y);
-    }
-  };
-}
 
 #endif // COMMON_UTILS_H

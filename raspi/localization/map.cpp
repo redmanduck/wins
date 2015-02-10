@@ -1,18 +1,22 @@
 #include <cmath>
+#include <fstream>
 
+#include "cereal/archives/binary.hpp"
 #include "map.h"
 
 vector<Point> Map::likely_points_;
-unordered_map<Point, unordered_map<string, MacInfo>> Map::map_;
+Graph Map::graph_;
 
-ProbabilityStat Map::Stats(Point p, string mac, int signal) {
-  auto point_stats_iter = map_.find(p);
-  if (point_stats_iter == map_.end()) {
-    // TODO: Handle error.
-  }
-  auto&& point_stats = (*point_stats_iter).second;
-  auto mac_info_iter = point_stats.find(mac);
-  if (mac_info_iter == point_stats.end()) {
+void Map::InitMap(string filename) {
+  ifstream is(filename, ios::binary);
+  cereal::BinaryInputArchive archive(is);
+
+  archive(graph_);
+}
+
+ProbabilityStat Map::Stats(const Point& p, string mac, int signal) {
+  auto mac_info_iter = p.info.find(mac);
+  if (mac_info_iter == p.info.end()) {
     // TODO: Handle error.
     return ProbabilityStat(-1, -1, -1);
   }

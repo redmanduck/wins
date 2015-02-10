@@ -57,10 +57,10 @@
 ##==========================================================================
 
 # The pre-processor and compiler options.
-MY_CFLAGS = -std=c++11
+MY_CFLAGS = -std=c++11 -I.
 
 # The linker options.
-MY_LIBS   =
+MY_LIBS   = 
 
 # The pre-processor options used by the cpp (man cpp for more).
 CPPFLAGS  = -Wall
@@ -74,7 +74,7 @@ SRCDIRS   =
 
 # The executable file name.
 # If not specified, current directory name or `a.out' will be used.
-PROGRAM   =
+PROGRAM   = binary
 
 ## Implicit Section: change the following only when necessary.
 ##==========================================================================
@@ -95,7 +95,7 @@ CXXFLAGS= -g -O2
 CC     = gcc
 
 # The C++ program compiler.
-CXX    = g++-4.8
+CXX    = g++
 
 # Un-comment the following line to compile C programs as C++ ones.
 #CC     = $(CXX)

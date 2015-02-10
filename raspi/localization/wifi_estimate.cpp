@@ -7,14 +7,14 @@
 // anonymous namespace
 namespace {
   vector<pair<float, float>> ComputePointStats(ScanResult s) {
-    auto&& current_likely_points = Map::CurrentLikelyPoints();
+    auto& current_likely_points = Map::CurrentLikelyPoints();
     vector<pair<float, float>> point_stats(current_likely_points.size());
  
     // Determine the probability of being at each of the possible points.
-    for (auto&& point : current_likely_points) {
+    for (auto& point : current_likely_points) {
       float total_prob = 0;
       float total_precision = 0;
-      for (auto&& mac : s) {
+      for (auto& mac : s) {
         auto stats = Map::Stats(point, mac.name, mac.signal);
         if (stats.mean() < 0) {
           continue;
