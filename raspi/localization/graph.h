@@ -32,7 +32,19 @@ struct Point {
   void serialize(Archive & archive) {
     archive(x, y, info, neighbors);
   }
+  Point();
+  Point(int,int);
 };
+
+Point::Point(){
+	x = 0;
+	y = 0;
+}
+
+Point::Point(int xv, int yv){
+	x = xv;
+	y = yv;
+}
 
 struct Graph {
   vector<Point> points;
