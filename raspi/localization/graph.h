@@ -26,36 +26,14 @@ struct Point {
   float x;
   float y;
   unordered_map<string, MacInfo> info;
-  vector<Point> neighbors;
-
-  template<class Archive>
-  void serialize(Archive & archive) {
-    archive(x, y, info, neighbors);
-  }
-  Point();
-  Point(int,int);
-};
-
-Point::Point(){
-	x = 0;
-	y = 0;
-}
-
-Point::Point(int xv, int yv){
-	x = xv;
-	y = yv;
-}
-
-struct Graph {
-  vector<Point> points;
 
   template<class Archive>
   void serialize(Archive & archive, uint32_t const version) {
     assert(version == GRAPH_VERSION);
-    archive(points);
+    archive(x, y, info);
   }
 };
 
-CEREAL_CLASS_VERSION(Graph, GRAPH_VERSION);
+CEREAL_CLASS_VERSION(Point, GRAPH_VERSION);
 
 #endif // GRAPH_H

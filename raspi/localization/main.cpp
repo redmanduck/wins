@@ -1,18 +1,26 @@
+#include <fstream>
 #include <iostream>
-#include "kdtree/kdtree.hpp"
+
+#include "cereal/archives/json.hpp"
 #include "graph.h"
+#include "kdtree/kdtree.hpp"
 
 using namespace std;
 
 int main() {
 	vector<Point> points = {
-		Point(10, 0),
-		Point(9, 1),
-		Point(40, 0),
-		Point(80, 0),
-		Point(20, 1)
+    {10, 0},
+		{ 9, 1},
+		{40, 0},
+		{80, 0},
+		{20, 1}
 	};
 
+  ofstream os("sample.json");
+  cereal::JSONOutputArchive archive(os);
+
+  archive(points);
+
   kdtree::kdtree<Point> * tree = new kdtree::kdtree<Point>(points);
-  tree->k_nearest(Point(10, 0), 2);
+  tree->k_nearest({10, 0}, 2);
 }

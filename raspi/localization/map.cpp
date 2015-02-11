@@ -5,13 +5,21 @@
 #include "map.h"
 
 vector<Point> Map::likely_points_;
-Graph Map::graph_;
+unique_ptr<kdtree::kdtree<Point>> Map::tree_;
 
 void Map::InitMap(string filename) {
+  vector<Point> points;
+
   ifstream is(filename, ios::binary);
   cereal::BinaryInputArchive archive(is);
 
-  archive(graph_);
+  archive(points);
+
+  tree_.reset(new kdtree::kdtree<Point>(points));
+}
+
+void Map::TryLoadRawMap(string filename) {
+
 }
 
 ProbabilityStat Map::Stats(const Point& p, string mac, int signal) {
