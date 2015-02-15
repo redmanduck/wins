@@ -6,6 +6,13 @@
             "value1": 0,
             "value2": [
                 {
+                    "key": "mac6",
+                    "value": {
+                        "value0": 150,
+                        "value1": 95
+                    }
+                },
+                {
                     "key": "mac1",
                     "value": {
                         "value0": 100,
@@ -18,6 +25,13 @@
             "value0": 9,
             "value1": 1,
             "value2": [
+                {
+                    "key": "mac7",
+                    "value": {
+                        "value0": 160,
+                        "value1": 96
+                    }
+                },
                 {
                     "key": "mac2",
                     "value": {
