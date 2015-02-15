@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 #include "common_utils.h"
-#include "graph.h"
+#include "point.h"
 #include "kdtree/kdtree.hpp"
 #include "probability_stat.h"
 

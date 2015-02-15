@@ -1,5 +1,5 @@
-#ifndef GRAPH_H
-#define GRAPH_H
+#ifndef POINT_H
+#define POINT_H
 
 #include <cassert>
 #include <unordered_map>
@@ -10,7 +10,7 @@
 #include "cereal/types/unordered_map.hpp"
 #include "cereal/types/vector.hpp"
 
-#define GRAPH_VERSION 1
+#define POINT_VERSION 1
 
 struct MacInfo {
   float mean;
@@ -29,11 +29,11 @@ struct Point {
 
   template<class Archive>
   void serialize(Archive & archive, uint32_t const version) {
-    assert(version == GRAPH_VERSION);
+    assert(version == POINT_VERSION);
     archive(x, y, info);
   }
 };
 
-CEREAL_CLASS_VERSION(Point, GRAPH_VERSION);
+CEREAL_CLASS_VERSION(Point, POINT_VERSION);
 
-#endif // GRAPH_H
+#endif // POINT_H

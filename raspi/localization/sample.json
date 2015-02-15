@@ -1,0 +1,70 @@
+{
+    "value0": [
+        {
+            "cereal_class_version": 1,
+            "value0": 10,
+            "value1": 0,
+            "value2": [
+                {
+                    "key": "mac1",
+                    "value": {
+                        "value0": 100,
+                        "value1": 90
+                    }
+                }
+            ]
+        },
+        {
+            "value0": 9,
+            "value1": 1,
+            "value2": [
+                {
+                    "key": "mac2",
+                    "value": {
+                        "value0": 110,
+                        "value1": 91
+                    }
+                }
+            ]
+        },
+        {
+            "value0": 40,
+            "value1": 0,
+            "value2": [
+                {
+                    "key": "mac3",
+                    "value": {
+                        "value0": 120,
+                        "value1": 92
+                    }
+                }
+            ]
+        },
+        {
+            "value0": 80,
+            "value1": 0,
+            "value2": [
+                {
+                    "key": "mac4",
+                    "value": {
+                        "value0": 130,
+                        "value1": 93
+                    }
+                }
+            ]
+        },
+        {
+            "value0": 20,
+            "value1": 1,
+            "value2": [
+                {
+                    "key": "mac5",
+                    "value": {
+                        "value0": 140,
+                        "value1": 94
+                    }
+                }
+            ]
+        }
+    ]
+}
