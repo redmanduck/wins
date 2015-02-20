@@ -1,7 +1,7 @@
 {
     "value0": [
         {
-            "cereal_class_version": 1,
+            "cereal_class_version": 2,
             "value0": 10,
             "value1": 0,
             "value2": [
@@ -19,6 +19,28 @@
                         "value1": 90
                     }
                 }
+            ],
+            "value3": [
+                [
+                    {
+                        "value0": "mac11",
+                        "value1": 60
+                    },
+                    {
+                        "value0": "mac12",
+                        "value1": 70
+                    }
+                ],
+                [
+                    {
+                        "value0": "mac11",
+                        "value1": 65
+                    },
+                    {
+                        "value0": "mac12",
+                        "value1": 75
+                    }
+                ]
             ]
         },
         {
@@ -39,7 +61,8 @@
                         "value1": 91
                     }
                 }
-            ]
+            ],
+            "value3": []
         },
         {
             "value0": 40,
@@ -52,7 +75,8 @@
                         "value1": 92
                     }
                 }
-            ]
+            ],
+            "value3": []
         },
         {
             "value0": 80,
@@ -65,7 +89,8 @@
                         "value1": 93
                     }
                 }
-            ]
+            ],
+            "value3": []
         },
         {
             "value0": 20,
@@ -78,7 +103,8 @@
                         "value1": 94
                     }
                 }
-            ]
+            ],
+            "value3": []
         }
     ]
 }

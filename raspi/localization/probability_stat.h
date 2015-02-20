@@ -10,7 +10,7 @@ class ProbabilityStat {
   float x_;
 
  public:
-  ProbabilityStat(float mean, float std, float x);
+  ProbabilityStat(float mean, float var, float x);
   float mean() { return mean_; }
   float std() { return std_; }
   float prob();

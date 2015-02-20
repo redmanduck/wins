@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdlib>
 
+#include "gamma.hpp"
 #include "probability_stat.h"
 
 namespace {
@@ -9,9 +10,9 @@ namespace {
   }
 } // anonymous namespace
 
-ProbabilityStat::ProbabilityStat(float m, float s, float x) {
+ProbabilityStat::ProbabilityStat(float m, float v, float x) {
   mean_ = m;
-  std_ = s;
+  std_ = sqrt(v);
   prob_ = -1;
   dist_mean_ = -1;
   x_ = x;
@@ -23,11 +24,11 @@ float ProbabilityStat::precision() {
 
 float ProbabilityStat::prob() {
   if(prob_ == -1) {
-    prob_ = StandardDistribution((x_ - mean_) / std_) / std_;
+    prob_ = dnorm(x_, mean_, std_);
   }
   return prob_;
 }
 
 float ProbabilityStat::dist_mean() {
-  return abs((x_ - mean_) / std_);
+  return fabs((x_ - mean_) / std_);
 }

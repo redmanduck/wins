@@ -5,21 +5,22 @@
 #include <vector>
 
 #include "common_utils.h"
+#include "cereal/cereal.hpp"
+#include "cereal/types/string.hpp"
 
 struct Result {
   string name;
   int signal;
+
+  template<class Archive>
+  void serialize(Archive & archive) {
+    archive(name, signal);
+  }
 };
 
 class ScanResult {
- private:
-  vector<Result> scan_results_;
-  ScanResult() { }
-
  public:
-  static vector<ScanResult> Fetch();
-  vector<Result>::const_iterator end () const;
-  vector<Result>::const_iterator begin () const;
+  static list<Result> Fetch(string wlan);
 };
 
 #endif //SCAN_RESULT_H

@@ -2,23 +2,25 @@
 #define POINT_H
 
 #include <cassert>
+#include <list>
 #include <unordered_map>
 
 #include "common_utils.h"
 #include "cereal/cereal.hpp"
 #include "cereal/types/string.hpp"
 #include "cereal/types/unordered_map.hpp"
-#include "cereal/types/vector.hpp"
+#include "cereal/types/list.hpp"
+#include "scan_result.h"
 
-#define POINT_VERSION 1
+#define POINT_VERSION 2
 
 struct MacInfo {
   float mean;
-  float std;
+  float var;
 
   template<class Archive>
   void serialize(Archive & archive) {
-    archive(mean, std);
+    archive(mean, var);
   }
 };
 
@@ -27,10 +29,16 @@ struct Point {
   float y;
   unordered_map<string, MacInfo> info;
 
+  list<list<Result>> scans;
+
   template<class Archive>
   void serialize(Archive & archive, uint32_t const version) {
     assert(version == POINT_VERSION);
+#ifdef DSCAN
+    archive(x, y, info, scans);
+#else
     archive(x, y, info);
+#endif
   }
 };
 

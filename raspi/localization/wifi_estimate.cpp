@@ -1,14 +1,18 @@
+#include <algorithm>
 #include <cmath>
 #include <unordered_map>
 
+#include "gamma.hpp"
 #include "map.h"
 #include "wifi_estimate.h"
 
+#define MIN_DF 5
+
 // anonymous namespace
 namespace {
-  vector<pair<float, float>> ComputePointStats(ScanResult s) {
+  vector<pair<float, float>> ComputePointStats(list<Result> s) {
     auto& current_likely_points = Map::CurrentLikelyPoints();
-    vector<pair<float, float>> point_stats(current_likely_points.size());
+    vector<pair<float, float>> point_stats;
  
     // Determine the probability of being at each of the possible points.
     for (auto& point : current_likely_points) {
@@ -27,23 +31,22 @@ namespace {
     return point_stats;
   }
 
-  float ChiSquaredProbability(float x, int df) {
-    return pow(x, (df / 2) - 1) * exp (-x / 2) /
-        (pow(2, df / 2) * tgamma(df / 2));
-  }
-
 } // anonymous namespace
 
-PointEstimate WifiEstimate::ClosestByMahalanobis(ScanResult s) {
+PointEstimate WifiEstimate::ClosestByMahalanobis(const list<Result> *s,
+    Variant v) {
+  using stat = pair<float, const Point*>;
+
   auto&& current_likely_points = Map::CurrentLikelyPoints();
-  vector<float> point_stats(current_likely_points.size());
+  vector<stat> point_stats;
+  vector<pair<float, float>> stat_details;
 
   // Determine the probability of being at each of the possible points from
   // Mahalanobis distance.
   for (auto&& point : current_likely_points) {
     float sum = 0;
     int df = 0;
-    for (auto&& mac : s) {
+    for (auto&& mac : *s) {
       auto stats = Map::Stats(point, mac.name, mac.signal);
       if (stats.mean() < 0) {
         continue;
@@ -51,29 +54,61 @@ PointEstimate WifiEstimate::ClosestByMahalanobis(ScanResult s) {
       sum += pow(stats.dist_mean(), 2);
       df += 1;
     }
-    point_stats.push_back(ChiSquaredProbability(sum, df));
+    if (df < MIN_DF) {
+      //cout << "df low!!!";
+      continue;
+    }
+
+    //point_stats.push_back(ChiSquaredProbability(sum, df));
+    if (df > 0 and sum > 0) {
+      if (v & VARIANT_CHI_SQ)
+        point_stats.push_back(make_pair(
+              1 - pchisq(sum, df),
+              &point));
+      else
+        point_stats.push_back(make_pair(df / sqrt(sum), &point));
+      stat_details.push_back(make_pair(df, sqrt(sum)));
+    }
   }
 
-  // Find the point that we most likely are at.
   float pred_x = 0;
   float pred_y = 0;
   float total_weight = 0;
-  for (size_t i = 0; i < current_likely_points.size(); ++i) {
-    int weight = point_stats[i];
-    total_weight += weight;
-    pred_x += current_likely_points[i].x * weight;
-    pred_y += current_likely_points[i].y * weight;
-  } 
-  
-  pred_x /= total_weight;
-  pred_y /= total_weight;
+  if (v & VARIANT_TOP1 or v & VARIANT_TOP_FEW) {
+    sort(point_stats.begin(), point_stats.end(),
+        [](const stat &a, const stat &b) -> bool {
+            return a.first > b.first;
+        });
+    if ((v & VARIANT_TOP1) and not (v & VARIANT_TOP_FEW)) {
+      pred_x = point_stats[0].second->x;
+      pred_y = point_stats[0].second->y;
+    } else if (not (v & VARIANT_TOP1) and (v & VARIANT_TOP_FEW)) {
+      if (point_stats[0].first - point_stats[1].first < 0.1) {
+        cout << "clash!!!\n";
+      }
+      pred_x = point_stats[0].second->x;
+      pred_y = point_stats[0].second->y;
+      //throw "NotImplemented";
+    }
+  } else {
+    for (auto&& stat : point_stats) {
+      float weight = stat.first;
+      total_weight += weight;
+      pred_x += stat.second->x * weight;
+      pred_y += stat.second->y * weight;
+    } 
+    
+    pred_x /= total_weight;
+    pred_y /= total_weight;
+  }
   
   float var_x = 0;
   float var_y = 0;
-  for (size_t i = 0; i < current_likely_points.size(); ++i) {
-    int weight = point_stats[i];
-    var_x += pow(pred_x - current_likely_points[i].x, 2) * weight;
-    var_y += pow(pred_y - current_likely_points[i].y, 2) * weight;
+  for (auto&& stat : point_stats) {
+    float weight = stat.first;
+    total_weight += weight;
+    var_x += pow(pred_x - stat.second->x, 2) * weight;
+    var_y += pow(pred_y - stat.second->y, 2) * weight;
   }
 
   var_x /= total_weight;
@@ -85,7 +120,7 @@ PointEstimate WifiEstimate::ClosestByMahalanobis(ScanResult s) {
            /* y_var */ 1 / var_y};
 }
   
-PointEstimate WifiEstimate::MostProbableClubbed(ScanResult s) {
+PointEstimate WifiEstimate::MostProbableClubbed(list<Result> s) {
   auto&& current_likely_points = Map::CurrentLikelyPoints();
   auto point_stats = ComputePointStats(s);
 
@@ -140,7 +175,7 @@ PointEstimate WifiEstimate::MostProbableClubbed(ScanResult s) {
            /* y_var */ 1 / total_weight_y };
 }
 
-PointEstimate WifiEstimate::MostProbableNotClubbed(ScanResult s) {
+PointEstimate WifiEstimate::MostProbableNotClubbed(list<Result> s) {
   auto&& current_likely_points = Map::CurrentLikelyPoints();
   auto point_stats = ComputePointStats(s);
 

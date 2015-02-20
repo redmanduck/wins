@@ -16,7 +16,7 @@ class Map {
 
  public:  
   static void InitMap(string filename);
-  static void TryLoadRawMap(string filename);
+  static void TryConvertJSONMap(string filename);
   static void UpdateLikelyPoints();
   static ProbabilityStat Stats(const Point& p, string mac, int signal);
   static const vector<Point>& CurrentLikelyPoints();
