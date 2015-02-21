@@ -21,7 +21,7 @@ namespace kdtree {
         T point;
         node<T> *left = NULL;
         node<T> *right = NULL;
-        
+
         ///-----------------------------------------------------------------------
         /// @name Constructor
         ///-----------------------------------------------------------------------
@@ -33,7 +33,7 @@ namespace kdtree {
          *  @return Initialized node instance.
          */
         node(T point) : point(point) {}
-        
+
         /**
          *  Initialize node as a root of a kdtree with specified points.
          *
@@ -41,8 +41,13 @@ namespace kdtree {
          *
          *  @return Initialized node instance.
          */
-        node(std::vector<T> points) : node<T>(&points[0], (int)points.size(), 0) {}
-        
+        node(std::vector<T>&& points) : node<T>(&points[0], (int)points.size(), 0) {}
+
+        //template <typename U>
+        //node(std::unique_ptr<U> *points, int size, int depth = 0) {
+
+        //}
+
         /**
          *  Initialize node as a root of a kdtree with specified points.
          *
@@ -52,33 +57,34 @@ namespace kdtree {
          *
          *  @return Initialized node instance.
          */
-        node(T *points, int size, int depth = 0) {
+        template <typename U>
+        node(U *points, int size, int depth = 0) {
             if (size == 1) {
-                this->point = *points;
+                this->point = (*points).get();
                 return;
             }
-            
+
             // Sort points
             bool is_even = !(depth & 1);
             if (is_even) {
-                std::sort(points, points + size, [](T const& a, T const& b) { return a.x < b.x; });
+                std::sort(points, points + size, [](U const& a, U const& b) { return a->x < b->x; });
             } else {
-                std::sort(points, points + size, [](T const& a, T const& b) { return a.y < b.y; });
+                std::sort(points, points + size, [](U const& a, U const& b) { return a->y < b->y; });
             }
-            
+
             // Determine a point to divide
             int median = size / 2;
-            this->point = *(points + median);
-            
+            this->point = (*(points + median)).get();
+
             // Create left node
             this->left = new node<T>(points, median, depth + 1);
-            
+
             // Create right node
             if (size - median - 1 > 0) {
                 this->right = new node<T>(points + median + 1, size - median - 1, depth + 1);
             }
         }
-        
+
         ///-----------------------------------------------------------------------
         /// @name Destructor
         ///-----------------------------------------------------------------------
@@ -89,7 +95,7 @@ namespace kdtree {
             if (this->has_left_node()) delete this->left;
             if (this->has_right_node()) delete this->right;
         }
-        
+
         ///-----------------------------------------------------------------------
         /// @name Helper Methods
         ///-----------------------------------------------------------------------
@@ -101,7 +107,7 @@ namespace kdtree {
         inline bool has_left_node() {
             return (this->left != NULL);
         }
-        
+
         /**
          *  Indicates whether the node has the right node.
          *
@@ -110,7 +116,7 @@ namespace kdtree {
         inline bool has_right_node() {
             return (this->right != NULL);
         }
-        
+
         /**
          *  Indicates whether the node is the leaf.
          *
@@ -119,7 +125,7 @@ namespace kdtree {
         inline bool is_leaf() {
             return (!this->has_left_node() && !this->has_right_node());
         }
-        
+
         /**
          *  Calculate a distance between the receiver and the specified node.
          *
@@ -128,12 +134,12 @@ namespace kdtree {
          *  @return A distance between two nodes.
          */
         inline double distance(node<T> *node) {
-            double dx = this->point.x - node->point.x;
-            double dy = this->point.y - node->point.y;
-            
+            double dx = this->point->x - node->point->x;
+            double dy = this->point->y - node->point->y;
+
             return std::sqrt(dx * dx + dy * dy);
         }
-        
+
         /**
          *  Calculate a distance between the receiver and the specified point.
          *
@@ -142,12 +148,12 @@ namespace kdtree {
          *  @return A distance between the receiver and the point.
          */
         inline double distance(T point) {
-            double dx = this->point.x - point.x;
-            double dy = this->point.y - point.y;
-            
+            double dx = this->point->x - point->x;
+            double dy = this->point->y - point->y;
+
             return std::sqrt(dx * dx + dy * dy);
         }
-        
+
         /**
          *  Get a closer node to the receiver.
          *
@@ -159,7 +165,7 @@ namespace kdtree {
         inline node<T> * closer(node<T> *a, node<T> *b) {
             return this->distance(a) < this->distance(b) ? a : b;
         }
-        
+
         ///-----------------------------------------------------------------------
         /// @name Nearest Neighbor Search
         ///-----------------------------------------------------------------------
@@ -175,10 +181,10 @@ namespace kdtree {
             node<T> *query = new node<T>(query_point);
             node<T> *nearest = this->nearest(query, depth);
             delete query;
-            
+
             return nearest;
         }
-        
+
         /**
          *  Search for the nearest neighbor in the tree.
          *
@@ -192,21 +198,21 @@ namespace kdtree {
             if (this->is_leaf()) {
                 return this;
             }
-            
+
             // Calculate distance between the query and self along one direction (if depth is even, the direction is horizontal)
             bool is_even = !(depth & 1);
-            double dx = query->point.x - this->point.x;
-            double dy = query->point.y - this->point.y;
+            double dx = query->point->x - this->point->x;
+            double dy = query->point->y - this->point->y;
             double distance = is_even ? std::sqrt(dx * dx) : std::sqrt(dy * dy);
-            
+
             // Find the nearest node
-            bool left = is_even ? (this->point.x > query->point.x) : (this->point.y > query->point.y);
+            bool left = is_even ? (this->point->x > query->point->x) : (this->point->y > query->point->y);
             node<T> *leaf = NULL;
-            
+
             if (left) {
                 if (this->has_left_node()) {
                     leaf = this->left->nearest(query, depth + 1);
-                    
+
                     // Compare the found node and the nearest node in the other divided part
                     if (this->has_right_node() && distance < query->distance(leaf)) {
                         leaf = query->closer(leaf, this->right->nearest(query, depth + 1));
@@ -217,7 +223,7 @@ namespace kdtree {
             } else {
                 if (this->has_right_node()) {
                     leaf = this->right->nearest(query, depth + 1);
-                    
+
                     // Compare the found leaf and the nearest leaf in the other divided part
                     if (this->has_left_node() && distance < query->distance(leaf)) {
                         leaf = query->closer(leaf, this->left->nearest(query, depth + 1));
@@ -226,10 +232,10 @@ namespace kdtree {
                     leaf = this->left->nearest(query, depth + 1);
                 }
             }
-            
+
             return query->closer(this, leaf);
         }
-        
+
         /**
          *  Search for all nearest neighbors within a certain radius of a point.
          *
@@ -242,10 +248,10 @@ namespace kdtree {
             node<T> *query = new node<T>(query_point);
             std::vector<node<T> *> neighbors = this->radius_nearest(query, r);
             delete query;
-            
+
             return neighbors;
         }
-        
+
         /**
          *  Search for all nearest neighbors within a certain radius of a point.
          *
@@ -256,27 +262,27 @@ namespace kdtree {
          */
         std::vector<node<T> *> radius_nearest(node<T> *query, const double r) {
             std::vector<node<T> *> neighbors;
-            
+
             this->_radius_nearest(neighbors, query, r, 0);
-            
+
             return neighbors;
         }
-        
+
         void _radius_nearest(std::vector<node<T> *>& neighbors, node<T> *query, const double r, const int depth = 0) {
             // Calculate distance between the query and self along one direction (if depth is even, the direction is horizontal)
             bool is_even = !(depth & 1);
-            double dx = query->point.x - this->point.x;
-            double dy = query->point.y - this->point.y;
+            double dx = query->point->x - this->point->x;
+            double dy = query->point->y - this->point->y;
             double distance = is_even ? std::sqrt(dx * dx) : std::sqrt(dy * dy);
-            
+
             // Find the node inside the circle with specified radius
-            bool left = is_even ? (this->point.x > query->point.x) : (this->point.y > query->point.y);
-            
+            bool left = is_even ? (this->point->x > query->point->x) : (this->point->y > query->point->y);
+
             if (left) {
                 if (this->has_left_node()) {
                     this->left->_radius_nearest(neighbors, query, r, depth + 1);
                 }
-                
+
                 if (this->has_right_node() && distance <= r) {
                     this->right->_radius_nearest(neighbors, query, r, depth + 1);
                 }
@@ -284,12 +290,12 @@ namespace kdtree {
                 if (this->has_right_node()) {
                     this->right->_radius_nearest(neighbors, query, r, depth + 1);
                 }
-                
+
                 if (this->has_left_node() && distance <= r) {
                     this->left->_radius_nearest(neighbors, query, r, depth + 1);
                 }
             }
-            
+
             if (query->distance(this) <= r) {
                 if (neighbors.size() == 0) {
                     // Add self
@@ -301,7 +307,7 @@ namespace kdtree {
                             neighbors.push_back(this);
                             break;
                         }
-                        
+
                         node<T> *neighbor = *it;
                         if (query->distance(neighbor) > query->distance(this)) {
                             neighbors.insert(it, this);
@@ -311,7 +317,7 @@ namespace kdtree {
                 }
             }
         }
-        
+
         ///-----------------------------------------------------------------------
         /// @name k-Nearest Neighbor Search
         ///-----------------------------------------------------------------------
@@ -327,10 +333,10 @@ namespace kdtree {
             node<T> *query = new node<T>(query_point);
             std::vector<node<T> *> neighbors = this->k_nearest(query, k);
             delete query;
-            
+
             return neighbors;
         }
-        
+
         /**
          *  Search for k-nearest neighbors in the tree.
          *
@@ -341,12 +347,12 @@ namespace kdtree {
          */
         std::vector<node<T> *> k_nearest(node<T> *query, const int k) {
             std::vector<node<T> *> neighbors;
-            
+
             this->_k_nearest(neighbors, query, k, 0);
-            
+
             return neighbors;
         }
-        
+
         void _k_nearest(std::vector<node<T> *>& neighbors, node<T> *query, const int k, const int depth = 0) {
             double max_distance;
             if (neighbors.size() > 0) {
@@ -354,28 +360,28 @@ namespace kdtree {
             } else {
                 max_distance = 0;
             }
-            
+
             // Calculate distance between the query and self along one direction (if depth is even, the direction is horizontal)
             bool is_even = !(depth & 1);
-            double dx = query->point.x - this->point.x;
-            double dy = query->point.y - this->point.y;
+            double dx = query->point->x - this->point->x;
+            double dy = query->point->y - this->point->y;
             double distance = is_even ? std::sqrt(dx * dx) : std::sqrt(dy * dy);
-            
+
             // Find the nearest node
-            bool left = is_even ? (this->point.x > query->point.x) : (this->point.y > query->point.y);
-            
+            bool left = is_even ? (this->point->x > query->point->x) : (this->point->y > query->point->y);
+
             if (left) {
                 if (this->has_left_node()) {
                     this->left->_k_nearest(neighbors, query, k, depth + 1);
                 }
-                
+
                 // Update max distance
                 if (neighbors.size() > 0) {
                     max_distance = query->distance(neighbors.at(neighbors.size() - 1));
                 } else {
                     max_distance = 0;
                 }
-                
+
                 if (this->has_right_node() && (neighbors.size() < k || distance < max_distance)) {
                     this->right->_k_nearest(neighbors, query, k, depth + 1);
                 }
@@ -383,19 +389,19 @@ namespace kdtree {
                 if (this->has_right_node()) {
                     this->right->_k_nearest(neighbors, query, k, depth + 1);
                 }
-                
+
                 // Update max distance
                 if (neighbors.size() > 0) {
                     max_distance = query->distance(neighbors.at(neighbors.size() - 1));
                 } else {
                     max_distance = 0;
                 }
-                
+
                 if (this->has_left_node() && (neighbors.size() < k || distance < max_distance)) {
                     this->left->_k_nearest(neighbors, query, k, depth + 1);
                 }
             }
-            
+
             if (neighbors.size() == 0) {
                 // Add self
                 neighbors.push_back(this);
@@ -406,14 +412,14 @@ namespace kdtree {
                         neighbors.push_back(this);
                         break;
                     }
-                    
+
                     node<T> *neighbor = *it;
                     if (query->distance(this) < query->distance(neighbor)) {
                         neighbors.insert(it, this);
                         break;
                     }
                 }
-                
+
                 if (neighbors.size() > k) {
                     neighbors.pop_back();
                 }

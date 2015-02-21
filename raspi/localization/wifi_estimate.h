@@ -14,7 +14,8 @@ enum Variant {
 
 class WifiEstimate {
  public:
-  static PointEstimate ClosestByMahalanobis(const list<Result> *s, Variant v);
+  static list<PointEstimate> ClosestByMahalanobis(
+      const list<Result> *s, Variant v);
   // PointEstimate ClosestByMahalanobisVarWeighted(list<Result> s);
   // PointEstimate MahalanobisTriangulated(list<Result> s);
   static PointEstimate MostProbableClubbed(list<Result> s);

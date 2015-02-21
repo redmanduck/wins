@@ -1,7 +1,9 @@
 #include <fstream>
 #include <iostream>
+#include <memory>
 
 #include "cereal/archives/json.hpp"
+#include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
 #include "kdtree/kdtree.hpp"
 #include "map.h"
@@ -25,15 +27,21 @@ bool DoDebugRun(int argc, char *argv[]) {
     Map::InitMap(Global::MapFile);
     ofstream out_file;
     out_file.open("results.csv");
-    for (auto&& point : Map::CurrentLikelyPoints()) {
-      for (auto&& scan : point.scans) {
-        out_file << to_string(point.x) + "," + to_string(point.y) + ",";
+    for (auto&& point : Map::all_points()) {
+      cout << to_string(point->x) + "," + to_string(point->y) + "\n";
+      for (auto&& scan : point->scans) {
+        out_file << to_string(point->x) + "," + to_string(point->y) + ",";
+        /*
         out_file << WifiEstimate::ClosestByMahalanobis(
             &scan, (Variant)(VARIANT_CHI_SQ | VARIANT_TOP1)).to_string();
         out_file << ",";
-        out_file << WifiEstimate::ClosestByMahalanobis(
-            &scan, (Variant)(VARIANT_CHI_SQ | VARIANT_TOP_FEW)).to_string();
-        out_file << ",";
+        */
+        for (auto&& estimate : WifiEstimate::ClosestByMahalanobis(
+            &scan, (Variant)(VARIANT_CHI_SQ | VARIANT_TOP_FEW))) {
+          out_file << estimate.to_string();
+          out_file << ",";
+        }
+        /*
         out_file << WifiEstimate::ClosestByMahalanobis(
             &scan, VARIANT_CHI_SQ).to_string();
         out_file << ",";
@@ -45,20 +53,20 @@ bool DoDebugRun(int argc, char *argv[]) {
         out_file << ",";
         PointEstimate p3 = WifiEstimate::MostProbableNotClubbed(scan);
         out_file << p3.to_string();
+        */
         out_file << "\n";
       }
     }
     out_file.close();
   } else if (string(argv[1]) == "sample") {
-      vector<Point> points = {
-        {10, 0, {{"mac1", {100, 90}}, {"mac6", {150, 95}}},
+      unique_ptr<Point> p = unique_ptr<Point>(new Point {20, 1, {{"mac5", {140, 94}}}});
+      vector<unique_ptr<Point>> points;
+        points.emplace_back(unique_ptr<Point>(new Point {10, 0,
+          {{"mac1", {100, 90}}, {"mac6", {150, 95}}},
           {{{"mac11", 60}, {"mac12", 70}},
-           {{"mac11", 65}, {"mac12", 75}}}},
-        { 9, 1, {{"mac2", {110, 91}}, {"mac7", {160, 96}}}},
-        {40, 0, {{"mac3", {120, 92}}}},
-        {80, 0, {{"mac4", {130, 93}}}},
-        {20, 1, {{"mac5", {140, 94}}}}
-      };
+           {{"mac11", 65}, {"mac12", 75}}}}));
+        points.emplace_back(unique_ptr<Point>(new Point { 9, 1,
+          {{"mac2", {110, 91}}, {"mac7", {160, 96}}}}));
 
       ofstream os("sample.json");
       cereal::JSONOutputArchive archive(os);
@@ -78,7 +86,7 @@ bool DoDebugRun(int argc, char *argv[]) {
 }
 
 void RunMainLoop(int argc, char *argv[]) {
-  
+
 }
 
 int main(int argc, char *argv[]) {

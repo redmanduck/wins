@@ -17,7 +17,7 @@ namespace kdtree {
     class kdtree {
     public:
         node<T> *root;
-        
+
         ///-----------------------------------------------------------------------
         /// @name Constructor
         ///-----------------------------------------------------------------------
@@ -28,8 +28,11 @@ namespace kdtree {
          *
          *  @return Initialized kdtree instance.
          */
-        kdtree(std::vector<T> points) : kdtree<T>(&points[0], (int)points.size()) {}
-        
+        template <typename U>
+        kdtree(std::vector<U>* points) {
+          this->root = new node<T>(&(*points)[0], (int)(*points).size());
+        }
+
         /**
          *  Initialize kdtree.
          *
@@ -41,7 +44,7 @@ namespace kdtree {
         kdtree(T *points, int size) {
             this->root = new node<T>(points, size);
         }
-        
+
         ///-----------------------------------------------------------------------
         /// @name Destructor
         ///-----------------------------------------------------------------------
@@ -51,7 +54,7 @@ namespace kdtree {
         ~kdtree() {
             delete this->root;
         }
-        
+
         ///-----------------------------------------------------------------------
         /// @name Nearest Neighbor Search
         ///-----------------------------------------------------------------------
@@ -65,7 +68,7 @@ namespace kdtree {
         node<T> * nearest(T query_point) {
             return this->root->nearest(query_point);
         }
-        
+
         /**
          *  Search for the nearest neighbor in the tree.
          *
@@ -76,7 +79,7 @@ namespace kdtree {
         node<T> * nearest(node<T> *query) {
             return this->root->nearest(query);
         }
-        
+
         /**
          *  Search for all nearest neighbors within a certain radius of a point.
          *
@@ -88,7 +91,7 @@ namespace kdtree {
         std::vector<node<T> *> radius_nearest(T query_point, const double r) {
             return this->root->radius_nearest(query_point, r);
         }
-        
+
         /**
          *  Search for all nearest neighbors within a certain radius of a point.
          *
@@ -100,7 +103,7 @@ namespace kdtree {
         std::vector<node<T> *> radius_nearest(node<T> *query, const double r) {
             return this->root->radius_nearest(query, r);
         }
-        
+
         ///-----------------------------------------------------------------------
         /// @name k-Nearest Neighbor Search
         ///-----------------------------------------------------------------------
@@ -115,7 +118,7 @@ namespace kdtree {
         std::vector<node<T> *> k_nearest(T query_point, const int k) {
             return this->root->k_nearest(query_point, k);
         }
-        
+
         /**
          *  Search for k-nearest neighbors in the tree.
          *

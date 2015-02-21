@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import pdb
 import json
+from collections import OrderedDict
 
 MIN_SIGNAL_COUNT = 10
 MIN_VAR = 25
@@ -46,25 +47,40 @@ for line in in_file:
             if var < MIN_VAR:
                 var = MIN_VAR
             if avg >= MIN_AVG:
-                mac_info.append({
-                        'key' : mac,
-                        'value' : {
-                            'value0' : avg,
-                            'value1' : var
-                        }})
+                mac_info.append(
+                    OrderedDict([
+                        ('key', mac),
+                        ('value', OrderedDict([
+                            ('value0', avg),
+                            ('value1', var)
+                        ]))
+                    ])
+                )
 
         formatted_scans = []
         for scan in scans_cur_point:
             scan_data = []
             for mac in scan:
-                scan_data.append({
-                        'value0' : mac,
-                        'value1' : scan[mac] })
+                scan_data.append(
+                    OrderedDict([
+                        ('value0', mac),
+                        ('value1', scan[mac])
+                    ])
+                )
             formatted_scans.append(scan_data)
-        points.append({ 'value0' : cur_x,
-                        'value1' : cur_y,
-                        'value2' : mac_info,
-                        'value3' : formatted_scans })
+        points.append(
+            OrderedDict([
+                ('ptr_wrapper', OrderedDict([
+                    ('valid', 1),
+                    ('data', OrderedDict([
+                        ('value0', cur_x),
+                        ('value1', cur_y),
+                        ('value2', mac_info),
+                        ('value3', formatted_scans)]
+                    ))
+                ]))
+            ])
+        )
         scans_cur_point = []
         macs_cur_point = []
 
@@ -91,7 +107,15 @@ for line in in_file:
         macs_cur_point.append(parts[0])
 in_file.close
 
-points[0]['cereal_class_version'] = 2
+d = points[0]['ptr_wrapper']['data']
+points[0]['ptr_wrapper']['data'] = OrderedDict([
+    ('cereal_class_version', 2),
+    ('value0', d['value0']),
+    ('value1', d['value1']),
+    ('value2', d['value2']),
+    ('value3', d['value3'])
+])
+
 out_file = open(sys.argv[2], 'w')
-json.dump({ 'value0' : points }, out_file, sort_keys=True, indent=4, separators=(',', ': '))
+json.dump({ 'value0' : points }, out_file, indent=4, separators=(',', ': '))
 out_file.close()

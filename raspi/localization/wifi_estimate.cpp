@@ -7,15 +7,18 @@
 #include "wifi_estimate.h"
 
 #define MIN_DF 5
+#define TOP_FEW_GOOD_PROB_THRESH 0.30
+#define TOP_FEW_MIN_PROB_THRESH 0.35
 
 // anonymous namespace
 namespace {
-  vector<pair<float, float>> ComputePointStats(list<Result> s) {
+  list<tuple<float, float, Point* const>> ComputePointStats(list<Result> s) {
     auto& current_likely_points = Map::CurrentLikelyPoints();
-    vector<pair<float, float>> point_stats;
- 
+    list<tuple<float, float, Point* const>> point_stats;
+
     // Determine the probability of being at each of the possible points.
-    for (auto& point : current_likely_points) {
+    for (auto& node : current_likely_points) {
+      auto point = node->point;
       float total_prob = 0;
       float total_precision = 0;
       for (auto& mac : s) {
@@ -26,27 +29,28 @@ namespace {
         total_prob += stats.prob() * stats.precision();
         total_precision += stats.precision();
       }
-      point_stats.push_back(make_pair(total_prob, total_precision));
+      point_stats.push_back(make_tuple(total_prob, total_precision, point));
     }
     return point_stats;
   }
 
 } // anonymous namespace
 
-PointEstimate WifiEstimate::ClosestByMahalanobis(const list<Result> *s,
+list<PointEstimate> WifiEstimate::ClosestByMahalanobis(const list<Result> *s,
     Variant v) {
-  using stat = pair<float, const Point*>;
+  using stat = pair<float, Point*>;
 
-  auto&& current_likely_points = Map::CurrentLikelyPoints();
+  auto& current_likely_points = Map::CurrentLikelyPoints();
   vector<stat> point_stats;
   vector<pair<float, float>> stat_details;
 
   // Determine the probability of being at each of the possible points from
   // Mahalanobis distance.
-  for (auto&& point : current_likely_points) {
+  for (auto& node : current_likely_points) {
+    auto point = node->point;
     float sum = 0;
     int df = 0;
-    for (auto&& mac : *s) {
+    for (auto& mac : *s) {
       auto stats = Map::Stats(point, mac.name, mac.signal);
       if (stats.mean() < 0) {
         continue;
@@ -62,11 +66,16 @@ PointEstimate WifiEstimate::ClosestByMahalanobis(const list<Result> *s,
     //point_stats.push_back(ChiSquaredProbability(sum, df));
     if (df > 0 and sum > 0) {
       if (v & VARIANT_CHI_SQ)
+        // Square of M-distance is ch-sqaured.
+        // Weight of a point is the probability that the collected signal data
+        // was taken at that point.
         point_stats.push_back(make_pair(
               1 - pchisq(sum, df),
-              &point));
+              point));
       else
-        point_stats.push_back(make_pair(df / sqrt(sum), &point));
+        // Weight of a point is proportional to the number of APs common to
+        // that location and inversely proportinal to the M-distance.
+        point_stats.push_back(make_pair(df / sqrt(sum), point));
       stat_details.push_back(make_pair(df, sqrt(sum)));
     }
   }
@@ -74,84 +83,94 @@ PointEstimate WifiEstimate::ClosestByMahalanobis(const list<Result> *s,
   float pred_x = 0;
   float pred_y = 0;
   float total_weight = 0;
+  list<PointEstimate> estimates;
   if (v & VARIANT_TOP1 or v & VARIANT_TOP_FEW) {
     sort(point_stats.begin(), point_stats.end(),
         [](const stat &a, const stat &b) -> bool {
             return a.first > b.first;
         });
-    if ((v & VARIANT_TOP1) and not (v & VARIANT_TOP_FEW)) {
-      pred_x = point_stats[0].second->x;
-      pred_y = point_stats[0].second->y;
-    } else if (not (v & VARIANT_TOP1) and (v & VARIANT_TOP_FEW)) {
-      if (point_stats[0].first - point_stats[1].first < 0.1) {
-        cout << "clash!!!\n";
+    if (v & VARIANT_TOP1) {
+      estimates.push_back({
+          point_stats[0].second->x,
+          1 - point_stats[0].first,
+          point_stats[0].second->y,
+          1 - point_stats[0].first
+      });
+    } else if (v & VARIANT_TOP_FEW) {
+      for (auto p_stat : point_stats) {
+        // if (p_stat.first < TOP_FEW_MIN_PROB)
+        //   continue;
+        if (p_stat.first > TOP_FEW_GOOD_PROB_THRESH) {
+          estimates.push_back({
+              p_stat.second->x, 1 - p_stat.first,
+              p_stat.second->y, 1 - p_stat.first });
+        }
       }
-      pred_x = point_stats[0].second->x;
-      pred_y = point_stats[0].second->y;
-      //throw "NotImplemented";
     }
   } else {
-    for (auto&& stat : point_stats) {
-      float weight = stat.first;
+    for (auto&& p_stat : point_stats) {
+      float weight = p_stat.first;
       total_weight += weight;
-      pred_x += stat.second->x * weight;
-      pred_y += stat.second->y * weight;
-    } 
-    
+      pred_x += p_stat.second->x * weight;
+      pred_y += p_stat.second->y * weight;
+    }
+
     pred_x /= total_weight;
     pred_y /= total_weight;
-  }
-  
-  float var_x = 0;
-  float var_y = 0;
-  for (auto&& stat : point_stats) {
-    float weight = stat.first;
-    total_weight += weight;
-    var_x += pow(pred_x - stat.second->x, 2) * weight;
-    var_y += pow(pred_y - stat.second->y, 2) * weight;
-  }
 
-  var_x /= total_weight;
-  var_y /= total_weight;
+    float var_x = 0;
+    float var_y = 0;
+    for (auto&& p_stat : point_stats) {
+      float weight = p_stat.first;
+      total_weight += weight;
+      var_x += pow(pred_x - p_stat.second->x, 2) * weight;
+      var_y += pow(pred_y - p_stat.second->y, 2) * weight;
+    }
 
-  return { /* x_mean */ (int)nearbyint(pred_x), 
-           /* x_var */ 1 / var_x, 
-           /* y_mean */ (int)nearbyint(pred_y),
-           /* y_var */ 1 / var_y};
+    var_x /= total_weight;
+    var_y /= total_weight;
+
+    estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+                          /* x_var */ 1 / var_x,
+                          /* y_mean */ nearbyint(pred_y),
+                          /* y_var */ 1 / var_y});
+  }
+  return estimates;
 }
-  
+
 PointEstimate WifiEstimate::MostProbableClubbed(list<Result> s) {
-  auto&& current_likely_points = Map::CurrentLikelyPoints();
   auto point_stats = ComputePointStats(s);
 
   // Club all points with same x together and all points with the same y
   // together.
   unordered_map<int, pair<float, float>> x_points;
   unordered_map<int, pair<float, float>> y_points;
-  for (size_t i = 0; i < current_likely_points.size(); ++i) {
-    auto x = current_likely_points[i].x;
+  for (auto&& p_stat : point_stats) {
+    auto x = std::get<2>(p_stat)->x;
     auto x_point = x_points.find(x);
     if (x_point == x_points.end()) {
-      x_points[x] = point_stats[i];
+      y_points[x] = make_pair(std::get<0>(p_stat),
+          std::get<1>(p_stat));
     } else {
-      x_points[x].first += point_stats[i].first;
-      x_points[x].second += point_stats[i].second;
+      x_points[x].first  += std::get<0>(p_stat);
+      x_points[x].second += std::get<1>(p_stat);
     }
 
-    auto y = current_likely_points[i].y;
+    auto y = std::get<2>(p_stat)->y;
     auto y_point = y_points.find(y);
     if (y_point == y_points.end()) {
-      y_points[y] = point_stats[i];
+      y_points[y] = make_pair(std::get<0>(p_stat),
+          std::get<1>(p_stat));
     } else {
-      y_points[y].first += point_stats[i].first;
-      y_points[y].second += point_stats[i].second;
+      y_points[x].first  += std::get<0>(p_stat);
+      y_points[x].second += std::get<1>(p_stat);
     }
   }
 
   // Find the x-coordinate that we most likely are at.
   float total_weight_x = 0;
   float pred_x = 0;
-  for (auto&& x_point : x_points) {
+  for (auto& x_point : x_points) {
     int weight = (x_point.second).first * (x_point.second).second;
     total_weight_x += weight;
     pred_x += x_point.first * weight;
@@ -169,32 +188,31 @@ PointEstimate WifiEstimate::MostProbableClubbed(list<Result> s) {
   pred_x /= total_weight_x;
   pred_y /= total_weight_y;
 
-  return { /* x_mean */ (int)nearbyint(pred_x), 
-           /* x_var */ 1 / total_weight_x, 
-           /* y_mean */ (int)nearbyint(pred_y),
+  return { /* x_mean */ nearbyint(pred_x),
+           /* x_var */ 1 / total_weight_x,
+           /* y_mean */ nearbyint(pred_y),
            /* y_var */ 1 / total_weight_y };
 }
 
 PointEstimate WifiEstimate::MostProbableNotClubbed(list<Result> s) {
-  auto&& current_likely_points = Map::CurrentLikelyPoints();
   auto point_stats = ComputePointStats(s);
 
   // Find the point that we most likely are at.
   float pred_x = 0;
   float pred_y = 0;
   float total_weight = 0;
-  for (size_t i = 0; i < current_likely_points.size(); ++i) {
-    int weight = point_stats[i].first * point_stats[i].second;
+  for (auto& p_stat : point_stats) {
+    int weight = std::get<0>(p_stat) * std::get<1>(p_stat);
     total_weight += weight;
-    pred_x += current_likely_points[i].x * weight;
-    pred_y += current_likely_points[i].y * weight;
+    pred_x += std::get<2>(p_stat)->x * weight;
+    pred_y += std::get<2>(p_stat)->y * weight;
   }
 
   pred_x /= total_weight;
   pred_y /= total_weight;
 
-  return { /* x_mean */ (int)nearbyint(pred_x), 
-           /* x_var */ 1 / total_weight, 
-           /* y_mean */ (int)nearbyint(pred_y),
+  return { /* x_mean */ nearbyint(pred_x),
+           /* x_var */ 1 / total_weight,
+           /* y_mean */ nearbyint(pred_y),
            /* y_var */ 1 / total_weight };
 }
