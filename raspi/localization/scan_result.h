@@ -1,9 +1,6 @@
 #ifndef SCAN_RESULT_H
 #define SCAN_RESULT_H
 
-#include <utility>
-#include <vector>
-
 #include "common_utils.h"
 #include "cereal/cereal.hpp"
 #include "cereal/types/string.hpp"
@@ -20,7 +17,7 @@ struct Result {
 
 class ScanResult {
  public:
-  static list<Result> Fetch(string wlan);
+  static vector<Result> Fetch(string wlan);
 };
 
 #endif //SCAN_RESULT_H

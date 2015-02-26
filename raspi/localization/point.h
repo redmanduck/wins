@@ -15,8 +15,8 @@
 #define POINT_VERSION 2
 
 struct MacInfo {
-  float mean;
-  float var;
+  double mean;
+  double var;
 
   template<class Archive>
   void serialize(Archive & archive) {
@@ -25,11 +25,11 @@ struct MacInfo {
 };
 
 struct Point {
-  float x;
-  float y;
+  double x;
+  double y;
   unordered_map<string, MacInfo> info;
 
-  list<list<Result>> scans;
+  vector<vector<Result>> scans;
 
   template<class Archive>
   void serialize(Archive & archive, uint32_t const version) {

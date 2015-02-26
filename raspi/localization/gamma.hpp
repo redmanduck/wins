@@ -90,7 +90,7 @@ pnorm_both(double x, double *cum, double *ccum, int i_tail,
     0.00378239633202758244,
     7.29751555083966205e-5
   };
-  
+
   double xden, xnum, temp, del, eps, xsq, y;
   int i, lower, upper;
 
@@ -113,7 +113,7 @@ pnorm_both(double x, double *cum, double *ccum, int i_tail,
         xden = (xden + b[i]) * xsq;
       }
     } else xnum = xden = 0.0;
-    
+
     temp = x * (xnum + a[3]) / (xden + b[3]);
     if(lower)  *cum = 0.5 + temp;
     if(upper) *ccum = 0.5 - temp;
@@ -122,7 +122,7 @@ pnorm_both(double x, double *cum, double *ccum, int i_tail,
       if(upper) *ccum = std::log(*ccum);
     }
   } else if (y <= M_SQRT_32) {
-    /* Evaluate pnorm for 0.674.. = qnorm(3/4) < |x| <= sqrt(32) 
+    /* Evaluate pnorm for 0.674.. = qnorm(3/4) < |x| <= sqrt(32)
      * ~= 5.657 */
 
     xnum = c[8] * y;
@@ -158,7 +158,7 @@ pnorm_both(double x, double *cum, double *ccum, int i_tail,
       *cum = 0.;
       *ccum = 1.;
     }
-    
+
     assert(false && "Did not converge");
   }
 
@@ -198,9 +198,9 @@ inline double
 dnorm(double x, double mean, double sd)
 {
   assert(sd > 0);
-  
+
   double X = (x - mean) / sd;
-  
+
   return (M_1_SQRT_2PI * std::exp(-0.5 * X * X) / sd);
 }
 
@@ -209,7 +209,7 @@ dnorm(double x, double mean, double sd)
 inline double
 bd0(double x, double np)
 {
-  
+
   if(std::fabs(x - np) < 0.1 * (x + np)) {
     double v = (x - np) / (x + np);
     double s = (x - np) * v;
@@ -223,7 +223,7 @@ bd0(double x, double np)
       s = s1;
     }
   }
-  
+
   return x * std::log(x / np) + np - x;
 }
 
@@ -236,7 +236,7 @@ stirlerr(double n)
 #define S2 0.00079365079365079365079365  /* 1/1260 */
 #define S3 0.000595238095238095238095238 /* 1/1680 */
 #define S4 0.0008417508417508417508417508/* 1/1188 */
-  
+
   /* error for 0, 0.5, 1.0, 1.5, ..., 14.5, 15.0 */
   const double sferr_halves[31] = {
     0.0, /* n=0 - wrong, place holder only */
@@ -272,7 +272,7 @@ stirlerr(double n)
     0.005554733551962801371038690  /* 15.0 */
   };
   double nn;
-  
+
   if (n <= 15.0) {
     nn = n + n;
     if (nn == (int)nn)
@@ -280,7 +280,7 @@ stirlerr(double n)
     return (std::lgamma(n + 1.) - (n + 0.5) * std::log(n) + n -
         std::log(std::sqrt(2 * M_PI)));
   }
-  
+
   nn = n*n;
   if (n > 500)
     return((S0 - S1 / nn) / n);
@@ -320,9 +320,9 @@ dpois_raw (double x, double lambda)
 inline double
 pgamma (double x, double shape, double scale)
 {
-  const double xbig = 1.0e+8, xlarge = 1.0e+37, 
+  const double xbig = 1.0e+8, xlarge = 1.0e+37,
     alphlimit = 1000.;/* normal approx. for shape > alphlimit */
-    
+
   int lower_tail = 1;
 
   double pn1, pn2, pn3, pn4, pn5, pn6, arg, a, b, c, an, osum, sum;
@@ -333,7 +333,7 @@ pgamma (double x, double shape, double scale)
   assert (shape > 0 && scale > 0);
 
   x /= scale;
-  
+
   if (x <= 0.)
     return 0.0;
 
@@ -418,20 +418,20 @@ dgamma(double x, double shape, double scale)
   assert(shape > 0 && scale > 0);
   if (x < 0)
     return 0.0;
-  
+
   if (x == 0) {
     assert(shape >= 1);
     if (shape > 1)
       return 0.0;
-    
+
     return 1 / scale;
   }
-  
-  if (shape < 1) { 
+
+  if (shape < 1) {
     double pr = dpois_raw(shape, x/scale);
     return pr * shape / x;
   }
-  
+
   /* else  shape >= 1 */
   double pr = dpois_raw(shape - 1, x / scale);
   return pr / scale;
@@ -458,7 +458,7 @@ pchisq(double x, double df)
 }
 
 inline
-float ChiSquaredProbability(float x, int df) {
+double ChiSquaredProbability(double x, int df) {
   //return pow(x, (df / 2) - 1) * exp (-x / 2) /
   //    (pow(2, df / 2) * tgamma(df / 2));
   return dchisq(x, df);

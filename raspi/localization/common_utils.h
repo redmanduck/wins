@@ -1,22 +1,26 @@
 #ifndef COMMON_UTILS_H
 #define COMMON_UTILS_H
 
+#include <algorithm>
 #include <cstdlib>
+#include <functional>
 #include <list>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include <cassert>
+
 using namespace std;
 
 #define DSCAN
 
 struct PointEstimate {
-  float x_mean;
-  float x_var;
-  float y_mean;
-  float y_var;
+  double x_mean;
+  double x_var;
+  double y_mean;
+  double y_var;
   string to_string() {
     return std::to_string(x_mean) + "," +
            std::to_string(x_var) + "," +
@@ -28,7 +32,6 @@ struct PointEstimate {
 class Global {
  public:
   static string MapFile;
-
   static void Init();
 };
 
@@ -49,6 +52,68 @@ std::unique_ptr<T> make_unique_helper(std::true_type, Args&&... args) {
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
    return make_unique_helper<T>(std::is_array<T>(), std::forward<Args>(args)...);
+}
+
+template <typename T>
+std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
+{
+    assert(a.size() == b.size());
+
+    std::vector<T> result;
+    result.reserve(a.size());
+
+    std::transform(a.begin(), a.end(), b.begin(),
+                   std::back_inserter(result), std::plus<T>());
+    return result;
+}
+
+template <typename T>
+std::vector<T> operator-(const std::vector<T>& a, const std::vector<T>& b)
+{
+    assert(a.size() == b.size());
+
+    std::vector<T> result;
+    result.reserve(a.size());
+
+    std::transform(a.begin(), a.end(), b.begin(),
+                   std::back_inserter(result), std::minus<T>());
+    return result;
+}
+
+template <typename T>
+std::vector<T> operator*(const std::vector<T>& a, const std::vector<T>& b)
+{
+    assert(a.size() == b.size());
+
+    std::vector<T> result;
+    result.reserve(a.size());
+
+    std::transform(a.begin(), a.end(), b.begin(),
+                   std::back_inserter(result), std::multiplies<T>());
+    return result;
+}
+
+template <typename T>
+std::vector<T> operator/(const std::vector<T>& a, const std::vector<T>& b)
+{
+    assert(a.size() == b.size());
+
+    std::vector<T> result;
+    result.reserve(a.size());
+
+    std::transform(a.begin(), a.end(), b.begin(),
+                   std::back_inserter(result), std::divides<T>());
+    return result;
+}
+
+template <int N>
+std::vector<int> ones() {
+  return std::vector<int>(1, N);
+}
+
+template <int N>
+std::vector<int> zeroes() {
+  return std::vector<int>(0, N);
 }
 
 #endif // COMMON_UTILS_H

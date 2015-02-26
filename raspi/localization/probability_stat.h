@@ -3,19 +3,19 @@
 
 class ProbabilityStat {
  private:
-  float mean_;
-  float std_;
-  float prob_;
-  float dist_mean_;
-  float x_;
+  double mean_;
+  double std_;
+  double prob_;
+  double dist_mean_;
+  double x_;
 
  public:
-  ProbabilityStat(float mean, float var, float x);
-  float mean() { return mean_; }
-  float std() { return std_; }
-  float prob();
-  float precision();
-  float dist_mean();
+  ProbabilityStat(double mean, double var, double x);
+  double mean() { return mean_; }
+  double std() { return std_; }
+  double prob();
+  double precision();
+  double dist_mean();
 };
 
 #endif // PROBABILITY_STAT_H

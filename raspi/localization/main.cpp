@@ -31,22 +31,17 @@ bool DoDebugRun(int argc, char *argv[]) {
       cout << to_string(point->x) + "," + to_string(point->y) + "\n";
       for (auto&& scan : point->scans) {
         out_file << to_string(point->x) + "," + to_string(point->y) + ",";
-        /*
-        out_file << WifiEstimate::ClosestByMahalanobis(
-            &scan, (Variant)(VARIANT_CHI_SQ | VARIANT_TOP1)).to_string();
-        out_file << ",";
-        */
         for (auto&& estimate : WifiEstimate::ClosestByMahalanobis(
-            &scan, (Variant)(VARIANT_CHI_SQ | VARIANT_TOP_FEW))) {
+            &scan, (WiFiVariant)(WIFI_VARIANT_CHI_SQ | WIFI_VARIANT_TOP_FEW))) {
           out_file << estimate.to_string();
           out_file << ",";
         }
         /*
         out_file << WifiEstimate::ClosestByMahalanobis(
-            &scan, VARIANT_CHI_SQ).to_string();
+            &scan, WIFI_VARIANT_CHI_SQ).to_string();
         out_file << ",";
         out_file << WifiEstimate::ClosestByMahalanobis(
-            &scan, VARIANT_NONE).to_string();
+            &scan, WIFI_VARIANT_NONE).to_string();
         out_file << ",";
         PointEstimate p2 = WifiEstimate::MostProbableClubbed(scan);
         out_file << p2.to_string();

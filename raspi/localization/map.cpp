@@ -22,7 +22,7 @@ void Map::InitMap(string filename) {
   tree_.reset(new kdtree::kdtree<Point*>(&all_points_));
   Global::Init();
   likely_points_ = tree_->radius_nearest(all_points_[0].get(),
-      numeric_limits<float>::max());
+      numeric_limits<double>::max());
 }
 
 void Map::TryConvertJSONMap(string filename) {

@@ -4,22 +4,22 @@
 #include "common_utils.h"
 #include "scan_result.h"
 
-enum Variant {
-  VARIANT_NONE      = 00,
-  VARIANT_CHI_SQ    = 01,
-  VARIANT_TOP1      = 02,
-  VARIANT_TOP_FEW   = 04,
+enum WiFiVariant {
+  WIFI_VARIANT_NONE      = 00,
+  WIFI_VARIANT_CHI_SQ    = 01,
+  WIFI_VARIANT_TOP1      = 02,
+  WIFI_VARIANT_TOP_FEW   = 04,
   All               = 010,
 };
 
 class WifiEstimate {
  public:
-  static list<PointEstimate> ClosestByMahalanobis(
-      const list<Result> *s, Variant v);
-  // PointEstimate ClosestByMahalanobisVarWeighted(list<Result> s);
-  // PointEstimate MahalanobisTriangulated(list<Result> s);
-  static PointEstimate MostProbableClubbed(list<Result> s);
-  static PointEstimate MostProbableNotClubbed(list<Result> s);
+  static vector<PointEstimate> ClosestByMahalanobis(
+      const vector<Result> *s, WiFiVariant v);
+  // PointEstimate ClosestByMahalanobisVarWeighted(vector<Result> s);
+  // PointEstimate MahalanobisTriangulated(vector<Result> s);
+  static PointEstimate MostProbableClubbed(vector<Result> s);
+  static PointEstimate MostProbableNotClubbed(vector<Result> s);
 };
 
 #endif //WIFI_ESTIMATE_H
