@@ -135,7 +135,7 @@ int WifiScan::scan_channels(wireless_scan_head * context)
   /* Set options. */
   double channel_to_freq;
   iw_freq freq;
-  for (int i = 0; i < channels_.size(); i++)
+  for (size_t i = 0; i < channels_.size(); i++)
   {
     iw_channel_to_freq(channels_[i], &channel_to_freq, &range);
     iw_float2freq(channel_to_freq, &freq);
@@ -257,7 +257,7 @@ int WifiScan::scan_channels(wireless_scan_head * context)
     struct iw_event iwe;
     struct stream_descr stream;
     struct wireless_scan * wscan = NULL;
-    struct iwscan_state state = { /*.ap_num =*/1, /*.val_index =*/0};
+    // struct iwscan_state state = { /*.ap_num =*/1, /*.val_index =*/0};
     int ret;
 
     iw_init_event_stream(&stream, (char *)buffer, wrq.u.data.length);
@@ -330,11 +330,10 @@ WifiScan::~WifiScan()
   iw_sockets_close(socket_);
 }
 
-
-Duckta WifiScan::createFingerprint()
+vector<Result> WifiScan::Fetch()
 {
   wireless_scan_head scan_context;
-  std::map<std::string, double> fingerprint;
+  vector<Result> results;
 
   if (geteuid() != 0)
     std::cout << "uid: " << geteuid();
@@ -343,7 +342,7 @@ Duckta WifiScan::createFingerprint()
     throw WIFISCAN_ERROR_IN_IW_SCAN;
   if (scan_context.result == 0){
     // return -1;
-    return fingerprint;
+    return results;
   }
     // std::cout << "Done scanning...";
 
@@ -362,7 +361,7 @@ Duckta WifiScan::createFingerprint()
              (unsigned char)i->ap_addr.sa_data[5]);
 
     /* Retrieve RSSI */
-    double dBm;
+    int dBm;
     if (i->stats.qual.updated & IW_QUAL_DBM)
     {
       dBm = i->stats.qual.level;
@@ -373,23 +372,8 @@ Duckta WifiScan::createFingerprint()
     {
       dBm = (i->stats.qual.level / 2.0) - 110.0;
     }
-    std::string SSID = std::string(address);
 
-    fingerprint[SSID] = dBm;
-
+    results.push_back({ string(address), dBm });
   }
-  return fingerprint;
-
-}
-
-int main(){
-	std::vector<int> EEchan = { 1, 6, 11, 48, 149, 36, 40, 157, 44, 153,161};
-
-	WifiScan wifiscan(EEchan, "wlp2s0");
-  Duckta FP = wifiscan.createFingerprint();
-
-  for(auto& kv : FP) {
-    std::cout << kv.first << " = " << kv.second << std::endl;
-  }
-
+  return results;
 }

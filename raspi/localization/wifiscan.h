@@ -27,6 +27,11 @@
 #include <iostream>
 #include <iwlib.h>
 #include <cstring>
+
+#include "scan_result.h"
+
+struct Result;
+
 /*
 #include <ros/ros.h>
 #include <ros/time.h>
@@ -51,7 +56,6 @@
  * The WifiScan class allows for easy operations on the iwlib library, and easy
  * publishing to the defined topics.
  **/
-typedef std::map<std::string, double> Duckta;
 
 class WifiScan
 {
@@ -180,21 +184,22 @@ public:
    **/
   ///@{
   /**
-   * @brief Publishes a Fingerprint message to the Publisher pub.
+   * @brief Fetches a list of all visible WiFi access points and their signal
+   * strengths.
    *
-   * A fingerprint is a list of all visible WiFi access points' device addresses
+   * Fetches a list of all visible WiFi access points' device addresses
    * linked with their corresponding received signal strength indication.
    *
    * @param pub A ROS Publisher, publishing wifi_scan::Fingerprint messages.
    * Example: ros::Publisher pub = node.advertise<wifi_scan::Fingerprint>
    * ("wifi_fp", 10);
    *
-   * @return void
+   * @return vector of results
    *
    * @throw WIFISCAN_ERROR_OPENING_IOCTL_SOCKET Error opening ioctl socket.
    * @throw WIFISCAN_ERROR_IN_IW_SCAN Error in iw_scan().
    **/
-   std::map<std::string, double> createFingerprint();
+   vector<Result> Fetch();
   ///@}
 };
 

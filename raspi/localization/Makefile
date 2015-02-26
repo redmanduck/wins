@@ -57,10 +57,10 @@
 ##==========================================================================
 
 # The pre-processor and compiler options.
-MY_CFLAGS = -std=c++11 -I.
+MY_CFLAGS = -std=c++11 -I. -Iwireless_tools.29 -Lwireless_tools.29
 
 # The linker options.
-MY_LIBS   = 
+MY_LIBS   = -liw
 
 # The pre-processor options used by the cpp (man cpp for more).
 CPPFLAGS  = -Wall
