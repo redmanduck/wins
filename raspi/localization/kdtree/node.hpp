@@ -9,10 +9,11 @@
 #ifndef __kdtree__node__
 #define __kdtree__node__
 
-#include <iostream>
-#include <vector>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <numeric_limits>
+#include <vector>
 
 namespace kdtree {
     template <typename T>
@@ -21,6 +22,8 @@ namespace kdtree {
         T point;
         node<T> *left = NULL;
         node<T> *right = NULL;
+        int left_cost = numeric_limits<int>::max();
+        int right_cost = numeric_limits<int>::max();
 
         ///-----------------------------------------------------------------------
         /// @name Constructor
@@ -203,7 +206,7 @@ namespace kdtree {
             bool is_even = !(depth & 1);
             double dx = query->point->x - this->point->x;
             double dy = query->point->y - this->point->y;
-            double distance = is_even ? std::sqrt(dx * dx) : std::sqrt(dy * dy);
+            double distance = is_even ? dx : dy;
 
             // Find the nearest node
             bool left = is_even ? (this->point->x > query->point->x) : (this->point->y > query->point->y);

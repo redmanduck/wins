@@ -2,6 +2,7 @@
 #define COMMON_UTILS_H
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <functional>
 #include <list>
@@ -31,6 +32,8 @@ struct PointEstimate {
 
 class Global {
  public:
+  static atomic<bool> ShuttingDown;
+
   static string MapFile;
   static void Init();
 };
