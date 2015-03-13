@@ -10622,6 +10622,7 @@ Standard 3-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <part name="LMC2" library="rcl" deviceset="C-EU" device="C1206" value="10uF"/>
 <part name="LMC1" library="rcl" deviceset="C-EU" device="C1206" value="10uF"/>
 <part name="JP3" library="pinhead" deviceset="PINHD-1X3" device="" value="main_power_switch"/>
+<part name="SUPPLY32" library="supply2" deviceset="VDD" device=""/>
 <part name="JP6" library="pinhead" deviceset="PINHD-1X2" device="" value="LCDPOWER"/>
 <part name="JP7" library="pinhead" deviceset="PINHD-1X3" device="" value="RPI SPI"/>
 <part name="JP8" library="pinhead" deviceset="PINHD-1X2" device="" value="RPI PWR"/>
@@ -10748,6 +10749,7 @@ Standard 3-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <instance part="LMC2" gate="G$1" x="129.54" y="58.42"/>
 <instance part="LMC1" gate="G$1" x="88.9" y="58.42"/>
 <instance part="JP3" gate="A" x="27.94" y="147.32"/>
+<instance part="SUPPLY32" gate="G$1" x="137.16" y="73.66"/>
 <instance part="JP6" gate="G$1" x="127" y="190.5"/>
 <instance part="JP7" gate="A" x="241.3" y="63.5"/>
 <instance part="JP8" gate="G$1" x="267.716" y="78.994"/>
@@ -10861,6 +10863,15 @@ Standard 3-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <segment>
 <pinref part="SUPPLY19" gate="G$1" pin="VDD"/>
 <pinref part="U$4" gate="G$1" pin="15"/>
+</segment>
+<segment>
+<pinref part="LMC2" gate="G$1" pin="1"/>
+<pinref part="IC2" gate="G$1" pin="OUT"/>
+<wire x1="129.54" y1="60.96" x2="119.38" y2="60.96" width="0.1524" layer="91"/>
+<wire x1="129.54" y1="60.96" x2="134.62" y2="60.96" width="0.1524" layer="91"/>
+<wire x1="134.62" y1="60.96" x2="137.16" y2="63.5" width="0.1524" layer="91"/>
+<wire x1="137.16" y1="63.5" x2="137.16" y2="71.12" width="0.1524" layer="91"/>
+<pinref part="SUPPLY32" gate="G$1" pin="VDD"/>
 </segment>
 <segment>
 <pinref part="JP6" gate="G$1" pin="2"/>
