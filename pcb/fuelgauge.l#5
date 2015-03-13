@@ -566,12 +566,6 @@ straight</description>
 <pad name="P$27" x="32.1564" y="0.4572" drill="0.7" diameter="0.8128" shape="long" rot="R90"/>
 <pad name="P$28" x="33.4264" y="0.4572" drill="0.7" diameter="0.8128" shape="long" rot="R90"/>
 <pad name="P$29" x="34.6964" y="0.4572" drill="0.7" diameter="0.8128" shape="long" rot="R90"/>
-<wire x1="-0.0762" y1="1.3462" x2="-0.0762" y2="-0.4318" width="0.127" layer="21"/>
-<wire x1="-0.0762" y1="-0.4318" x2="35.179" y2="-0.4318" width="0.127" layer="21"/>
-<wire x1="35.179" y1="-0.4318" x2="35.179" y2="1.3462" width="0.127" layer="21"/>
-<wire x1="35.179" y1="1.3462" x2="-0.0762" y2="1.3462" width="0.127" layer="21"/>
-<dimension x1="-0.0762" y1="-0.4318" x2="35.179" y2="-0.4318" x3="17.5514" y3="-7.62" textsize="1.27" layer="21"/>
-<dimension x1="35.179" y1="-0.4318" x2="35.179" y2="1.3462" x3="36.83" y3="0.4572" textsize="1.27" layer="21"/>
 </package>
 <package name="TEMP">
 <pad name="P$1" x="-11.43" y="2.54" drill="0.7" diameter="0.8128" shape="long" rot="R90"/>
