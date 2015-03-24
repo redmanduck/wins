@@ -25,13 +25,13 @@ void Map::InitMap(string filename) {
       numeric_limits<double>::max());
 }
 
-void Map::TryConvertJSONMap(string filename) {
-  ifstream is(filename);
+void Map::TryConvertJSONMap(string in_filename, string out_filename) {
+  ifstream is(in_filename);
   cereal::JSONInputArchive in_archive(is);
   in_archive(all_points_);
   is.close();
 
-  ofstream os(Global::MapFile);
+  ofstream os(out_filename);
   cereal::BinaryOutputArchive out_archive(os);
   out_archive(all_points_);
   os.close();

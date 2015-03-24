@@ -13,13 +13,14 @@ namespace {
 ProbabilityStat::ProbabilityStat(double m, double v, double x) {
   mean_ = m;
   std_ = sqrt(v);
+  var_ = v;
   prob_ = -1;
   dist_mean_ = -1;
   x_ = x;
 }
 
 double ProbabilityStat::precision() {
-  return 1 / (std_ * std_);
+  return 1 / (var_);
 }
 
 double ProbabilityStat::prob() {

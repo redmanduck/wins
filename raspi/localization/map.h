@@ -17,7 +17,7 @@ class Map {
 
  public:
   static void InitMap(string filename);
-  static void TryConvertJSONMap(string filename);
+  static void TryConvertJSONMap(string in_filename, string out_filename);
   static void UpdateLikelyPoints();
   static ProbabilityStat Stats(const Point* p, string mac, int signal);
   static const vector<kdtree::node<Point*>*>& CurrentLikelyPoints();

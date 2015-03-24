@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 
+#include "cereal/archives/binary.hpp"
 #include "cereal/archives/json.hpp"
 #include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
@@ -19,18 +20,28 @@
 
 void Test(int argc, char *argv[]) {
   if (string(argv[2]) == "make_binary") {
-    assert(argc == 4);
-    Map::TryConvertJSONMap(argv[3]);
+    assert(argc == 5);
+    Map::TryConvertJSONMap(argv[3], argv[4]);
   } else if (string(argv[2]) == "data") {
-    Map::InitMap(Global::MapFile);
+    assert(argc == 5);
+    Map::InitMap(argv[3]);
     ofstream out_file;
     out_file.open("results.csv");
-    for (auto&& point : Map::all_points()) {
+
+    vector<unique_ptr<Point>> test_points;
+    ifstream is(argv[4], ios::binary);
+    cereal::BinaryInputArchive archive(is);
+
+    archive(test_points);
+    is.close();
+
+    for (auto&& point : test_points) {
       cout << to_string(point->x) + "," + to_string(point->y) + "\n";
       for (auto&& scan : point->scans) {
         out_file << to_string(point->x) + "," + to_string(point->y) + ",";
         for (auto&& estimate : WifiEstimate::ClosestByMahalanobis(
-            &scan, (WiFiVariant)(WIFI_VARIANT_CHI_SQ | WIFI_VARIANT_TOP_FEW))) {
+            &scan, (WiFiVariant)(WIFI_VARIANT_CHI_SQ))) {
+        //for (auto&& estimate : WifiEstimate::MostProbableClubbed(scan)) {
           out_file << estimate.to_string();
           out_file << ",";
         }

@@ -18,8 +18,8 @@ class WifiEstimate {
       const vector<Result> *s, WiFiVariant v);
   // PointEstimate ClosestByMahalanobisVarWeighted(vector<Result> s);
   // PointEstimate MahalanobisTriangulated(vector<Result> s);
-  static PointEstimate MostProbableClubbed(vector<Result> s);
-  static PointEstimate MostProbableNotClubbed(vector<Result> s);
+  static vector<PointEstimate> MostProbableClubbed(vector<Result> s);
+  static vector<PointEstimate> MostProbableNotClubbed(vector<Result> s);
 };
 
 #endif //WIFI_ESTIMATE_H

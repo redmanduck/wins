@@ -4,9 +4,9 @@ import pdb
 import json
 from collections import OrderedDict
 
-MIN_SIGNAL_COUNT = 10
+MIN_SIGNAL_COUNT = 4
 MIN_VAR = 25
-MIN_AVG = 35
+MIN_AVG = 20
 
 if len(sys.argv) < 3:
     print "Min 3 args"

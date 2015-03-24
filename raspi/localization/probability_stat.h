@@ -6,6 +6,7 @@ class ProbabilityStat {
   double mean_;
   double std_;
   double prob_;
+  double var_;
   double dist_mean_;
   double x_;
 
