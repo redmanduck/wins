@@ -26,32 +26,32 @@ int main()
 	glcd.begin(0x18);
 
 	glcd.display();
-	usleep(2000000);
+	usleep(20000);
 	glcd.clear();
 
 	glcd.setpixel(10, 10, BLACK);
   	glcd.display();
-  	usleep(2000000);
+  	usleep(5000000);
 	glcd.clear();
 
 	testdrawline();
 	glcd.display();
-	usleep(2000000);
+	usleep(5000000);
 	glcd.clear();
 
 	testdrawrect();
 	glcd.display();
-	usleep(2000000);
+	usleep(5000000);
 	glcd.clear();
 
 	testfillrect();
 	glcd.display();
-	usleep(2000000);
+	usleep(5000000);
 	glcd.clear();
 
 	testdrawcircle();
 	glcd.display();
-	usleep(2000000);
+	usleep(5000000);
 	glcd.clear();
 
 	glcd.fillcircle(32, 32, 10, BLACK);
