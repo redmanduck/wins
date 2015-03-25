@@ -2,11 +2,14 @@
 #define SCAN_RESULT_H
 
 #include <map>
+#include <string>
 
 #include "common_utils.h"
 #include "cereal/cereal.hpp"
 #include "cereal/types/string.hpp"
 #include "wifiscan.h"
+
+using namespace std;
 
 class WifiScan;
 

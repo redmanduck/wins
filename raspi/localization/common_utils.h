@@ -13,6 +13,8 @@
 
 #include <cassert>
 
+class Display;
+
 using namespace std;
 
 #define DSCAN
@@ -31,11 +33,16 @@ struct PointEstimate {
 };
 
 class Global {
- public:
-  static atomic<bool> ShuttingDown;
+ private:
+  static Display* display_;
 
+ public:
   static string MapFile;
+
   static void Init();
+  static void Destroy();
+  static Display* MainDisplay();
+  static void ShutDown();
 };
 
 template <typename T, typename... Args>

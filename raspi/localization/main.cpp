@@ -1,15 +1,21 @@
 #include <iostream>
 
+#include "display.h"
+#include "location.h"
 #include "map.h"
+#include "navigation.h"
 #include "test.h"
 
 using namespace std;
 
 void RunMainLoop(int argc, char *argv[]) {
-  while(not Global::ShuttingDown) {
+  while(true) {
+    if (not Map::IsNavigating()) {
+      Map::BlockUntilNavigating();
+    }
     Location::UpdateEstimate();
     Navigation::UpdateRoute();
-    Display::display_update_pending.notify_one();
+    Global::MainDisplay()->SetUpdateFlag(DISPLAY_UPDATE_NAV_CHANGE);
   }
 }
 
@@ -18,7 +24,6 @@ int main(int argc, char *argv[]) {
     Test(argc, argv);
   } else {
     Global::Init();
-    SPI::Start();
     RunMainLoop(argc, argv);
   }
   return 0;

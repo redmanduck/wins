@@ -8,9 +8,28 @@
 #include "cereal/types/vector.hpp"
 #include "map.h"
 
+mutex Map::navmode_mutex_;
+NavMode Map::navmode_ = NAV_MODE_NONE;
 vector<kdtree::node<Point*>*> Map::likely_points_;
 vector<unique_ptr<Point>> Map::all_points_;
 unique_ptr<kdtree::kdtree<Point*>> Map::tree_;
+
+void Map::SetNavMode(NavMode mode) {
+  lock_guard<mutex> lock(navmode_mutex_);
+  navmode_ = mode;
+  navmode_changed_.notify_all();
+}
+
+bool Map::IsNavigating() {
+  return navmode_ != NAV_MODE_NONE;
+}
+
+void Map::BlockUntilNavigating() {
+  unique_lock<mutex> lock(navmode_mutex_);
+  while (navmode_ == NAV_MODE_NONE) {
+    navmode_changed_.wait(lock);
+  }
+}
 
 void Map::InitMap(string filename) {
   ifstream is(filename, ios::binary);

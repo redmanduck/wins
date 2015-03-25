@@ -30,6 +30,8 @@
 
 #include "scan_result.h"
 
+using namespace std;
+
 struct Result;
 
 /*

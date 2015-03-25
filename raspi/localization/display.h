@@ -1,16 +1,23 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
+#include <atomic>
 #include <condition_variable>
+#include <mutex>
+#include <thread>
 
-#include "common_utils.h"
+#include "map.h"
+
+using namespace std;
 
 enum DisplayUpdate {
   DISPLAY_UPDATE_NONE               = 00,
-  DISPLAY_UPDATE_ROUTE_CHANGE       = 01,
-  DISPLAY_UPDATE_KEYPRESS           = 02,
-  DISPLAY_UPDATE_BATTERY_LOW        = 04,
-  DISPLAY_UPDATE_BATTERY_CRITICAL   = 08,
+  DISPLAY_UPDATE_NAV_CHANGE         = 01,
+  DISPLAY_UPDATE_DEST_REACHED       = 02,
+  DISPLAY_UPDATE_KEYPRESS           = 04,
+  DISPLAY_UPDATE_BATTERY_LOW        = 010,
+  DISPLAY_UPDATE_BATTERY_CRITICAL   = 020,
+  DISPLAY_UPDATE_ALL                = 077
 };
 
 enum FontSize {
@@ -26,21 +33,42 @@ enum Alignment {
 
 class Display {
  private:
-  enum CurrentScreen {
-    CURRENT_SCREEN_BOOT,
-    CURRENT_SCREEN_DESTINATION,
-    CURRENT_SCREEN_NAVIGATING,
-    CURRENT_SCREEN_NOW,
-    CURRENT_SCREEN_ARRIVED,
-    CURRENT_SCREEN_QUIT
-  };
-  static CurrentScreen current_screen_;
-  static thread display_thread_;
-  static mutex dummy_;
+  thread display_thread_;
+
+  condition_variable display_update_pending_;
+  mutex update_mutex_;
+  DisplayUpdate update_;
+
+  FontSize font_size_;
+  Alignment alignment_;
+  int cursor_;
+  int current_line_;
+  bool flushed_;
+
+  void BlockForUpdate(DisplayUpdate type);
+  void ClearLine(int line);
+  void ClearScreen();
+  void PutChar(char character);
+  char GetChar();
+  void PutString(string s, bool clear);
+  string GetString();
+  void Flush();
+  void SetFont(FontSize size, Alignment al, int expected_width = 5);
+  void SetCurrentLine(int line);
 
  public:
-  static condition_variable display_update_pending;
-  static DisplayUpdate update;
+  void SetUpdateFlag(DisplayUpdate flag);
 
-  static void Start();
+  void Menu();
+  void WhereAmI();
+  void DestinationPrompt(NavMode mode);
+  void Navigating(NavMode mode);
+  void Done();
+
+  Display();
+
+  // Prevent copying.
+  Display(const Display& other) = delete;
 };
+
+#endif

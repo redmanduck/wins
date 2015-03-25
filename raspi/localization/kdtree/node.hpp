@@ -11,8 +11,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 #include <iostream>
-#include <numeric_limits>
+#include <limits>
 #include <vector>
 
 namespace kdtree {
@@ -22,8 +23,8 @@ namespace kdtree {
         T point;
         node<T> *left = NULL;
         node<T> *right = NULL;
-        int left_cost = numeric_limits<int>::max();
-        int right_cost = numeric_limits<int>::max();
+        vector<int> cost;
+        vector<node<T>*> neighbors;
 
         ///-----------------------------------------------------------------------
         /// @name Constructor
@@ -35,7 +36,10 @@ namespace kdtree {
          *
          *  @return Initialized node instance.
          */
-        node(T point) : point(point) {}
+        node(T point) :
+            point(point),
+            cost(4, numeric_limits<int>::max()),
+            neighbors(4, nullptr) {}
 
         /**
          *  Initialize node as a root of a kdtree with specified points.
