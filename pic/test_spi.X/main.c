@@ -87,7 +87,7 @@ void SPI1Init(void)
 
     SPI1CON1bits.DISSCK		= 0;	// Internal SPIx clock is enabled
     SPI1CON1bits.DISSDO		= 0;	// SDOx pin is controlled by the module
-    SPI1CON1bits.MODE16 	= 1;	// set in 16-bit mode, clear in 8-bit mode
+    SPI1CON1bits.MODE16 	= 0;	// set in 16-bit mode, clear in 8-bit mode
     SPI1CON1bits.SMP		= 0;	// Input data sampled at middle of data output time
     SPI1CON1bits.CKP 		= 0;	// CKP and CKE is subject to change ...
     SPI1CON1bits.CKE 		= 1;	// ... based on your communication mode.
@@ -113,7 +113,7 @@ unsigned short writeSPI1( unsigned short data )
 int main (void)
 {
 	unsigned short i;
-
+        unsigned short a;
 	// Disable Watch Dog Timer
 	RCONbits.SWDTEN = 0;
 	// for LED
@@ -121,6 +121,7 @@ int main (void)
 	TRISAbits.TRISA6 = 0;
         TRISAbits.TRISA0 = 0;
 	SPI1Init();
+
     
     while (1) {
 	   // for (i=0; i<0xffff; i++);	// a simple delay
@@ -132,11 +133,15 @@ int main (void)
 		spiBufR[2]	= writeSPI1(spiBufT[2]);
 		spiBufR[3]	= writeSPI1(spiBufT[3]);*/
 		//SPI_SS_PORT = 1;
-                PORTAbits.RA0 = 1;
-                writeSPI1(0x0123);
-                writeSPI1(0x4567);
-                writeSPI1(0xABCD);
-                writeSPI1(0x1357);
+                //PORTAbits.RA0 = 1;
+                a = writeSPI1(0x01);
+                writeSPI1(a);
+                a = writeSPI1(0x23);
+                writeSPI1(a);
+                a = writeSPI1(0x45);
+                writeSPI1(a);
+                a = writeSPI1(0xab);
+                writeSPI1(a);
                 //writeSPI1(0x5A5A);
 
 	    __builtin_btg((unsigned int *)&LATA, 6);
