@@ -10,6 +10,7 @@
 
 mutex Map::navmode_mutex_;
 NavMode Map::navmode_ = NAV_MODE_NONE;
+condition_variable Map::navmode_changed_;
 vector<kdtree::node<Point*>*> Map::likely_points_;
 vector<unique_ptr<Point>> Map::all_points_;
 unique_ptr<kdtree::kdtree<Point*>> Map::tree_;

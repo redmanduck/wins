@@ -5,6 +5,7 @@
 #include "spi_manager.h"
 
 string Global::MapFile = "ee_ab_map.dat";
+Display* Global::display_;
 
 void Global::Init() {
   SPI::Init();

@@ -102,7 +102,11 @@ void Display::SetCurrentLine(int line) {
     current_line_ = MaxLines(font_size_) - 1;
   }
 }
-typedef void(*func_ptr)( Display*, NavMode );
+
+void Display::SetUpdateFlag(DisplayUpdate flag) {
+  throw runtime_error("Not Implemented");
+}
+
 void Display::Menu() {
   SPI::ShowMenu();
   char option = GetChar();

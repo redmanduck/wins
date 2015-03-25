@@ -21,7 +21,6 @@ namespace {
       auto point = node->point;
       double total_prob = 0;
       double total_precision = 0;
-      int count = 0;
       for (auto& mac : s) {
         auto stats = Map::Stats(point, mac.name, mac.signal);
         if (stats.mean() < 0) {
