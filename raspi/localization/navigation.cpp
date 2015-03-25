@@ -26,7 +26,7 @@ vector<kdtree::node<Point>*> Navigation::current_route_;
 mutex Navigation::route_mutex;
 
 bool Navigation::TrySetDestinationFromCoords(string s) {
-
+  throw runtime_error("Not Implemented");
 }
 
 void Navigation::UpdateRoute() {
