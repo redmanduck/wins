@@ -35,7 +35,6 @@ IMUdata * pibridge::recv_IMU(){
   }
 }
 
-
 int main(){
     pibridge * PB = new pibridge();
     while(1){
