@@ -7,8 +7,29 @@
 
 using namespace std;
 
+#define MULTIPLIER 10
+
+namespace {
+  std::vector<std::string> &split(const std::string &s,
+    char delim, std::vector<std::string> &elems) {
+      std::stringstream ss(s);
+      std::string item;
+      while (std::getline(ss, item, delim)) {
+          elems.push_back(item);
+      }
+      return elems;
+  }
+
+
+  std::vector<std::string> split(const std::string &s, char delim) {
+      std::vector<std::string> elems;
+      split(s, delim, elems);
+      return elems;
+  }
+}
+
 struct PriorityNode {
-  kdtree::node<Point>* node;
+  kdtree::node<Point*>* node;
   int priority;
 
   bool operator < (const PriorityNode& pn) const {
@@ -16,17 +37,26 @@ struct PriorityNode {
   }
 };
 
-int heuristic(kdtree::node<Point>* p1, kdtree::node<Point>* p2) {
-  throw runtime_error("Not Implemented");
-}
-
-kdtree::node<Point>* Navigation::destination_node_ = nullptr;
-vector<kdtree::node<Point>*>::reverse_iterator Navigation::current_start_;
-vector<kdtree::node<Point>*> Navigation::current_route_;
+kdtree::node<Point*>* Navigation::destination_node_ = nullptr;
+vector<kdtree::node<Point*>*>::reverse_iterator Navigation::current_start_;
+vector<kdtree::node<Point*>*> Navigation::current_route_;
 mutex Navigation::route_mutex;
 
 bool Navigation::TrySetDestinationFromCoords(string s) {
-  throw runtime_error("Not Implemented");
+  vector<string> coords = split(s, ',');
+  double in_xd = stod(coords[0]);
+  double in_yd = stod(coords[1]);
+  node<Point*>* n = Map::NodeNearest(stod(coords[0]), coords[1]);
+  int in_xi = (int)(in_xd * MULTIPLIER);
+  int in_yi = (int)(in_xd * MULTIPLIER);
+  int n_xi = (int)(n->point->x * MULTIPLIER);
+  int n_yi = (int)(n->point->y * MULTIPLIER);
+
+  if (in_xi == n_xi and in_yi == n_yi) {
+    destination_node_ = n;
+    return true;
+  }
+  return false;
 }
 
 void Navigation::UpdateRoute() {
@@ -46,8 +76,8 @@ void Navigation::UpdateRoute() {
   auto target_node = destination_node_;
   assert(target_node != nullptr);
 
-  unordered_map<kdtree::node<Point>*, kdtree::node<Point>*> came_from;
-  unordered_map<kdtree::node<Point>*, int> cost_so_far;
+  unordered_map<kdtree::node<Point*>*, kdtree::node<Point*>*> came_from;
+  unordered_map<kdtree::node<Point*>*, int> cost_so_far;
   priority_queue<PriorityNode> frontier;
 
   frontier.push({ Location::GetCurrentNode(), 0 });
@@ -63,14 +93,14 @@ void Navigation::UpdateRoute() {
       break;
     }
 
-    auto neighbors = current.node->neighbors;
+    auto neighbors = current.node->neighbors();
     for (size_t i = 0; i < neighbors.size(); ++i) {
-      kdtree::node<Point>* next = neighbors[i];
-      int new_cost = cost_so_far[current.node] + current.node->cost[i];
+      kdtree::node<Point*>* next = neighbors[i];
+      int new_cost = cost_so_far[current.node] + current.node->point->cost[i];
       if (cost_so_far.count(next) == 0 ||
           new_cost < cost_so_far[next]) {
         cost_so_far[next] = new_cost;
-        int priority = new_cost + heuristic(next, target_node);
+        int priority = new_cost + next->distance(target_node);
         frontier.push(PriorityNode{ next, priority });
         came_from[next] = current.node;
       }
@@ -84,4 +114,12 @@ void Navigation::UpdateRoute() {
   }
   current_route_.push_back(current_node);
   current_start_ = current_route_.rbegin();
+}
+
+vector<kdtree::node<Point*>*>::const_reverse_iterator Navigation::route_begin() {
+  return current_start_;
+}
+
+vector<kdtree::node<Point*>*>::const_reverse_iterator Navigation::route_end() {
+  return current_route_.rend();
 }

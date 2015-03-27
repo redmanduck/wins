@@ -71,3 +71,8 @@ ProbabilityStat Map::Stats(const Point* p, string mac, int signal) {
 const vector<kdtree::node<Point*>*>& Map::CurrentLikelyPoints() {
   return likely_points_;
 }
+
+const kdtree::node<Point*>* Map::NodeNearest(double x, double y) {
+  Point p({ x, y });
+  return tree_->nearest(&p);
+}

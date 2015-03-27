@@ -27,6 +27,7 @@ struct MacInfo {
 struct Point {
   double x;
   double y;
+  vector<int> cost;
   unordered_map<string, MacInfo> info;
 
   vector<vector<Result>> scans;

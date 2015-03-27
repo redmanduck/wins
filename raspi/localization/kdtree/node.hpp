@@ -14,17 +14,22 @@
 #include <stdexcept>
 #include <iostream>
 #include <limits>
+#include <sstream>
 #include <vector>
+
+#include "direction.h"
 
 namespace kdtree {
     template <typename T>
     class node {
+    private:
+        vector<node<T>*> neighbors_;
+
     public:
         T point;
         node<T> *left = NULL;
         node<T> *right = NULL;
-        vector<int> cost;
-        vector<node<T>*> neighbors;
+        node<T> *parent = NULL;
 
         ///-----------------------------------------------------------------------
         /// @name Constructor
@@ -37,9 +42,8 @@ namespace kdtree {
          *  @return Initialized node instance.
          */
         node(T point) :
-            point(point),
-            cost(4, numeric_limits<int>::max()),
-            neighbors(4, nullptr) {}
+            neighbors_(4, NULL),
+            point(point) {}
 
         /**
          *  Initialize node as a root of a kdtree with specified points.
@@ -85,10 +89,12 @@ namespace kdtree {
 
             // Create left node
             this->left = new node<T>(points, median, depth + 1);
+            this->left->parent = this;
 
             // Create right node
             if (size - median - 1 > 0) {
                 this->right = new node<T>(points + median + 1, size - median - 1, depth + 1);
+                this->right->parent = this;
             }
         }
 
@@ -101,6 +107,57 @@ namespace kdtree {
         ~node() {
             if (this->has_left_node()) delete this->left;
             if (this->has_right_node()) delete this->right;
+        }
+
+        node<T>* successor(bool is_even) {
+          if (this->right != NULL) {
+              node<T>* min = this->right;
+              while (min->left!= NULL) {
+                  min = min->left;
+              }
+              return min;
+          }
+
+          node<T>* p = this->parent;
+          node<T>* c = this;
+          while (p != NULL && c == p->right)
+          {
+              c = p;
+              p = p->parent;
+          }
+
+          return p;
+        }
+
+        node<T>* predecessor(bool is_even) {
+          if (this->left != NULL) {
+              node<T>* max = this->left;
+              while (max->right != NULL) {
+                  max = max->right;
+              }
+              return max;
+          }
+
+          node<T>* p = this->parent;
+          node<T>* c = this;
+          while (p != NULL && c == p->left)
+          {
+              c = p;
+              p = p->parent;
+          }
+
+          return p;
+        }
+
+        vector<node<T>*> neighbors() {
+            if (neighbors_[DIRECTION_UP] != NULL) {
+              return neighbors_;
+            }
+            neighbors_[DIRECTION_UP] = predecessor(false);
+            neighbors_[DIRECTION_RIGHT] = successor(true);
+            neighbors_[DIRECTION_DOWN] = successor(false);
+            neighbors_[DIRECTION_LEFT] = predecessor(true);
+            return neighbors_;
         }
 
         ///-----------------------------------------------------------------------

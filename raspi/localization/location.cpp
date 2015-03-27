@@ -2,9 +2,9 @@
 
 #include "location.h"
 
-kdtree::node<Point>* Location::current_node_ = nullptr;
+kdtree::node<Point*>* Location::current_node_ = nullptr;
 
-kdtree::node<Point>* Location::GetCurrentNode() {
+kdtree::node<Point*>* Location::GetCurrentNode() {
   return current_node_;
 }
 

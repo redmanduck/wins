@@ -7,11 +7,11 @@
 
 class Location {
  private:
-  static kdtree::node<Point>* current_node_;
+  static kdtree::node<Point*>* current_node_;
   static PointEstimate point_estimate_;
 
  public:
-  static kdtree::node<Point>* GetCurrentNode();
+  static kdtree::node<Point*>* GetCurrentNode();
   static void UpdateEstimate();
 };
 

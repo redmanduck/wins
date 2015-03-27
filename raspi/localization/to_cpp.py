@@ -68,6 +68,8 @@ for line in in_file:
                     ])
                 )
             formatted_scans.append(scan_data)
+
+        costs = [1, 1, 1, 1]
         points.append(
             OrderedDict([
                 ('ptr_wrapper', OrderedDict([
@@ -75,8 +77,9 @@ for line in in_file:
                     ('data', OrderedDict([
                         ('value0', cur_x),
                         ('value1', cur_y),
-                        ('value2', mac_info),
-                        ('value3', formatted_scans)]
+                        ('value2', costs),
+                        ('value3', mac_info),
+                        ('value4', formatted_scans)]
                     ))
                 ]))
             ])
