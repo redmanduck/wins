@@ -38,7 +38,7 @@ class Map {
   static const vector<unique_ptr<Point>>& all_points() {
     return all_points_;
   }
-  static const kdtree::node<Point*>* NodeNearest(double x, double y);
+  static kdtree::node<Point*>* NodeNearest(double x, double y);
 };
 
 #endif // MAP_H

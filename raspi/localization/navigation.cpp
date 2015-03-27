@@ -2,6 +2,7 @@
 #include <queue>
 #include <stdexcept>
 
+#include "map.h"
 #include "navigation.h"
 #include "location.h"
 
@@ -46,9 +47,9 @@ bool Navigation::TrySetDestinationFromCoords(string s) {
   vector<string> coords = split(s, ',');
   double in_xd = stod(coords[0]);
   double in_yd = stod(coords[1]);
-  node<Point*>* n = Map::NodeNearest(stod(coords[0]), coords[1]);
+  kdtree::node<Point*>* n = Map::NodeNearest(stod(coords[0]), stod(coords[1]));
   int in_xi = (int)(in_xd * MULTIPLIER);
-  int in_yi = (int)(in_xd * MULTIPLIER);
+  int in_yi = (int)(in_yd * MULTIPLIER);
   int n_xi = (int)(n->point->x * MULTIPLIER);
   int n_yi = (int)(n->point->y * MULTIPLIER);
 
