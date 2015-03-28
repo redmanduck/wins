@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string>
 #include "IPoint.h"
+#include "bitmap_image.hpp"
 
 #ifndef CANVAS_H
 #define	CANVAS_H
@@ -38,6 +39,7 @@ public:
     int percentHeightToPixel(int percent);
     void drawRectangle(InkStyle istyle, int width_px, int height_px, IPoint * origin);
     void drawCircle(InkStyle istyle, int radius, IPoint * centre);
+    void toBitmap(std::string filename);
 private:
     int width;
     int height;

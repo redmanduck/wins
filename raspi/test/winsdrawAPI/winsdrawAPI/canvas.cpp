@@ -14,6 +14,7 @@
 #include <cassert>
 #include <iostream>
 #include <math.h>
+#include "minecrafter_font.h"
 
 Kyanvas::Kyanvas(int w, int h) {
     //Initialize canvas
@@ -88,6 +89,24 @@ void Kyanvas::drawRectangle(InkStyle istyle, int width_px, int height_px, IPoint
 
 int Kyanvas::percentWidthToPixel(int percent){
     return int(percent*width/100);
+}
+
+void Kyanvas::toBitmap(std::string filename){
+    bitmap_image image(this->width,this->height);
+    
+    for (unsigned int x = 0; x < this->width; ++x)
+    {
+        for (unsigned int y = 0; y < this->height; ++y)
+        {
+            if(this->bitmap[x][y] != 1){
+                continue;
+            }
+            image.set_pixel(x,y,255,255,255);
+        }
+    }
+    
+    
+    image.save_image(filename);
 }
 
 int Kyanvas::countRows(){
