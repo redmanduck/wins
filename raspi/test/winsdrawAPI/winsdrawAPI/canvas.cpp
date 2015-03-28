@@ -44,16 +44,18 @@ void Kyanvas::printCanvas(){
  */
 void Kyanvas::drawLine(InkStyle istyle, IPoint * start, IPoint * end){
     
-    int dx = abs(end->x-start->x), sx = start->x<end->x ? 1 : -1;
-    int dy = abs(end->y-start->y), sy = start->y<end->y ? 1 : -1;
+    int x0 = start->x;
+    int y0 = start->y;
+    int dx = abs(end->x-x0), sx = x0<end->x ? 1 : -1;
+    int dy = abs(end->y-y0), sy = y0<end->y ? 1 : -1;
     int err = (dx>dy ? dx : -dy)/2, e2;
     
     for(;;){
-        putPixel(start->x,start->y);
-        if (start->x==end->x && start->y==end->y) break;
+        putPixel(x0,y0);
+        if (x0==end->x && y0==end->y) break;
         e2 = err;
-        if (e2 >-dx) { err -= dy; start->x += sx; }
-        if (e2 < dy) { err += dx; start->y += sy; }
+        if (e2 >-dx) { err -= dy; x0 += sx; }
+        if (e2 < dy) { err += dx; y0 += sy; }
     }
 }
 
@@ -68,6 +70,20 @@ void Kyanvas::drawCircle(InkStyle istyle, int radius, IPoint * centre){
             if ((x * x) + (y * y) <= (radius * radius))
                 putPixel(x + centre->x, y + centre->y);
 
+}
+
+/*
+ * draw rectangle
+ */
+void Kyanvas::drawRectangle(InkStyle istyle, int width_px, int height_px, IPoint * origin){
+    IPoint * bottomleft = new IPoint(origin->x, origin->y + height_px);
+    IPoint * bottomright = new IPoint(origin->x + width_px, origin->y + height_px);
+    IPoint * topright = new IPoint(origin->x + width_px, origin->y);
+   
+    drawLine(istyle, origin, bottomleft);
+    drawLine(istyle, origin, topright);
+    drawLine(istyle, bottomleft, bottomright);
+    drawLine(istyle, bottomright, topright);
 }
 
 int Kyanvas::percentWidthToPixel(int percent){
