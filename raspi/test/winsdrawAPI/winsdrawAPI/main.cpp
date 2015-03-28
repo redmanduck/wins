@@ -1,19 +1,12 @@
-//
-//  main.cpp
-//  winsdrawAPI
-//
-//  Created by Pat Sabpisal on 3/27/15.
-//  Copyright (c) 2015 Pat Sabpisal. All rights reserved.
-//
-
 #include <iostream>
 #include "display.h"
 
 using namespace std;
 int main(int argc, const char * argv[]) {
-    Kyanvas * canvas = new Kyanvas(60, 15);
+    Kyanvas * canvas = new Kyanvas(60, 20);
+    canvas->drawLine(INK_STYLE_NORMAL, new IPoint(0,0), new IPoint(59,19));
+    canvas->drawLine(INK_STYLE_NORMAL, new IPoint(0,19), new IPoint(59,0));
     canvas->printCanvas();
-    
     
     return 0;
 }

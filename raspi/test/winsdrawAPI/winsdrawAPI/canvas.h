@@ -11,14 +11,10 @@
 
 #include <stdio.h>
 #include <string>
+#include "IPoint.h"
 
 #ifndef CANVAS_H
 #define	CANVAS_H
-
-struct IPoint{
-    int x;
-    int y;
-};
 
 enum InkStyle {
     INK_STYLE_THICK,
@@ -36,13 +32,16 @@ public:
     int countColumns();
     void printCanvas();
     void newLayer();
-    void drawLine(InkStyle istyle, int width_px);
+    void drawLine(InkStyle istyle, IPoint * start, IPoint * end);
     void drawText(std::string text);
     int percentWidthToPixel(int percent);
     int percentHeightToPixel(int percent);
+    void drawRectangle(InkStyle istyle, int width_px, int height_px, IPoint * origin);
 private:
     int width;
     int height;
+    void putPixel(int x, int y);
+    void clearPixel(int x, int y);
     uint8_t ** bitmap;
 };
 
