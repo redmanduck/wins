@@ -2,7 +2,6 @@
 #include <chrono>
 #include <functional>
 #include <stdexcept>
-
 #include <algorithm>
 #include <atomic>
 #include <cstdlib>
@@ -12,7 +11,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #include <cassert>
 #include <iostream>
 
@@ -24,15 +22,16 @@ canvas::canvas(int w, int h) {
     for(int i = 0; i < w; i++ ){
         this->bitmap[i] = new uint8_t[h];
         for(int j = 0; j < h; j++){
-            this->bitmap[j] = 0;
+            this->bitmap[i][j] = 0;
         }
     }
+
 }
 
 void canvas::printCanvas(){
     for(int i = 0; i < this->width; i++ ){
         for(int j = 0; j < this->height; j++){
-            std::cout << this->bitmap[i][j];
+            std::cout << int(this->bitmap[i][j]);
         }
         std::cout << "\n";
     }
