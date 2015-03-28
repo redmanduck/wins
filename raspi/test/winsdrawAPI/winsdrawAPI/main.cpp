@@ -7,11 +7,13 @@
 //
 
 #include <iostream>
-#include "canvas.h"
+#include "display.h"
 
 using namespace std;
 int main(int argc, const char * argv[]) {
-    canvas * dutch = new canvas(128, 60);
-    dutch->printCanvas();
+    Kyanvas * canvas = new Kyanvas(60, 15);
+    canvas->printCanvas();
+    
+    
     return 0;
 }

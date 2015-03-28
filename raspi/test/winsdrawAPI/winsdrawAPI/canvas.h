@@ -20,15 +20,26 @@ struct IPoint{
     int y;
 };
 
-class canvas {
+enum InkStyle {
+    INK_STYLE_THICK,
+    INK_STYLE_NORMAL,
+    INK_STYLE_DOUBLE
+};
+
+class Kyanvas {
 public:
-    canvas(int w, int h);
+    Kyanvas(int w, int h);
     uint8_t * getRowData(int i);
     uint8_t ** getBitmap();
     void clear();
     int countRows();
     int countColumns();
     void printCanvas();
+    void newLayer();
+    void drawLine(InkStyle istyle, int width_px);
+    void drawText(std::string text);
+    int percentWidthToPixel(int percent);
+    int percentHeightToPixel(int percent);
 private:
     int width;
     int height;
@@ -36,7 +47,5 @@ private:
 };
 
 #endif	/* CANVAS_H */
-
-
 
 #endif /* defined(__winsdrawAPI__canvas__) */

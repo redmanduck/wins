@@ -14,7 +14,7 @@
 #include <cassert>
 #include <iostream>
 
-canvas::canvas(int w, int h) {
+Kyanvas::Kyanvas(int w, int h) {
     //Initialize canvas
     this->height = h;
     this->width = w;
@@ -28,17 +28,20 @@ canvas::canvas(int w, int h) {
 
 }
 
-void canvas::printCanvas(){
-    for(int i = 0; i < this->width; i++ ){
-        for(int j = 0; j < this->height; j++){
-            std::cout << int(this->bitmap[i][j]);
+void Kyanvas::printCanvas(){
+    std::cout << this->width << "x" << this->height << std::endl;
+    for(int i = 0; i < this->height; i++ ){
+        for(int j = 0; j < this->width; j++){
+            std::cout << int(this->bitmap[j][i]);
         }
         std::cout << "\n";
     }
 }
-int canvas::countRows(){
+
+int Kyanvas::countRows(){
     return this->height;
 }
-int canvas::countColumns(){
+
+int Kyanvas::countColumns(){
     return this->width;
 }
