@@ -13,6 +13,7 @@
 #include <vector>
 #include <cassert>
 #include <iostream>
+#include <math.h>
 
 Kyanvas::Kyanvas(int w, int h) {
     //Initialize canvas
@@ -54,6 +55,19 @@ void Kyanvas::drawLine(InkStyle istyle, IPoint * start, IPoint * end){
         if (e2 >-dx) { err -= dy; start->x += sx; }
         if (e2 < dy) { err += dx; start->y += sy; }
     }
+}
+
+/*
+ * Draw filled circle
+ */
+void Kyanvas::drawCircle(InkStyle istyle, int radius, IPoint * centre){
+    int x, y;
+    
+    for (y = -radius; y <= radius; y++)
+        for (x = -radius; x <= radius; x++)
+            if ((x * x) + (y * y) <= (radius * radius))
+                putPixel(x + centre->x, y + centre->y);
+
 }
 
 int Kyanvas::percentWidthToPixel(int percent){

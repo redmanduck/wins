@@ -37,6 +37,7 @@ public:
     int percentWidthToPixel(int percent);
     int percentHeightToPixel(int percent);
     void drawRectangle(InkStyle istyle, int width_px, int height_px, IPoint * origin);
+    void drawCircle(InkStyle istyle, int radius, IPoint * centre);
 private:
     int width;
     int height;
