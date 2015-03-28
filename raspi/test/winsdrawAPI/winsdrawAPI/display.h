@@ -48,7 +48,7 @@ private:
     void BlockForUpdate(DisplayUpdate type);
     void ClearLine(int line);
     void ClearScreen();
-    
+    void SplashScreen();
     char GetChar();
     void PutChar(char character);
     void PutString(string s, bool clear);

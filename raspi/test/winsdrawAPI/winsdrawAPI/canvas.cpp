@@ -14,7 +14,6 @@
 #include <cassert>
 #include <iostream>
 #include <math.h>
-#include "minecrafter_font.h"
 
 Kyanvas::Kyanvas(int w, int h) {
     //Initialize canvas
@@ -27,7 +26,7 @@ Kyanvas::Kyanvas(int w, int h) {
             this->bitmap[i][j] = 0;
         }
     }
-
+//    std::cout << glcdfont[0];
 }
 
 void Kyanvas::printCanvas(){

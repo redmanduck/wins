@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B4252D4C1AC6C97100C76F37 /* glcdfont.c in Sources */ = {isa = PBXBuildFile; fileRef = B4252D4A1AC6C97100C76F37 /* glcdfont.c */; };
 		B45B677B1AC626EE00C3A5E0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B45B677A1AC626EE00C3A5E0 /* main.cpp */; };
 		B45B67861AC6276700C3A5E0 /* canvas.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B45B67841AC6276700C3A5E0 /* canvas.cpp */; };
 		B4FA50971AC656E700FF5326 /* display.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B4FA50951AC656E700FF5326 /* display.cpp */; };
@@ -27,6 +28,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B4252D4A1AC6C97100C76F37 /* glcdfont.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = glcdfont.c; sourceTree = "<group>"; };
 		B45B67771AC626EE00C3A5E0 /* winsdrawAPI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = winsdrawAPI; sourceTree = BUILT_PRODUCTS_DIR; };
 		B45B677A1AC626EE00C3A5E0 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B45B67841AC6276700C3A5E0 /* canvas.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = canvas.cpp; sourceTree = "<group>"; };
@@ -94,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				B4FA509C1AC6816100FF5326 /* minecrafter_font.h */,
+				B4252D4A1AC6C97100C76F37 /* glcdfont.c */,
 			);
 			name = Font;
 			sourceTree = "<group>";
@@ -156,6 +159,7 @@
 			files = (
 				B45B677B1AC626EE00C3A5E0 /* main.cpp in Sources */,
 				B4FA509E1AC6816100FF5326 /* minecrafter_font.h in Sources */,
+				B4252D4C1AC6C97100C76F37 /* glcdfont.c in Sources */,
 				B45B67861AC6276700C3A5E0 /* canvas.cpp in Sources */,
 				B4FA509A1AC6661F00FF5326 /* IPoint.cpp in Sources */,
 				B4FA50971AC656E700FF5326 /* display.cpp in Sources */,

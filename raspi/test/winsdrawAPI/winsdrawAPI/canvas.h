@@ -23,6 +23,8 @@ enum InkStyle {
     INK_STYLE_DOUBLE
 };
 
+
+
 class Kyanvas {
 public:
     Kyanvas(int w, int h);
@@ -32,9 +34,8 @@ public:
     int countRows();
     int countColumns();
     void printCanvas();
-    void newLayer();
     void drawLine(InkStyle istyle, IPoint * start, IPoint * end);
-    void drawText(std::string text);
+    void drawText(std::string text, IPoint * origin, int fontscale);
     int percentWidthToPixel(int percent);
     int percentHeightToPixel(int percent);
     void drawRectangle(InkStyle istyle, int width_px, int height_px, IPoint * origin);

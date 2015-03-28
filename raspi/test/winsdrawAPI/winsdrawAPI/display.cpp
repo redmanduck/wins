@@ -117,6 +117,9 @@ void Display::Menu(){
     
 }
 
+void Display::SplashScreen(){
+    
+}
 
 Display::Display(Kyanvas * canv) {
     display_thread_ = thread(&Display::Menu, this);
