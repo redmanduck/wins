@@ -112,6 +112,8 @@
 #define MPU6050_RA_FIFO_R_W 0x74
 #define MPU6050_RA_WHO_AM_I 0x75
 
+#define true 1
+#define false 0
 #define USE_AND_OR	// To enable AND_OR mask setting for I2C.
 #include <i2c.h>
 #include "lcdPmp.h"
@@ -144,19 +146,361 @@ enum opcode{
     ERROR = 'E',
 };
 
-unsigned char spiBufT[6];	// 6 byte
-unsigned char spiBufR[6];	// 6 byte
+typedef int bool;
+
+typedef struct data{
+    unsigned char imu[1200];
+    unsigned char lcd[1200];
+}spiData;
+
 unsigned char lcd_data1[16];
 unsigned char lcd_data2[16];
-unsigned short posX = 0;
-unsigned short posY = 0;
+unsigned int accel_p = 0;           //index of buffer where the next accel data will be inserted
+unsigned int gyro_p = 6;            //index of buffer where the next gyro data will be inserted
+unsigned int data_p = 0;            //index of buffer that will be transmitted next to the RPi
+static spiData rpiData;
 
 void LDByteWriteI2C(unsigned char SlaveAddress, unsigned char data, unsigned  char reg);
 void LDByteReadI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char *data, int num);
 void Setup_MPU6050();
-
+void SPI1Init(void);
 void TimerInit(void);
+unsigned short writeSPI1( unsigned short data );
+bool _05ms;
 unsigned long _temp32;
+
+int main (void)
+{
+        //CLKDIVbits.RCDIV = 0b000; FRC clock divider
+        unsigned char accel_xh = 0x00;
+        unsigned char accel_xl = 0x00;
+        unsigned char accel_yh = 0x00;
+        unsigned char accel_yl = 0x00;
+        unsigned char accel_zh = 0x00;
+        unsigned char accel_zl = 0x00;
+        int g_x=0;
+        int g_y=0;
+        int g_z=0;
+	// Disable Watch Dog Timer
+	RCONbits.SWDTEN = 0;
+	// for LED
+	ODCAbits.ODA6 = 0;
+	TRISAbits.TRISA6 = 0;
+        TRISAbits.TRISA0 = 0;
+        TRISAbits.TRISA1 = 0;
+        TRISAbits.TRISA5 = 0;
+        TRISAbits.TRISA2 = 0;
+        TRISAbits.TRISA4 = 0;
+        TRISAbits.TRISA3 = 0;
+        
+        // push button
+        TRISAbits.TRISA7 = 1;
+        TRISDbits.TRISD6 = 1;
+        TRISDbits.TRISD7 = 1;
+        TRISDbits.TRISD13 = 1;
+
+
+        //Enable channel
+        SPI1Init();
+        LCDInit();
+        TimerInit();
+	OpenI2C1( I2C_ON, I2C_BRG );
+        unsigned char lcd_data1[16];
+        unsigned char lcd_data2[16];
+        Setup_MPU6050();
+        LDByteWriteI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , 0x00);   //turn on IMU
+        _05ms = 0;
+
+        lcd_data1[12] = ' ';
+        lcd_data1[13] = ' ';
+        lcd_data1[14] = ' ';
+        lcd_data1[15] = ' ';
+
+        lcd_data2[6]='y';
+        lcd_data2[7]=' ';
+        lcd_data2[8]=' ';
+        lcd_data2[9]='z';
+        bool accel_queue = true;
+
+
+        while (1) {
+            LATAbits.LATA0 = 0;
+            LATAbits.LATA6 = 0;
+            LATAbits.LATA5 = 0;
+            LATAbits.LATA1 = 0;
+
+            if(_05ms==true){
+                //do something
+                if(accel_queue){
+                    LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_H , &rpiData.imu[accel_p], 6);
+                accel_xh=rpiData.imu[accel_p];
+                accel_xl=rpiData.imu[accel_p+1];
+                accel_yh=rpiData.imu[accel_p+2];
+                accel_yl=rpiData.imu[accel_p+3];
+                accel_zh=rpiData.imu[accel_p+4];
+                accel_zl=rpiData.imu[accel_p+5];
+                    accel_p+=12;
+                    lcd_data1[7] = 'A';
+                    lcd_data1[8] = 'C';
+                    lcd_data1[9] = 'C';
+                    lcd_data1[10] = 'E';
+                    lcd_data1[11] = 'L';
+                    accel_queue=false;
+                }
+                else{
+                    LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_XOUT_H , &rpiData.imu[gyro_p], 6);
+                accel_xh=rpiData.imu[gyro_p];
+                accel_xl=rpiData.imu[gyro_p+1];
+                accel_yh=rpiData.imu[gyro_p+2];
+                accel_yl=rpiData.imu[gyro_p+3];
+                accel_zh=rpiData.imu[gyro_p+4];
+                accel_zl=rpiData.imu[gyro_p+5];
+                    gyro_p+=12;
+                    lcd_data1[7] = 'G';
+                    lcd_data1[8] = 'Y';
+                    lcd_data1[9] = 'R';
+                    lcd_data1[10] = 'O';
+                    lcd_data1[11] = ' ';
+                    accel_queue=true;
+                }
+                LCDwriteLine(LCD_LINE1, lcd_data1);
+                LCDwriteLine(LCD_LINE2, lcd_data2);
+                _05ms=false;
+                g_x=accel_xl|accel_xh<<8;
+                lcd_data1[0]=g_x < 0? '-' : ' ';
+                g_x=g_x > 0 ? g_x : -g_x;
+
+                g_y=accel_yl|accel_yh<<8;
+                lcd_data2[0]=g_y < 0? '-' : ' ';
+                g_y=g_y > 0 ? g_y : -g_y;
+
+                g_z=accel_zl|accel_zh<<8;
+                lcd_data2[10]=g_z < 0? '-' : ' ';
+                g_z=g_z > 0 ? g_z : -g_z;
+                lcd_data1[6]=' ';
+                lcd_data1[5]=(g_x%10)+'0';
+                lcd_data1[4]=(g_x/10)%10+'0';
+                lcd_data1[3]=(g_x/100)%10+'0';
+                lcd_data1[2]=(g_x/1000)%10+'0';
+                lcd_data1[1]=(g_x/10000)%10+'0';
+
+                lcd_data2[5]=(g_y%10)+'0';
+                lcd_data2[4]=((g_y/10)%10)+'0';
+                lcd_data2[3]=((g_y/100)%10)+'0';
+                lcd_data2[2]=(g_y/1000)%10+'0';
+                lcd_data2[1]=(g_y/10000)%10+'0';
+
+                lcd_data2[15]=(g_z%10)+'0';
+                lcd_data2[14]=(g_z/10)%10+'0';
+                lcd_data2[13]=(g_z/100)%10+'0';
+                lcd_data2[12]=(g_z/1000)%10+'0';
+                lcd_data2[11]=(g_z/10000)%10+'0';
+
+            }
+            if(accel_p==1200){
+                accel_p=0;
+                LATAbits.LATA4 = 1;
+            }
+            else{
+                LATAbits.LATA4 = 0;
+            }
+            if(gyro_p==1206){
+                gyro_p=6;
+                LATAbits.LATA4 = 1;
+            }
+            else{
+                LATAbits.LATA4 = 0;
+            }
+
+            if(!PORTDbits.RD13){
+                LATAbits.LATA0 = 1;
+                // some code
+                LDByteWriteI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , 0x00);   //turn on IMU
+        
+            }
+            else if(!PORTAbits.RA7){
+                LATAbits.LATA1 = 1;
+                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_H , &rpiData.imu[accel_p], 6);
+                accel_xh=rpiData.imu[accel_p];
+                accel_xl=rpiData.imu[accel_p+1];
+                accel_yh=rpiData.imu[accel_p+2];
+                accel_yl=rpiData.imu[accel_p+3];
+                accel_zh=rpiData.imu[accel_p+4];
+                accel_zl=rpiData.imu[accel_p+5];
+                accel_p+=12;
+                lcd_data1[7] = 'A';
+                lcd_data1[8] = 'C';
+                lcd_data1[9] = 'C';
+                lcd_data1[10] = 'E';
+                lcd_data1[11] = 'L';
+                lcd_data1[12] = ' ';
+                lcd_data1[13] = ' ';
+                lcd_data1[14] = ' ';
+                lcd_data1[15] = ' ';
+
+                lcd_data2[6]='y';
+                lcd_data2[7]=' ';
+                lcd_data2[8]=' ';
+                lcd_data2[9]='z';
+
+                g_x=accel_xl|accel_xh<<8;
+                lcd_data1[0]=g_x < 0? '-' : ' ';
+                g_x=g_x > 0 ? g_x : -g_x;
+
+                g_y=accel_yl|accel_yh<<8;
+                lcd_data2[0]=g_y < 0? '-' : ' ';
+                g_y=g_y > 0 ? g_y : -g_y;
+
+                g_z=accel_zl|accel_zh<<8;
+                lcd_data2[10]=g_z < 0? '-' : ' ';
+                g_z=g_z > 0 ? g_z : -g_z;
+                lcd_data1[6]=' ';
+                lcd_data1[5]=(g_x%10)+'0';
+                lcd_data1[4]=(g_x/10)%10+'0';
+                lcd_data1[3]=(g_x/100)%10+'0';
+                lcd_data1[2]=(g_x/1000)%10+'0';
+                lcd_data1[1]=(g_x/10000)%10+'0';
+
+                lcd_data2[5]=(g_y%10)+'0';
+                lcd_data2[4]=((g_y/10)%10)+'0';
+                lcd_data2[3]=((g_y/100)%10)+'0';
+                lcd_data2[2]=(g_y/1000)%10+'0';
+                lcd_data2[1]=(g_y/10000)%10+'0';
+
+                lcd_data2[15]=(g_z%10)+'0';
+                lcd_data2[14]=(g_z/10)%10+'0';
+                lcd_data2[13]=(g_z/100)%10+'0';
+                lcd_data2[12]=(g_z/1000)%10+'0';
+                lcd_data2[11]=(g_z/10000)%10+'0';
+            }
+            else if(!PORTDbits.RD7){
+                LATAbits.LATA5 = 1;
+            }
+            else if (!PORTDbits.RD6){
+                LATAbits.LATA6 = 1;
+                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_H , &rpiData.imu[gyro_p], 1);
+                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_L , &rpiData.imu[gyro_p+1], 1);
+                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_YOUT_H , &rpiData.imu[gyro_p+2], 1);
+                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_YOUT_L , &rpiData.imu[gyro_p+3], 1);
+                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_ZOUT_H , &rpiData.imu[gyro_p+4], 1);
+                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_ZOUT_L , &rpiData.imu[gyro_p+5], 1);
+                accel_xh=rpiData.imu[gyro_p];
+                accel_xl=rpiData.imu[gyro_p+1];
+                accel_yh=rpiData.imu[gyro_p+2];
+                accel_yl=rpiData.imu[gyro_p+3];
+                accel_zh=rpiData.imu[gyro_p+4];
+                accel_zl=rpiData.imu[gyro_p+5];
+                gyro_p+=12;
+
+                lcd_data1[7] = 'G';
+                lcd_data1[8] = 'Y';
+                lcd_data1[9] = 'R';
+                lcd_data1[10] = 'O';
+                lcd_data1[11] = ' ';
+                lcd_data1[12] = ' ';
+                lcd_data1[13] = ' ';
+                lcd_data1[14] = ' ';
+                lcd_data1[15] = ' ';
+
+                lcd_data2[6]='y';
+                lcd_data2[7]=' ';
+                lcd_data2[8]=' ';
+                lcd_data2[9]='z';
+
+                g_x=accel_xl|accel_xh<<8;
+                lcd_data1[0]=g_x < 0? '-' : ' ';
+                g_x=g_x > 0 ? g_x : -g_x;
+
+                g_y=accel_yl|accel_yh<<8;
+                lcd_data2[0]=g_y < 0? '-' : ' ';
+                g_y=g_y > 0 ? g_y : -g_y;
+
+                g_z=accel_zl|accel_zh<<8;
+                lcd_data2[10]=g_z < 0? '-' : ' ';
+                g_z=g_z > 0 ? g_z : -g_z;
+                lcd_data1[6]=' ';
+                lcd_data1[5]=(g_x%10)+'0';
+                lcd_data1[4]=(g_x/10)%10+'0';
+                lcd_data1[3]=(g_x/100)%10+'0';
+                lcd_data1[2]=(g_x/1000)%10+'0';
+                lcd_data1[1]=(g_x/10000)%10+'0';
+
+                lcd_data2[5]=(g_y%10)+'0';
+                lcd_data2[4]=((g_y/10)%10)+'0';
+                lcd_data2[3]=((g_y/100)%10)+'0';
+                lcd_data2[2]=(g_y/1000)%10+'0';
+                lcd_data2[1]=(g_y/10000)%10+'0';
+
+                lcd_data2[15]=(g_z%10)+'0';
+                lcd_data2[14]=(g_z/10)%10+'0';
+                lcd_data2[13]=(g_z/100)%10+'0';
+                lcd_data2[12]=(g_z/1000)%10+'0';
+                lcd_data2[11]=(g_z/10000)%10+'0';
+            }
+      }
+	return 0;
+}
+
+void TimerInit(void){
+    TMR1 = 0x00;
+    T1CON = 0x00;
+    PR1 = 0xFA;
+    IPC0bits.T1IP = 2;  // interrupt priority
+    IFS0bits.T1IF = 0;  // reset interrupt flag
+    T1CONbits.TCKPS = 1; //
+    IEC0bits.T1IE = 1;  // timer 1 interrupt on
+    T1CONbits.TON = 1;  //timer on
+}
+
+void _ISR _T1Interrupt(void);
+void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void){
+    //set some flag every 0.5ms
+    LATAbits.LATA3 = ~LATAbits.LATA3;
+    _05ms = true;
+    IFS0bits.T1IF = 0;
+}
+
+void _ISR _SPI1Interrupt(void);
+void __attribute__((__interrupt__, auto_psv)) _SPI1Interrupt(void){
+    unsigned char ack = 0;
+    accel_p = 0;
+    gyro_p = 6;
+    unsigned int i = 0;
+        while(!SPI1STATbits.SPIRBF); //wait for ack from pi?
+    ack = SPI1BUF;
+    // need to send some data back for acknowledgment
+    if(ack==ACCEL){
+        // acknowledgment from pic to pi
+        SPI1BUF=ACCEL;
+        while(!SPI1STATbits.SPIRBF); //wait for ack from pi?
+        // will be the acknowledge from the pi
+        i=SPI1BUF;                  //read second byte
+        ack=VALID;                    // set ack as D
+            // send first byte of data
+        /*
+            SPI1BUF = rpiData.imu[data_p];
+            while(!SPI1STATbits.SPIRBF);
+            rpiData.lcd[data_p]= SPI1BUF;
+         */
+            // each time read a byte and compare it with the last sent byte
+        for(i=0; i<1200; i++){
+            SPI1BUF = rpiData.imu[data_p+i];
+            while(!SPI1STATbits.SPIRBF);
+            rpiData.lcd[data_p+i]= SPI1BUF;
+        }
+        // send done byte
+        SPI1BUF=ack;
+        while(!SPI1STATbits.SPIRBF);
+        i=SPI1BUF;
+        data_p=0;
+    }
+    else{
+        SPI1BUF=ERROR;
+        SPI1Init();
+    }
+    SPI1BUF = 0x5A;
+    IFS0bits.SPI1IF = 0;
+}
 
 void SPI1Init(void)
 {
@@ -202,243 +546,6 @@ unsigned short writeSPI1( unsigned short data )
     }
     return SPI1BUF;    				// read the received value
 }//writeSPI1
-
-int main (void)
-{
-        //CLKDIVbits.RCDIV = 0b000; FRC clock divider
-        unsigned char accel_xh = 0x00;
-        unsigned char accel_xl = 0x00;
-        unsigned char accel_yh = 0x00;
-        unsigned char accel_yl = 0x00;
-        unsigned char accel_zh = 0x00;
-        unsigned char accel_zl = 0x00;
-        unsigned char gyro_xh = 0x00;
-        unsigned char gyro_xl = 0x00;
-        unsigned char gyro_yh = 0x00;
-        unsigned char gyro_yl = 0x00;
-        unsigned char gyro_zh = 0x00;
-        unsigned char gyro_zl = 0x00;
-        unsigned char temp_h = 0x00;
-        unsigned char temp_l = 0x00;
-        int g_x=0;
-        int g_y=0;
-        int g_z=0;
-	// Disable Watch Dog Timer
-	RCONbits.SWDTEN = 0;
-	// for LED
-	ODCAbits.ODA6 = 0;
-	TRISAbits.TRISA6 = 0;
-        TRISAbits.TRISA0 = 0;
-        TRISAbits.TRISA1 = 0;
-        TRISAbits.TRISA5 = 0;
-        TRISAbits.TRISA2 = 0;
-        TRISAbits.TRISA3 = 0;
-        
-        // push button
-        TRISAbits.TRISA7 = 1;
-        TRISDbits.TRISD6 = 1;
-        TRISDbits.TRISD7 = 1;
-        TRISDbits.TRISD13 = 1;
-
-
-        //Enable channel
-        SPI1Init();
-        LCDInit();
-        //TimerInit();
-	OpenI2C1( I2C_ON, I2C_BRG );
-        unsigned char lcd_data1[16];
-        unsigned char lcd_data2[16];
-        Setup_MPU6050();
-        int i = 0;
-        for(i=0; i<6; i++){
-            spiBufT[i]=i;
-        }
-	while (1) {
-            LCDwriteLine(LCD_LINE1, lcd_data1);
-            LCDwriteLine(LCD_LINE2, lcd_data2);
-            LATAbits.LATA0 = 0;
-            LATAbits.LATA6 = 0;
-            LATAbits.LATA5 = 0;
-            LATAbits.LATA1 = 0;
-            if(!PORTDbits.RD13){
-                LATAbits.LATA0 = 1;
-                LDByteWriteI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , 0x00);
-            }
-            else if(!PORTAbits.RA7){
-                LATAbits.LATA1 = 1;
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_XOUT_H , &accel_xh, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_XOUT_L , &accel_xl, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_YOUT_H , &accel_yh, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_YOUT_L , &accel_yl, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_ZOUT_H , &accel_zh, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_ZOUT_L , &accel_zl, 1);
-                lcd_data1[7] = 'A';
-                lcd_data1[8] = 'C';
-                lcd_data1[9] = 'C';
-                lcd_data1[10] = 'E';
-                lcd_data1[11] = 'L';
-                lcd_data1[12] = ' ';
-                lcd_data1[13] = ' ';
-                lcd_data1[14] = ' ';
-                lcd_data1[15] = ' ';
-
-                lcd_data2[6]='y';
-                lcd_data2[7]=' ';
-                lcd_data2[8]=' ';
-                lcd_data2[9]='z';
-
-                g_x=accel_xl|accel_xh<<8;
-                lcd_data1[0]=g_x < 0? '-' : ' ';
-                g_x=g_x > 0 ? g_x : -g_x;
-
-                g_y=accel_yl|accel_yh<<8;
-                lcd_data2[0]=g_y < 0? '-' : ' ';
-                g_y=g_y > 0 ? g_y : -g_y;
-
-                g_z=accel_zl|accel_zh<<8;
-                lcd_data2[10]=g_z < 0? '-' : ' ';
-                g_z=g_z > 0 ? g_z : -g_z;
-            }
-            else if(!PORTDbits.RD7){
-                LATAbits.LATA5 = 1;
-                //g_x = writeSPI1(temp_l);
-                temp_l++;
-                lcd_data1[0]=g_x < 0? '-' : ' ';
-                g_x = g_x > 0 ? g_x : -g_x;
-                //writeSPI1(accel_yl|accel_yh<<8);
-                //writeSPI1(accel_zl|accel_zh<<8);
-
-            }
-            else if (!PORTDbits.RD6){
-                LATAbits.LATA6 = 1;
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_XOUT_H , &gyro_xh, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_XOUT_L , &gyro_xl, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_YOUT_H , &gyro_yh, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_YOUT_L , &gyro_yl, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_ZOUT_H , &gyro_zh, 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_ZOUT_L , &gyro_zl, 1);
-
-                lcd_data1[7] = 'G';
-                lcd_data1[8] = 'Y';
-                lcd_data1[9] = 'R';
-                lcd_data1[10] = 'O';
-                lcd_data1[11] = ' ';
-                lcd_data1[12] = ' ';
-                lcd_data1[13] = ' ';
-                lcd_data1[14] = ' ';
-                lcd_data1[15] = ' ';
-
-                lcd_data2[6]='y';
-                lcd_data2[7]=' ';
-                lcd_data2[8]=' ';
-                lcd_data2[9]='z';
-
-                g_x=gyro_xl|gyro_xh<<8;
-                lcd_data1[0]=g_x < 0? '-' : ' ';
-                g_x=g_x > 0 ? g_x : -g_x;
-
-                g_y=gyro_yl|gyro_yh<<8;
-                lcd_data2[0]=g_y < 0? '-' : ' ';
-                g_y=g_y > 0 ? g_y : -g_y;
-
-                g_z=gyro_zl|gyro_zh<<8;
-                lcd_data2[10]=g_z < 0? '-' : ' ';
-                g_z=g_z > 0 ? g_z : -g_z;
-            }
-
-                lcd_data1[6]=' ';
-                lcd_data1[5]=(g_x%10)+'0';
-                lcd_data1[4]=(g_x/10)%10+'0';
-                lcd_data1[3]=(g_x/100)%10+'0';
-                lcd_data1[2]=(g_x/1000)%10+'0';
-                lcd_data1[1]=(g_x/10000)%10+'0';
-
-                lcd_data2[5]=(g_y%10)+'0';
-                lcd_data2[4]=((g_y/10)%10)+'0';
-                lcd_data2[3]=((g_y/100)%10)+'0';
-                lcd_data2[2]=(g_y/1000)%10+'0';
-                lcd_data2[1]=(g_y/10000)%10+'0';
-
-                lcd_data2[15]=(g_z%10)+'0';
-                lcd_data2[14]=(g_z/10)%10+'0';
-                lcd_data2[13]=(g_z/100)%10+'0';
-                lcd_data2[12]=(g_z/1000)%10+'0';
-                lcd_data2[11]=(g_z/10000)%10+'0';
-
-		//for (_temp32 = 0; _temp32 < 30000; _temp32++);
-      }
-	return 0;
-}
-
-void TimerInit(void){
-    PR1 = 0x0002;
-    IPC0bits.T1IP = 5;  // interrupt priority
-    T1CON = 0x0030; //timer prescaler = 1, timer on
-    IFS0bits.T1IF = 0;  // reset interrupt flag
-    IEC0bits.T1IE = 1;  // timer 1 interrupt on
-}
-
-void _ISR _T1Interrupt(void);
-void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void){
-    LATAbits.LATA3 = ~LATAbits.LATA3;
-    IFS0bits.T1IF = 0;
-}
-
-void _ISR _SPI1Interrupt(void);
-void __attribute__((__interrupt__, auto_psv)) _SPI1Interrupt(void){
-    unsigned char ack = 0;
-    unsigned char i = 0;
-        while(!SPI1STATbits.SPIRBF); //wait for ack from pi?
-    ack = SPI1BUF;
-    // need to send some data back for acknowledgment
-    if(ack==ACCEL){
-        // acknowledgment from pic to pi
-        SPI1BUF=ACCEL;
-        while(!SPI1STATbits.SPIRBF); //wait for ack from pi?
-        // will be the acknowledge from the pi
-        i=SPI1BUF;                  //read second byte
-        ack=VALID;                    // set ack as D
-            // send first byte of data
-            SPI1BUF = spiBufT[0];
-            while(!SPI1STATbits.SPIRBF);
-            spiBufR[0]= SPI1BUF;
-            // each time read a byte and compare it with the last sent byte
-        for(i=1; i<6; i++){
-            SPI1BUF = spiBufT[i];
-            while(!SPI1STATbits.SPIRBF);
-            spiBufR[i]= SPI1BUF;
-            if(spiBufR[i]!=spiBufT[i-1]){
-                ack=ERROR;               // set ack as 'E'rror, to let pi know that data is wrong
-            }
-        }
-        // send done byte
-        SPI1BUF=ack;
-        while(!SPI1STATbits.SPIRBF);
-        i=SPI1BUF;
-    }
-
-    else if(i=='P'){
-        SPI1BUF='P';
-        while(!SPI1STATbits.SPIRBF);
-        i=SPI1BUF;
-        SPI1BUF=i;
-        while(!SPI1STATbits.SPIRBF);
-        posX = SPI1BUF;
-        SPI1BUF=i;
-        while(!SPI1STATbits.SPIRBF);
-        posY = SPI1BUF;
-        // send done byte
-        SPI1BUF=ack;
-        while(!SPI1STATbits.SPIRBF);
-        i=SPI1BUF;
-    }
-    else{
-        SPI1BUF=ERROR;
-        SPI1Init();
-    }
-    SPI1BUF = 0x5A;
-    IFS0bits.SPI1IF = 0;
-}
 
 void LDByteWriteI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char data){
     StartI2C1();	//Send the Start Bit
