@@ -49,10 +49,11 @@ private:
     
     void BlockForUpdate(DisplayUpdate type);
     void ClearLine(int line);
+    void IncrmLine();
     void ClearScreen();
     void PutChar(char character);
     char GetChar();
-    void PutString(string s, bool clear);
+    void PutString(string s, bool clear=false);
     string GetString();
     void Flush();
     void SetFont(FontSize size, Alignment al, int expected_width = 5);

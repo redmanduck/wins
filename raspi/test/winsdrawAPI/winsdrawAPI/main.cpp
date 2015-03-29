@@ -8,6 +8,6 @@ using namespace std;
 int main(int argc, const char * argv[]) {
     
     Display screen;
-    screen.gimmebitmap("sidmudgal.bmp");
+    screen.gimmebitmap("yeahduck.bmp");
     return 0;
 }

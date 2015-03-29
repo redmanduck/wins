@@ -13,11 +13,18 @@ char RETURN_CHARACTER = '\0';
 ST7565 glcd(0);
 
 int MaxLength(FontSize size) {
+    if(size == FONT_SIZE_MEDIUM){
+        return (int)(128/6);
+    }
     throw runtime_error("Not Implemented");
 }
 
 int MaxLines(FontSize size) {
+    if(size == FONT_SIZE_MEDIUM){
+         return 8;
+    }
     throw runtime_error("Not Implemented");
+    return 0;
 }
 
 //void Display::BlockForUpdate(DisplayUpdate type) {
@@ -31,16 +38,16 @@ int MaxLines(FontSize size) {
 //}
 
 void Display::ClearLine(int line) {
-    throw runtime_error("Not Implemented");
+    glcd.fillrect(0, line*8 , 128, 8, 0);
 }
 
 void Display::ClearScreen() {
     glcd.clear();
 }
 
-void Display::PutChar(char character) {
-    throw runtime_error("Not Implemented");
-}
+//void Display::PutChar(char character) {
+//    throw runtime_error("Not Implemented");
+//}
 
 char Display::GetChar() {
 //    Flush();
@@ -63,12 +70,8 @@ void Display::PutString(string s, bool clear) {
         ClearLine(current_line_);
         cursor_ = 0;
     }
-    for (char c : s) {
-        PutChar(c);
-        cursor_ += 1;
-        if (cursor_ >= MaxLength(font_size_))
-            break;
-    }
+    glcd.drawstring_P(cursor_, current_line_, s.c_str());
+    cursor_ += s.length();
 }
 
 string Display::GetString() {
@@ -99,12 +102,19 @@ void Display::SetFont(FontSize size, Alignment al, int expected_width) {
 }
 
 void Display::SetCurrentLine(int line) {
+    if(line == 0){
+        throw runtime_error("You arent allowed to set the top line. Reserved space for PIC!");
+    }
     current_line_ = line;
+    cursor_ = 0;
     if (line > MaxLines(font_size_)) {
         current_line_ = MaxLines(font_size_) - 1;
     }
 }
 
+void Display::IncrmLine(){
+    SetCurrentLine(++current_line_);
+}
 
 void Display::SetUpdateFlag(DisplayUpdate flag) {
     throw runtime_error("Not Implemented");
@@ -114,8 +124,15 @@ void Display::Menu() {
     
     ClearScreen();
     
-    glcd.drawline(0, 0, 100, 100, BLACK);
-    glcd.display();
+    PutString("1. NAVIGATION");
+    IncrmLine();
+    IncrmLine();
+    PutString("2. WHERE AM I?");
+    IncrmLine();
+    IncrmLine();
+    PutString("3. SHUT DOWN");
+    
+//    ClearLine(2);
     
     //TODO: construct canvas for menu
 //    char option = GetChar();
@@ -190,12 +207,14 @@ void Display::Done() {
 }
 
 Display::Display() {
-    Menu();
-//    display_thread_ = thread(&Display::Menu, this);
     font_size_ = FONT_SIZE_MEDIUM;
     cursor_ = 0;
-    current_line_ = 0;
+    current_line_ = 1;
     flushed_ = true;
+    
+    Menu();
+    //display_thread_ = thread(&Display::Menu, this);
+
 }
 
 
