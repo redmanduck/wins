@@ -1,6 +1,8 @@
 #include <cmath>
 #include <fstream>
 #include <limits>
+#include <stdexcept>
+#include <sys/stat.h>
 
 #include "cereal/archives/binary.hpp"
 #include "cereal/archives/json.hpp"
@@ -14,6 +16,11 @@ condition_variable Map::navmode_changed_;
 vector<kdtree::node<Point*>*> Map::likely_points_;
 vector<unique_ptr<Point>> Map::all_points_;
 unique_ptr<kdtree::kdtree<Point*>> Map::tree_;
+
+inline bool file_exists(const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
 
 void Map::SetNavMode(NavMode mode) {
   lock_guard<mutex> lock(navmode_mutex_);
@@ -40,13 +47,15 @@ void Map::InitMap(string filename) {
   is.close();
 
   tree_.reset(new kdtree::kdtree<Point*>(&all_points_));
-  Global::Init();
   likely_points_ = tree_->radius_nearest(all_points_[0].get(),
       numeric_limits<double>::max());
 }
 
 void Map::TryConvertJSONMap(string in_filename, string out_filename) {
   ifstream is(in_filename);
+  if (not file_exists(in_filename)) {
+    throw runtime_error("Map file does not exist");
+  }
   cereal::JSONInputArchive in_archive(is);
   in_archive(all_points_);
   is.close();

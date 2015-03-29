@@ -116,7 +116,8 @@ points[0]['ptr_wrapper']['data'] = OrderedDict([
     ('value0', d['value0']),
     ('value1', d['value1']),
     ('value2', d['value2']),
-    ('value3', d['value3'])
+    ('value3', d['value3']),
+    ('value4', d['value4'])
 ])
 
 out_file = open(sys.argv[2], 'w')

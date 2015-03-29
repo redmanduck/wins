@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -10,6 +11,7 @@
 #include "cereal/types/vector.hpp"
 #include "common_utils.h"
 #include "kdtree/kdtree.hpp"
+#include "test_helpers.h"
 #include "map.h"
 #include "point.h"
 #include "scan_result.h"
@@ -18,7 +20,9 @@
 
 #include <cassert>
 
-void Test(int argc, char *argv[]) {
+void Test(int argc, char *orig_argv[]) {
+  vector<string> argv(orig_argv, orig_argv + argc);
+
   if (string(argv[2]) == "make_binary") {
     assert(argc == 5);
     Map::TryConvertJSONMap(argv[3], argv[4]);
@@ -35,13 +39,19 @@ void Test(int argc, char *argv[]) {
     archive(test_points);
     is.close();
 
+    int count = 0;
     for (auto&& point : test_points) {
-      cout << to_string(point->x) + "," + to_string(point->y) + "\n";
+      printf("Ground Truth: %2.0f, %2.0f\n", point->x, point->y);
       for (auto&& scan : point->scans) {
         out_file << to_string(point->x) + "," + to_string(point->y) + ",";
+        count += 1;
+        if (count == 15) {
+          cout <<15;
+        }
         for (auto&& estimate : WifiEstimate::ClosestByMahalanobis(
-            &scan, (WiFiVariant)(WIFI_VARIANT_CHI_SQ))) {
-        //for (auto&& estimate : WifiEstimate::MostProbableClubbed(scan)) {
+            &scan, (WiFiVariant)(WIFI_VARIANT_TOP1),
+            point->x, point->y)) {
+        //for (auto&& estimate : WifiEstimate::MostProbableNotClubbed(scan)) {
           out_file << estimate.to_string();
           out_file << ",";
         }
@@ -64,14 +74,13 @@ void Test(int argc, char *argv[]) {
     out_file.close();
   }
   else if (string(argv[2]) == "sample") {
-      unique_ptr<Point> p = unique_ptr<Point>(new Point {20, 1, {{"mac5", {140, 94}}}});
       vector<unique_ptr<Point>> points;
-        points.emplace_back(unique_ptr<Point>(new Point {10, 0,
-          {{"mac1", {100, 90}}, {"mac6", {150, 95}}},
-          {{{"mac11", 60}, {"mac12", 70}},
-           {{"mac11", 65}, {"mac12", 75}}}}));
-        points.emplace_back(unique_ptr<Point>(new Point { 9, 1,
-          {{"mac2", {110, 91}}, {"mac7", {160, 96}}}}));
+      points.emplace_back(unique_ptr<Point>(new Point {10, 0, {1,1,1,1},
+        {{"mac1", {100, 90}}, {"mac6", {150, 95}}},
+        {{{"mac11", 60}, {"mac12", 70}},
+         {{"mac11", 65}, {"mac12", 75}}}}));
+      points.emplace_back(unique_ptr<Point>(new Point { 9, 1, {1,1,1,1},
+        {{"mac2", {110, 91}}, {"mac7", {160, 96}}}}));
 
       ofstream os("sample.json");
       cereal::JSONOutputArchive archive(os);
@@ -95,6 +104,27 @@ void Test(int argc, char *argv[]) {
 
     for(auto& kv : results) {
       std::cout << kv.name << " = " << kv.signal << std::endl;
+    }
+  }
+  else if (string(argv[2]) == "learn") {
+    learn_helper(argc, argv);
+  }
+  else if (string(argv[2]) == "learn_all") {
+    argc += 1;
+    argv.push_back("-");
+    remove("analysis_summary.csv");
+    for (int i = 0; i < 12; ++i) {
+      argv[5] = std::to_string(i);
+      learn_helper(argc, argv);
+    }
+  }
+  else if (string(argv[2]) == "learn_debug") {
+    argc += 1;
+    argv.push_back("-");
+    remove("analysis_summary.csv");
+    for (int i = 6; i < 12; ++i) {
+      argv[5] = std::to_string(i);
+      learn_helper(argc, argv);
     }
   }
 }

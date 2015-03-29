@@ -9,17 +9,23 @@ enum WiFiVariant {
   WIFI_VARIANT_CHI_SQ    = 01,
   WIFI_VARIANT_TOP1      = 02,
   WIFI_VARIANT_TOP_FEW   = 04,
-  All               = 010,
+  All                    = 010,
 };
 
 class WifiEstimate {
  public:
   static vector<PointEstimate> ClosestByMahalanobis(
-      const vector<Result> *s, WiFiVariant v);
+      const vector<Result> *s, WiFiVariant v,
+      double realx = -1, double realy = 0,
+      double exp1 = 1, double exp2 = -1, bool debug = false);
   // PointEstimate ClosestByMahalanobisVarWeighted(vector<Result> s);
   // PointEstimate MahalanobisTriangulated(vector<Result> s);
-  static vector<PointEstimate> MostProbableClubbed(vector<Result> s);
-  static vector<PointEstimate> MostProbableNotClubbed(vector<Result> s);
+  static vector<PointEstimate> MostProbableClubbed(vector<Result>& s,
+      double realx = -1, double realy = 0,
+      double exp1 = 1, double exp2 = 1, bool debug = false);
+  static vector<PointEstimate> MostProbableNotClubbed(vector<Result>& s,
+      double realx = -1, double realy = 0,
+      double exp1 = 1, double exp2 = 1, bool debug = false);
 };
 
 #endif //WIFI_ESTIMATE_H

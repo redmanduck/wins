@@ -1,24 +1,38 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <tuple>
 #include <unordered_map>
 
 #include "gamma.hpp"
 #include "map.h"
 #include "wifi_estimate.h"
 
+#define FILTERABLE_DISTANCE 7
+#define FILTER_BIAS 2
 #define MIN_DF 5
 #define TOP_FEW_GOOD_PROB_THRESH 0.01
 #define TOP_FEW_MIN_PROB_THRESH 0.35
 
 // anonymous namespace
 namespace {
-  vector<tuple<double, double, Point* const>> ComputePointStats(vector<Result> s) {
+  double distance(double x1, double y1, double x2, double y2) {
+    return sqrt(pow(x2-x1, 2) + pow(y2-y1, 2));
+  }
+
+  vector<tuple<double, double, Point* const>> ComputePointStats(
+      vector<Result> s, double realx, double realy, bool debug) {
     auto& current_likely_points = Map::CurrentLikelyPoints();
     vector<tuple<double, double, Point* const>> point_stats;
 
     // Determine the probability of being at each of the possible points.
     for (auto& node : current_likely_points) {
       auto point = node->point;
+      if (debug and distance(point->x, point->y,
+          realx - FILTER_BIAS, realy - FILTER_BIAS) >
+          FILTERABLE_DISTANCE) {
+        continue;
+      }
       double total_prob = 0;
       double total_precision = 0;
       for (auto& mac : s) {
@@ -29,7 +43,6 @@ namespace {
         total_prob += stats.prob() * stats.precision();
         total_precision += stats.precision();
       }
-      cout << "point " << point->x << ", " << point->y << " prob: " << total_prob << " prec: " << total_precision << "\n";
       point_stats.push_back(make_tuple(total_prob, total_precision, point));
     }
     return point_stats;
@@ -38,17 +51,21 @@ namespace {
 } // anonymous namespace
 
 vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s,
-    WiFiVariant v) {
-  using stat = pair<double, Point*>;
+    WiFiVariant v, double realx, double realy, double exp1, double exp2,
+    bool debug) {
+  using stat = tuple<double, Point*, int, double>;
 
   auto& current_likely_points = Map::CurrentLikelyPoints();
   vector<stat> point_stats;
-  vector<pair<double, double>> stat_details;
 
   // Determine the probability of being at each of the possible points from
   // Mahalanobis distance.
   for (auto& node : current_likely_points) {
     auto point = node->point;
+    if (debug and distance(point->x, point->y, realx, realy) >
+        FILTERABLE_DISTANCE) {
+      continue;
+    }
     double sum = 0;
     int df = 0;
     for (auto& mac : *s) {
@@ -70,14 +87,14 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
         // Square of M-distance is ch-sqaured.
         // Weight of a point is the probability that the collected signal data
         // was taken at that point.
-        point_stats.push_back(make_pair(
-              1 - pchisq(sum, df),
-              point));
+        point_stats.push_back(make_tuple(
+              pow(df, exp1) * pow(1 - pchisq(sum, df), exp2),
+              point, df, sqrt(sum)));
       else
         // Weight of a point is proportional to the number of APs common to
         // that location and inversely proportinal to the M-distance.
-        point_stats.push_back(make_pair(df / sqrt(sum), point));
-      stat_details.push_back(make_pair(df, sqrt(sum)));
+        point_stats.push_back(make_tuple(pow(df, exp1) * pow(sqrt(sum), exp2),
+              point, df, sqrt(sum)));
     }
   }
 
@@ -85,23 +102,23 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
   if (v & WIFI_VARIANT_TOP1 or v & WIFI_VARIANT_TOP_FEW) {
     sort(point_stats.begin(), point_stats.end(),
         [](const stat &a, const stat &b) -> bool {
-            return a.first > b.first;
+            return get<0>(a) > get<0>(b);
         });
     if (v & WIFI_VARIANT_TOP1) {
       estimates.push_back({
-          point_stats[0].second->x,
-          1 - point_stats[0].first,
-          point_stats[0].second->y,
-          1 - point_stats[0].first
+          get<1>(point_stats[0])->x,
+          1 - get<0>(point_stats[0]),
+          get<1>(point_stats[0])->y,
+          1 - get<0>(point_stats[0])
       });
     } else if (v & WIFI_VARIANT_TOP_FEW) {
       for (auto p_stat : point_stats) {
         // if (p_stat.first < TOP_FEW_MIN_PROB)
         //   continue;
-        if (p_stat.first > TOP_FEW_GOOD_PROB_THRESH) {
+        if (get<0>(p_stat) > TOP_FEW_GOOD_PROB_THRESH) {
           estimates.push_back({
-              p_stat.second->x, 1 - p_stat.first,
-              p_stat.second->y, 1 - p_stat.first });
+              get<1>(p_stat)->x, 1 - get<0>(p_stat),
+              get<1>(p_stat)->y, 1 - get<0>(p_stat)});
         }
       }
     }
@@ -110,10 +127,10 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
     double pred_y = 0;
     double total_weight = 0;
     for (auto&& p_stat : point_stats) {
-      double weight = p_stat.first;
+      double weight = get<0>(p_stat);
       total_weight += weight;
-      pred_x += p_stat.second->x * weight;
-      pred_y += p_stat.second->y * weight;
+      pred_x += get<1>(p_stat)->x * weight;
+      pred_y += get<1>(p_stat)->y * weight;
     }
 
     pred_x /= total_weight;
@@ -122,10 +139,10 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
     double var_x = 0;
     double var_y = 0;
     for (auto&& p_stat : point_stats) {
-      double weight = p_stat.first;
+      double weight = get<0>(p_stat);
       total_weight += weight;
-      var_x += pow(pred_x - p_stat.second->x, 2) * weight;
-      var_y += pow(pred_y - p_stat.second->y, 2) * weight;
+      var_x += pow(pred_x - get<1>(p_stat)->x, 2) * weight;
+      var_y += pow(pred_y - get<1>(p_stat)->y, 2) * weight;
     }
 
     var_x /= total_weight;
@@ -136,11 +153,23 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
                           /* y_mean */ nearbyint(pred_y),
                           /* y_var */ 1 / var_y});
   }
+
+  //printf("%3s %3s %10s %7s %2s\n", "--x", "y", "chi", "ssum", "df");
+  //for (int i = 0; i < point_stats.size(); ++i) {
+  //  printf("%3.0f %3.0f %10.7f %7.2f %2d\n",
+  //      get<1>(point_stats[i])->x,
+  //      get<1>(point_stats[i])->y,
+  //      get<0>(point_stats[i]),
+  //      get<3>(point_stats[i]),
+  //      get<2>(point_stats[i]));
+  //}
+
   return estimates;
 }
 
-vector<PointEstimate> WifiEstimate::MostProbableClubbed(vector<Result> s) {
-  auto point_stats = ComputePointStats(s);
+vector<PointEstimate> WifiEstimate::MostProbableClubbed(vector<Result>& s,
+    double realx, double realy, double exp1, double exp2, bool debug) {
+  auto point_stats = ComputePointStats(s, realx, realy, debug);
 
   // Club all points with same x together and all points with the same y
   // together.
@@ -181,7 +210,8 @@ vector<PointEstimate> WifiEstimate::MostProbableClubbed(vector<Result> s) {
   double total_weight_y = 0;
   double pred_y = 0;
   for (auto&& y_point : y_points) {
-    double weight = (y_point.second).first * (y_point.second).second;
+    double weight = pow((y_point.second).first, exp1) *
+        pow((y_point.second).second, exp2);
     total_weight_y += weight;
     pred_y += y_point.first * weight;
   }
@@ -201,15 +231,16 @@ vector<PointEstimate> WifiEstimate::MostProbableClubbed(vector<Result> s) {
   return estimates;
 }
 
-vector<PointEstimate> WifiEstimate::MostProbableNotClubbed(vector<Result> s) {
-  auto point_stats = ComputePointStats(s);
+vector<PointEstimate> WifiEstimate::MostProbableNotClubbed(vector<Result>& s,
+    double realx, double realy, double exp1, double exp2, bool debug) {
+  auto point_stats = ComputePointStats(s, realx, realy, debug);
 
   // Find the point that we most likely are at.
   double pred_x = 0;
   double pred_y = 0;
   double total_weight = 0;
   for (auto& p_stat : point_stats) {
-    double  weight = std::get<0>(p_stat) * std::get<1>(p_stat);
+    double weight = pow(get<0>(p_stat), exp1) * pow(get<1>(p_stat), exp2);
     total_weight += weight;
     pred_x += std::get<2>(p_stat)->x * weight;
     pred_y += std::get<2>(p_stat)->y * weight;

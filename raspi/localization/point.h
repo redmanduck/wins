@@ -36,9 +36,9 @@ struct Point {
   void serialize(Archive & archive, uint32_t const version) {
     assert(version == POINT_VERSION);
 #ifdef DSCAN
-    archive(x, y, info, scans);
+    archive(x, y, cost, info, scans);
 #else
-    archive(x, y, info);
+    archive(x, y, cost, info);
 #endif
   }
 };

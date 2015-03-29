@@ -109,54 +109,64 @@ namespace kdtree {
             if (this->has_right_node()) delete this->right;
         }
 
-        node<T>* successor(bool is_even) {
-          if (this->right != NULL) {
-              node<T>* min = this->right;
-              while (min->left!= NULL) {
-                  min = min->left;
+        node<T>* successor() {
+          if (this->right != NULL && this->right->right != NULL) {
+              node<T>* min = this->right->right;
+              while (min->left != NULL && min->left->left != NULL) {
+                  min = min->left->left;
               }
               return min;
           }
 
+          node<T>* pp = NULL;
           node<T>* p = this->parent;
           node<T>* c = this;
-          while (p != NULL && c == p->right)
+          if (p != NULL && p->parent != NULL) {
+            pp = p->parent;
+          }
+          while (pp != NULL && p == pp->right)
           {
-              c = p;
-              p = p->parent;
+              c = pp;
+              p = pp->parent;
+              pp = p == NULL ? NULL : p->parent;
           }
 
-          return p;
+          return pp;
         }
 
-        node<T>* predecessor(bool is_even) {
-          if (this->left != NULL) {
-              node<T>* max = this->left;
-              while (max->right != NULL) {
-                  max = max->right;
+        node<T>* predecessor() {
+          if (this->left != NULL && this->left->left != NULL) {
+              node<T>* max = this->left->left;
+              while (max->right != NULL && max->right->right != NULL) {
+                  max = max->right->right;
               }
               return max;
           }
 
+          node<T>* pp = NULL;
           node<T>* p = this->parent;
           node<T>* c = this;
-          while (p != NULL && c == p->left)
+          if (p != NULL && p->parent != NULL) {
+            pp = p->parent;
+          }
+          while (pp != NULL && p == pp->left)
           {
-              c = p;
-              p = p->parent;
+              c = pp;
+              p = pp->parent;
+              pp = p == NULL ? NULL : p->parent;
           }
 
-          return p;
+          return pp;
         }
 
         vector<node<T>*> neighbors() {
             if (neighbors_[DIRECTION_UP] != NULL) {
               return neighbors_;
             }
-            neighbors_[DIRECTION_UP] = predecessor(false);
-            neighbors_[DIRECTION_RIGHT] = successor(true);
-            neighbors_[DIRECTION_DOWN] = successor(false);
-            neighbors_[DIRECTION_LEFT] = predecessor(true);
+            neighbors_[DIRECTION_UP] = predecessor();
+            neighbors_[DIRECTION_RIGHT] = successor();
+            neighbors_[DIRECTION_DOWN] = successor();
+            neighbors_[DIRECTION_LEFT] = predecessor();
             return neighbors_;
         }
 
