@@ -30,9 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdint.h>
 #include <string.h>
 
-#include <wiringPi.h>
-#include <wiringShift.h>
-
 #include "ST7565.h"
 
 #define ST7565_STARTBYTES 1
@@ -383,35 +380,35 @@ void ST7565::begin(uint8_t contrast) {
 
   st7565_init();
   //st7565_set_brightness(contrast);
-  st7565_command(CMD_DISPLAY_ON);
+  // st7565_command(CMD_DISPLAY_ON);
   //st7565_command(CMD_SET_ALLPTS_NORMAL);
 }
 
 void ST7565::st7565_init(void) {
   // set pin directions
-  pinMode(sid, OUTPUT);
-  pinMode(sclk, OUTPUT);
-  pinMode(a0, OUTPUT);
-  pinMode(rst, OUTPUT);
-  pinMode(cs, OUTPUT);
+  // pinMode(sid, OUTPUT);
+  // pinMode(sclk, OUTPUT);
+  // pinMode(a0, OUTPUT);
+  // pinMode(rst, OUTPUT);
+  // pinMode(cs, OUTPUT);
 
-  // toggle RST low to reset; CS low so it'll listen to us
-  if (cs > 0)
-    digitalWrite(cs, LOW);
+  // // toggle RST low to reset; CS low so it'll listen to us
+  // if (cs > 0)
+  //   digitalWrite(cs, LOW);
 
-  digitalWrite(rst, LOW);
-  usleep(500000);
-  digitalWrite(rst, HIGH);
+  // digitalWrite(rst, LOW);
+  // usleep(500000);
+  // digitalWrite(rst, HIGH);
 
-  // LCD bias select
-  st7565_command(CMD_SET_BIAS_9);
-  // ADC select
-  st7565_command(CMD_SET_ADC_NORMAL);
-  // SHL select
-  st7565_command(CMD_SET_COM_REVERSE);
-  st7565_command(CMD_SET_COM_NORMAL);
-  // Initial display line
-  st7565_command(CMD_SET_DISP_START_LINE);
+  // // LCD bias select
+  // st7565_command(CMD_SET_BIAS_9);
+  // // ADC select
+  // st7565_command(CMD_SET_ADC_NORMAL);
+  // // SHL select
+  // st7565_command(CMD_SET_COM_REVERSE);
+  // st7565_command(CMD_SET_COM_NORMAL);
+  // // Initial display line
+  // st7565_command(CMD_SET_DISP_START_LINE);
 /*
   // turn on voltage converter (VC=1, VR=0, VF=0)
   st7565_command(CMD_SET_POWER_CONTROL | 0x4);
@@ -438,15 +435,15 @@ void ST7565::st7565_init(void) {
 
   // set up a bounding box for screen updates
 */
-	st7565_command(0x25);
-	st7565_command(0x81);
-	st7565_command(0x19);
-	st7565_command(0x2F);
+	// st7565_command(0x25);
+	// st7565_command(0x81);
+	// st7565_command(0x19);
+	// st7565_command(0x2F);
   updateBoundingBox(0, 0, LCDWIDTH-1, LCDHEIGHT-1);
 }
 
 inline void ST7565::spiwrite(uint8_t c) {
-  shiftOut(sid, sclk, MSBFIRST, c);
+  // shiftOut(sid, sclk, MSBFIRST, c);
   /*
   int8_t i;
   for (i=7; i>=0; i--) {
@@ -522,19 +519,18 @@ inline void ST7565::spiwrite(uint8_t c) {
 
 }
 void ST7565::st7565_command(uint8_t c) {
-  digitalWrite(a0, LOW);
-
-  spiwrite(c);
+  // digitalWrite(a0, LOW);
+  // spiwrite(c);
 }
 
 void ST7565::st7565_data(uint8_t c) {
-  digitalWrite(a0, HIGH);
+  // digitalWrite(a0, HIGH);
 
-  spiwrite(c);
+  // spiwrite(c);
 }
 void ST7565::st7565_set_brightness(uint8_t val) {
-    st7565_command(CMD_SET_VOLUME_FIRST);
-    st7565_command(CMD_SET_VOLUME_SECOND | (val & 0x3f));
+    // st7565_command(CMD_SET_VOLUME_FIRST);
+    // st7565_command(CMD_SET_VOLUME_SECOND | (val & 0x3f));
 }
 
 

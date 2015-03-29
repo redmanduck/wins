@@ -1,51 +1,61 @@
 #include <chrono>
 #include <functional>
 #include <stdexcept>
-
-#include <algorithm>
-#include <atomic>
-#include <cstdlib>
-#include <functional>
-#include <list>
-#include <memory>
 #include <string>
-#include <utility>
-#include <vector>
-
-#include <cassert>
 //#include "common_utils.h"
 #include "display.h"
 //#include "navigation.h"
 //#include "spi_manager.h"
+
 using namespace std;
 
 char RETURN_CHARACTER = '\0';
+ST7565 glcd(0);
 
-/*
- * Max character per line
- * for given font size
- */
 int MaxLength(FontSize size) {
     throw runtime_error("Not Implemented");
 }
 
-/*
- *  Same thing as above but for rows
- */
 int MaxLines(FontSize size) {
     throw runtime_error("Not Implemented");
 }
+
+//void Display::BlockForUpdate(DisplayUpdate type) {
+//    unique_lock<mutex> lock(update_mutex_);
+//    while (not update_ & type) {
+//        display_update_pending_.wait(lock);
+//        if (update_ & DISPLAY_UPDATE_BATTERY_CRITICAL) {
+//            Global::ShutDown();
+//        }
+//    }
+//}
 
 void Display::ClearLine(int line) {
     throw runtime_error("Not Implemented");
 }
 
 void Display::ClearScreen() {
-    throw runtime_error("Not Implemented");
+    glcd.clear();
 }
 
 void Display::PutChar(char character) {
     throw runtime_error("Not Implemented");
+}
+
+char Display::GetChar() {
+//    Flush();
+//    BlockForUpdate(DISPLAY_UPDATE_KEYPRESS);
+//    assert(SPI::input_buffer.length() > 0);
+//    
+//    // Acquire lock to read buffer till end of method.
+//    lock_guard<mutex> lock(SPI::buffer_mutex);
+//    
+//    // Read the buffer and mark as read.
+//    char input_char = SPI::input_buffer[0];
+//    SPI::input_buffer.erase(0, 1);
+//    
+//    return input_char;
+    return 'c';
 }
 
 void Display::PutString(string s, bool clear) {
@@ -61,25 +71,16 @@ void Display::PutString(string s, bool clear) {
     }
 }
 
-char Display::GetChar(){
-    throw runtime_error("Not Implemented");
-    return 'a';
-}
-
 string Display::GetString() {
     int char_count = 0;
     string buffer;
     char last_character = '\0';
     while (char_count < MaxLength(FONT_SIZE_MEDIUM) or
            last_character == RETURN_CHARACTER) {
-        last_character = this->GetChar();
+        last_character = GetChar();
         buffer += last_character;
     }
     return buffer;
-}
-
-void Display::PutLine(InkStyle istyle, int angle, int width){
-    return;
 }
 
 void Display::Flush() {
@@ -104,27 +105,100 @@ void Display::SetCurrentLine(int line) {
     }
 }
 
+
+void Display::SetUpdateFlag(DisplayUpdate flag) {
+    throw runtime_error("Not Implemented");
+}
+
+void Display::Menu() {
+    
+    ClearScreen();
+    
+    glcd.drawline(0, 0, 100, 100, BLACK);
+    glcd.display();
+    
+    //TODO: construct canvas for menu
+//    char option = GetChar();
+//    switch (option) {
+//        case '1': display_thread_ =
+//            thread(&Display::DestinationPrompt, this, NAV_MODE_ROUTE); break;
+//        case '2': display_thread_ =
+//            thread(&Display::DestinationPrompt, this, NAV_MODE_LOCATE); break;
+//        case '3': Global::ShutDown(); break;
+//    }
+}
+
 void Display::WhereAmI() {
     throw runtime_error("Not Implemented");
 }
+
+
+//void Display::DestinationPrompt(NavMode mode) {
+//    SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
+//    
+//    while (true) {
+//        ClearScreen();
+//        
+//        SetCurrentLine(2);
+//        PutString("Enter destination:", true);
+//        
+//        SetCurrentLine(3);
+//        if (Navigation::TrySetDestinationFromCoords(GetString())) {
+//            SetCurrentLine(1);
+//            PutString("Invalid location", true);
+//            break;
+//        }
+//    }
+//    display_thread_ = thread(&Display::Navigating, this, mode);
+//}
+
+//void Display::Navigating(NavMode mode) {
+//    while(true) {
+//        if (update_ == DISPLAY_UPDATE_NONE) {
+//            BlockForUpdate(DISPLAY_UPDATE_ALL);
+//        }
+//        if (update_ & DISPLAY_UPDATE_KEYPRESS) {
+//            SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
+//            SetCurrentLine(2);
+//            PutString("What's up?", true);
+//            
+//            SetCurrentLine(3);
+//            PutString("1: Menu 2: Continue", true);
+//            char input = GetChar();
+//            if (input == '1') {
+//                display_thread_ = thread(&Display::Menu, this);
+//                return;
+//            } else {
+//                continue;
+//            }
+//        }
+//        if (update_ & DISPLAY_UPDATE_NAV_CHANGE) {
+//            lock_guard<mutex> lock(Navigation::route_mutex);
+//            
+//            // TODO: Read the Route and Point estimate buffers and mark as read.
+//        }
+//        if (update_ & DISPLAY_UPDATE_DEST_REACHED) {
+//            display_thread_ = thread(&Display::Done, this);
+//            return;
+//        }
+//    }
+//}
 
 void Display::Done() {
     GetChar();
     display_thread_ = thread(&Display::Menu, this);
 }
 
-void Display::Menu(){
-    
-}
-
-void Display::SplashScreen(){
-    
-}
-
-Display::Display(Kyanvas * canv) {
-    display_thread_ = thread(&Display::Menu, this);
+Display::Display() {
+    Menu();
+//    display_thread_ = thread(&Display::Menu, this);
     font_size_ = FONT_SIZE_MEDIUM;
     cursor_ = 0;
     current_line_ = 0;
     flushed_ = true;
+}
+
+
+void Display::gimmebitmap(string saveas){
+    glcd.savebitmap(saveas);
 }

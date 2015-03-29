@@ -3,6 +3,9 @@ $Id:$
 
 ST7565 LCD library!
 
+WINS edition
+this ST765.cpp odes not interface with SPI
+
 Copyright (C) 2010 Limor Fried, Adafruit Industries
 
 This library is free software; you can redistribute it and/or

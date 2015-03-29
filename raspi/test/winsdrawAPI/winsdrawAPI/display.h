@@ -5,8 +5,10 @@
 #include <condition_variable>
 #include <mutex>
 #include <thread>
-#include "canvas.h"
-
+//
+//#include "map.h"
+//
+#include "ST7565.h"
 
 using namespace std;
 
@@ -48,30 +50,29 @@ private:
     void BlockForUpdate(DisplayUpdate type);
     void ClearLine(int line);
     void ClearScreen();
-    void SplashScreen();
-    char GetChar();
     void PutChar(char character);
+    char GetChar();
     void PutString(string s, bool clear);
     string GetString();
     void Flush();
     void SetFont(FontSize size, Alignment al, int expected_width = 5);
     void SetCurrentLine(int line);
     
+    
 public:
     void SetUpdateFlag(DisplayUpdate flag);
-    
+    void gimmebitmap(string saveas);
+
     void Menu();
     void WhereAmI();
-    //  void DestinationPrompt(NavMode mode);
-    //  void Navigating(NavMode mode);
+//    void DestinationPrompt(NavMode mode);
+//    void Navigating(NavMode mode);
     void Done();
-    void PutLine(InkStyle istyle, int angle, int width);
-
-    Display(Kyanvas * panda);
+    
+    Display();
+    
     // Prevent copying.
     Display(const Display& other) = delete;
 };
-
-
 
 #endif
