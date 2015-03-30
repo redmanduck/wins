@@ -5,9 +5,11 @@ import numpy as np
 import pdb
 from multiprocessing.pool import ThreadPool
 
+GPREFIX = '1gen'
+
 primary = 'ee_ab_map_4.dat'
 #maps = [m for m in os.listdir('.') if os.path.isfile(m) and m.startswith('ee_ab')]
-maps = ['ee_ab_map_4.dat']
+maps = ['ee_ab_map_2.dat', 'ee_ab_map.dat', 'ee_ab_map_3r.dat']
 
 dirs= { '10_5': [('10', '5', '5'),
                  ('10', '-5', '5'),
@@ -22,11 +24,12 @@ def createCommands():
   cwd0 = os.getcwd()
   commands = []
   for d in dirs:
+    maindir = d + PREFIX
     os.chdir(cwd0)
-    if not os.path.exists(d):
-      os.makedirs(d)
+    if not os.path.exists(maindir):
+      os.makedirs(maindir)
 
-    cwd1 = cwd0 + '/' + d
+    cwd1 = cwd0 + '/' + maindir
     for conf in dirs[d]:
       for m in maps:
         os.chdir(cwd1)

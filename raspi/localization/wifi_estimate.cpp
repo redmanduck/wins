@@ -97,29 +97,31 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
   }
 
   vector<PointEstimate> estimates;
+//  if (v & WIFI_VARIANT_TOP1 or v & WIFI_VARIANT_TOP_FEW) {
+//    sort(point_stats.begin(), point_stats.end(),
+//        [](const stat &a, const stat &b) -> bool {
+//            return get<0>(a) > get<0>(b);
+//        });
+//    if (v & WIFI_VARIANT_TOP1) {
+//      estimates.push_back({
+//          get<1>(point_stats[0])->x,
+//          1 - get<0>(point_stats[0]),
+//          get<1>(point_stats[0])->y,
+//          1 - get<0>(point_stats[0])
+//      });
+//    } else if (v & WIFI_VARIANT_TOP_FEW) {
+//      for (auto p_stat : point_stats) {
+//        // if (p_stat.first < TOP_FEW_MIN_PROB)
+//        //   continue;
+//        if (get<0>(p_stat) > TOP_FEW_GOOD_PROB_THRESH) {
+//          estimates.push_back({
+//              get<1>(p_stat)->x, 1 - get<0>(p_stat),
+//              get<1>(p_stat)->y, 1 - get<0>(p_stat)});
+//        }
+//      }
+//    }
   if (v & WIFI_VARIANT_TOP1 or v & WIFI_VARIANT_TOP_FEW) {
-    sort(point_stats.begin(), point_stats.end(),
-        [](const stat &a, const stat &b) -> bool {
-            return get<0>(a) > get<0>(b);
-        });
-    if (v & WIFI_VARIANT_TOP1) {
-      estimates.push_back({
-          get<1>(point_stats[0])->x,
-          1 - get<0>(point_stats[0]),
-          get<1>(point_stats[0])->y,
-          1 - get<0>(point_stats[0])
-      });
-    } else if (v & WIFI_VARIANT_TOP_FEW) {
-      for (auto p_stat : point_stats) {
-        // if (p_stat.first < TOP_FEW_MIN_PROB)
-        //   continue;
-        if (get<0>(p_stat) > TOP_FEW_GOOD_PROB_THRESH) {
-          estimates.push_back({
-              get<1>(p_stat)->x, 1 - get<0>(p_stat),
-              get<1>(p_stat)->y, 1 - get<0>(p_stat)});
-        }
-      }
-    }
+    throw runtime_error("Not Supported");
   } else {
     double pred_x = 0;
     double pred_y = 0;
@@ -233,14 +235,12 @@ vector<PointEstimate> WifiEstimate::MostProbableClubbed(vector<Result>& s,
     var_y += pow(pred_y - y_point.first, 2) * weight;
   }
 
-  var_x /= 1 - total_weight_x_sq;
-  var_y /= 1 - total_weight_y_sq;
-
   vector<PointEstimate> estimates;
 
   if (total_weight_x < 0.0001 or total_weight_y < 0.0001) {
     return estimates;
   }
+
   estimates.push_back({ /* x_mean */ nearbyint(pred_x),
                         /* x_var */ var_x,
                         /* y_mean */ nearbyint(pred_y),
@@ -275,9 +275,6 @@ vector<PointEstimate> WifiEstimate::MostProbableNotClubbed(vector<Result>& s,
     var_x += pow(pred_x - get<2>(p_stat)->x, 2) * weight;
     var_y += pow(pred_y - get<2>(p_stat)->y, 2) * weight;
   }
-
-  var_x /= 1 - total_weight_sq;
-  var_y /= 1 - total_weight_sq;
 
   vector<PointEstimate> estimates;
   estimates.push_back({ /* x_mean */ nearbyint(pred_x),

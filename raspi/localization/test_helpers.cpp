@@ -122,15 +122,11 @@ void learn_helper(int argc, vector<string> argv) {
 
   using namespace std::placeholders;
   switch(stoi(argv[5])) {
-    case 0: analysis_func = bind(
-        MahalanobisAnalysis, _1, _2, false,
-        (WiFiVariant)(WIFI_VARIANT_TOP1)); break;
+    case 0: return;
     case 1: analysis_func = bind(
         MahalanobisAnalysis, _1, _2, false,
         (WiFiVariant)(WIFI_VARIANT_NONE)); break;
-    case 2: analysis_func = bind(
-        MahalanobisAnalysis, _1, _2, false,
-        (WiFiVariant)(WIFI_VARIANT_TOP1|WIFI_VARIANT_CHI_SQ)); break;
+    case 2: return;
     case 3: analysis_func = bind(
         MahalanobisAnalysis, _1, _2, false,
         (WiFiVariant)(WIFI_VARIANT_CHI_SQ)); break;
@@ -184,7 +180,7 @@ void learn_helper(int argc, vector<string> argv) {
   ofstream summary_file;
   summary_file.open("analysis_summary.csv", ios::app);
 
-  char buffer[50];
+  char buffer[100];
   sprintf(buffer, "%7s %7s %7s %7s %5s %5s\n",
       "mean", "std", "mvx", "mvy", "e1", "e2");
   out_file << buffer;
