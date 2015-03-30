@@ -57,7 +57,7 @@
 ##==========================================================================
 
 # The pre-processor and compiler options.
-MY_CFLAGS = -std=c++11 -I. -Iwireless_tools.29 -Lwireless_tools.29
+MY_CFLAGS = -O3 -std=c++11 -I. -Iwireless_tools.29 -Lwireless_tools.29
 
 # The linker options.
 MY_LIBS   = -liw

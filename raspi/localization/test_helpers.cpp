@@ -134,15 +134,11 @@ void learn_helper(int argc, vector<string> argv) {
         MostProbableClubbedAnalysis, _1, _2, false); break;
     case 5: analysis_func = bind(
         MostProbableNotClubbedAnalysis, _1, _2, false); break;
-    case 6: analysis_func = bind(
-        MahalanobisAnalysis, _1, _2, true,
-        (WiFiVariant)(WIFI_VARIANT_TOP1)); break;
+    case 6: return;
     case 7: analysis_func = bind(
         MahalanobisAnalysis, _1, _2, true,
         (WiFiVariant)(WIFI_VARIANT_NONE)); break;
-    case 8: analysis_func = bind(
-        MahalanobisAnalysis, _1, _2, true,
-        (WiFiVariant)(WIFI_VARIANT_TOP1|WIFI_VARIANT_CHI_SQ)); break;
+    case 8: return;
     case 9: analysis_func = bind(
         MahalanobisAnalysis, _1, _2, true,
         (WiFiVariant)(WIFI_VARIANT_CHI_SQ)); break;
