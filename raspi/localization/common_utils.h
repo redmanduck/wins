@@ -37,6 +37,9 @@ class Global {
   static Display* display_;
 
  public:
+  static int FilterableDistance;
+  static int FilterBiasX;
+  static int FilterBiasY;
   static string MapFile;
 
   static void Init();

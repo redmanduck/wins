@@ -118,6 +118,18 @@ void Test(int argc, char *orig_argv[]) {
       learn_helper(argc, argv);
     }
   }
+  else if (string(argv[2]) == "learn_filter") {
+    assert(argc == 8);
+    Global::FilterableDistance = stoi(argv[5]);
+    Global::FilterBiasX = stoi(argv[6]);
+    Global::FilterBiasY = stoi(argv[7]);
+    argc = 6;
+    remove("analysis_summary.csv");
+    for (int i = 0; i < 12; ++i) {
+      argv[5] = std::to_string(i);
+      learn_helper(argc, argv);
+    }
+  }
   else if (string(argv[2]) == "learn_debug") {
     argc += 1;
     argv.push_back("-");
@@ -126,5 +138,18 @@ void Test(int argc, char *orig_argv[]) {
       argv[5] = std::to_string(i);
       learn_helper(argc, argv);
     }
+  }
+  else if (string(argv[2]) == "learn_good") {
+    argc += 1;
+    argv.push_back("-");
+    remove("analysis_summary.csv");
+    argv[5] = "1";
+    learn_helper(argc, argv);
+    argv[5] = "3";
+    learn_helper(argc, argv);
+    argv[5] = "7";
+    learn_helper(argc, argv);
+    argv[5] = "9";
+    learn_helper(argc, argv);
   }
 }

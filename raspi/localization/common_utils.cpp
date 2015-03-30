@@ -6,6 +6,9 @@
 
 string Global::MapFile = "ee_ab_map.dat";
 Display* Global::display_;
+int Global::FilterableDistance = 10;
+int Global::FilterBiasX = 5;
+int Global::FilterBiasY = 5;
 
 void Global::Init() {
   SPI::Init();

@@ -1,10 +1,14 @@
 import sys
+import os
 import numpy as np
 import pdb
 import json
 from collections import OrderedDict
 
-MIN_SIGNAL_COUNT = 20
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
+MIN_SIGNAL_COUNT = 10
 MIN_VAR = 25
 MIN_AVG = 20
 
@@ -22,6 +26,8 @@ scans_cur_point = []
 macs_cur_point = []
 cur_scan = {}
 points = []
+
+plot_info = OrderedDict()
 
 for line in in_file:
     parts = line.strip().split(',')
@@ -56,6 +62,14 @@ for line in in_file:
                         ]))
                     ])
                 )
+            if not mac in plot_info:
+                plot_info[mac] = [[] for x in xrange(6)]
+            plot_info[mac][0].append(cur_x - 0.25)
+            plot_info[mac][1].append(cur_y - 0.25)
+            plot_info[mac][2].append(0)
+            plot_info[mac][3].append(0.5)
+            plot_info[mac][4].append(0.5)
+            plot_info[mac][5].append(avg)
 
         formatted_scans = []
         for scan in scans_cur_point:
@@ -68,8 +82,6 @@ for line in in_file:
                     ])
                 )
             formatted_scans.append(scan_data)
-
-        costs = [1, 1, 1, 1]
         points.append(
             OrderedDict([
                 ('ptr_wrapper', OrderedDict([
@@ -77,9 +89,8 @@ for line in in_file:
                     ('data', OrderedDict([
                         ('value0', cur_x),
                         ('value1', cur_y),
-                        ('value2', costs),
-                        ('value3', mac_info),
-                        ('value4', formatted_scans)]
+                        ('value2', mac_info),
+                        ('value3', formatted_scans)]
                     ))
                 ]))
             ])
@@ -116,10 +127,25 @@ points[0]['ptr_wrapper']['data'] = OrderedDict([
     ('value0', d['value0']),
     ('value1', d['value1']),
     ('value2', d['value2']),
-    ('value3', d['value3']),
-    ('value4', d['value4'])
+    ('value3', d['value3'])
 ])
 
 out_file = open(sys.argv[2], 'w')
 json.dump({ 'value0' : points }, out_file, indent=4, separators=(',', ': '))
 out_file.close()
+
+if not os.path.exists("plots"):
+    os.makedirs("plots")
+count = 0
+for mac in plot_info:
+    fig = plt.figure()
+    plt.axis('equal')
+    ax = fig.add_subplot(111, projection='3d')
+    ax.bar3d(*plot_info[mac], color='b', zsort='average')
+    ax.view_init(elev=56, azim=24)
+    plt.xlim(-12, 0)
+    plt.ylim(0, 44)
+    ax.set_zlim(0, 100)
+    plt.savefig('plots/' + str(count) + '_' + mac + '.png', dpi=200, bbox_inches='tight')
+    plt.close()
+    count += 1
