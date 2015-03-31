@@ -1,51 +1,20 @@
-#include <bcm2835.h>
-#include <iostream>
-#include <signal.h>
-#include <string>
-#include <condition_variable>
-#include <mutex>
+#include "pad.h"
 
-#define W1 RPI_BPLUS_GPIO_J8_11
-#define W2 RPI_BPLUS_GPIO_J8_36
-#define W3 RPI_BPLUS_GPIO_J8_10
-#define W4 RPI_BPLUS_GPIO_J8_08
 
-#define R1 RPI_BPLUS_GPIO_J8_40
-#define R2 RPI_BPLUS_GPIO_J8_38
-#define R3 RPI_BPLUS_GPIO_J8_35
-#define R4 RPI_BPLUS_GPIO_J8_12
-
-using namespace std;
 bool forever = true;
-
-condition_variable cv;
-string buffer;
-
-void processButton(int r,int c);
-void sighandler(int sig);
-int get_event();
-
 
 void sighandler(int sig)
 {
     cout<< "Signal " << sig << ": Gracefully closing" << endl;
 		forever = false;
-			
 		bcm2835_gpio_write(W1, LOW);
 		bcm2835_gpio_write(W2, LOW);
 		bcm2835_gpio_write(W3, LOW);
 		bcm2835_gpio_write(W4, LOW);
-
 }
 
-
-int main(void) {
-    signal(SIGABRT, &sighandler);
-		signal(SIGTERM, &sighandler);
-		signal(SIGINT, &sighandler);
-		buffer = "";   
-		int state = 0, old_state = -1, new_state = 0;
-    if (!bcm2835_init()) return 1;
+void init_gpio(){
+   if (!bcm2835_init()) return;
 	
 	  bcm2835_gpio_fsel(W1, BCM2835_GPIO_FSEL_OUTP);
 		bcm2835_gpio_fsel(W2, BCM2835_GPIO_FSEL_OUTP);
@@ -66,7 +35,15 @@ int main(void) {
     bcm2835_gpio_fen(R2); 
     bcm2835_gpio_fen(R3);
     bcm2835_gpio_fen(R4); 
+}
 
+int main(void) {
+    signal(SIGABRT, &sighandler);
+		signal(SIGTERM, &sighandler);
+		signal(SIGINT, &sighandler);
+		buffer = "";   
+		int state = 0, old_state = -1, new_state = 0;
+    init_gpio();
 		while(forever){
 			for(int i = 0; i < 4; i++){
 				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4))); 
@@ -115,6 +92,10 @@ void processButton(int row, int col){
 
 	cout << "Row Pressed " << row << " Col " << col << "\n";
   cout << "Key value:" << map[row-1][col] << "\n";
+	//get lock
+	//lock_guard<mutex> lock(buffer_mutex);
+	//buffer.append(map[row-1][col]);
+	buffer += map[row-1][col];
 }
 
 int get_event(){
