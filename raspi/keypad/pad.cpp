@@ -1,6 +1,9 @@
 #include <bcm2835.h>
 #include <iostream>
 #include <signal.h>
+#include <string>
+#include <condition_variable>
+#include <mutex>
 
 #define W1 RPI_BPLUS_GPIO_J8_11
 #define W2 RPI_BPLUS_GPIO_J8_36
@@ -12,13 +15,16 @@
 #define R3 RPI_BPLUS_GPIO_J8_35
 #define R4 RPI_BPLUS_GPIO_J8_12
 
-
 using namespace std;
 bool forever = true;
 
-void processButton(int jsd);
+condition_variable cv;
+string buffer;
+
+void processButton(int r,int c);
 void sighandler(int sig);
 int get_event();
+
 
 void sighandler(int sig)
 {
@@ -37,66 +43,78 @@ int main(void) {
     signal(SIGABRT, &sighandler);
 		signal(SIGTERM, &sighandler);
 		signal(SIGINT, &sighandler);
-    
+		buffer = "";   
 		int state = 0, old_state = -1, new_state = 0;
     if (!bcm2835_init()) return 1;
 	
-	    bcm2835_gpio_fsel(W1, BCM2835_GPIO_FSEL_OUTP);
-			bcm2835_gpio_fsel(W2, BCM2835_GPIO_FSEL_OUTP);
-		  bcm2835_gpio_fsel(W3, BCM2835_GPIO_FSEL_OUTP);
-			bcm2835_gpio_fsel(W4, BCM2835_GPIO_FSEL_OUTP);
+	  bcm2835_gpio_fsel(W1, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_fsel(W2, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_fsel(W3, BCM2835_GPIO_FSEL_OUTP);
+		bcm2835_gpio_fsel(W4, BCM2835_GPIO_FSEL_OUTP);
 
-	    bcm2835_gpio_fsel(R1, BCM2835_GPIO_FSEL_INPT);
-			bcm2835_gpio_fsel(R2, BCM2835_GPIO_FSEL_INPT);
-		  bcm2835_gpio_fsel(R3, BCM2835_GPIO_FSEL_INPT);
-			bcm2835_gpio_fsel(R4, BCM2835_GPIO_FSEL_INPT);
+	  bcm2835_gpio_fsel(R1, BCM2835_GPIO_FSEL_INPT);
+		bcm2835_gpio_fsel(R2, BCM2835_GPIO_FSEL_INPT);
+		bcm2835_gpio_fsel(R3, BCM2835_GPIO_FSEL_INPT);
+		bcm2835_gpio_fsel(R4, BCM2835_GPIO_FSEL_INPT);
 
 		bcm2835_gpio_set_pud(R1, BCM2835_GPIO_PUD_DOWN);
 		bcm2835_gpio_set_pud(R2, BCM2835_GPIO_PUD_DOWN);
 		bcm2835_gpio_set_pud(R3, BCM2835_GPIO_PUD_DOWN);
 		bcm2835_gpio_set_pud(R4, BCM2835_GPIO_PUD_DOWN); 
-		//setup 
-		bcm2835_gpio_write(W1, HIGH);
-		bcm2835_gpio_write(W2, HIGH);
-		bcm2835_gpio_write(W3, HIGH);
-		bcm2835_gpio_write(W4, HIGH);
-
 		//detect edge
-    bcm2835_gpio_hen(R1); 
-    bcm2835_gpio_hen(R2); 
-    bcm2835_gpio_hen(R3);
-    bcm2835_gpio_hen(R4); 
+    bcm2835_gpio_fen(R1); 
+    bcm2835_gpio_fen(R2); 
+    bcm2835_gpio_fen(R3);
+    bcm2835_gpio_fen(R4); 
 
 		while(forever){
-	//		cout << new_state << " " << old_state << " " << state << "\n";
-			new_state = get_event();
+			for(int i = 0; i < 4; i++){
+				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4))); 
+				bcm2835_gpio_write(Wn, HIGH);
+				new_state = get_event();	
+				if(old_state != new_state){
+					//this press is new, we will consider it
+					delay(1);
+					//gather
+					state = 0;
+					state = get_event();	//compare it to the press 1ms later
+
+					//if it changes, we discard it
+					if(state == new_state){	
+						processButton(state, i);
+					}
 			
-			if(old_state != new_state){
-				delay(1);
-				//gather
-				state = 0;
-			  state = get_event();	
-
-				//check stable
-				if(state == new_state){	
-					processButton(state);
-				}
-
-				old_state = state;
+					old_state = state;
 	
-		  }
-			delay(100);
+			  }
+				//clear all GPIO states
+				bcm2835_gpio_clr(W1);
+				bcm2835_gpio_clr(W2);
+				bcm2835_gpio_clr(W3);
+				bcm2835_gpio_clr(W4);
+				
+				delay(4); //delay for clearing GPIO
+
+			}
+			delay(300);
 		}
 
     bcm2835_close();
 
 }
 
-void processButton(int jsd){
-			if(jsd != -1){
-				cout << "Row Pressed " << jsd << "\n";
-				jsd = -1;  //invalidate Just pu(s)he(d)
-		  }
+char map[4][4]  = {
+	{'1','2','3','A'},
+	{'4','5','6','B'},
+	{'7','8','9','C'},
+	{'*','0','#','D'}
+};
+
+void processButton(int row, int col){
+	if(row == -1 || col == -1) return;
+
+	cout << "Row Pressed " << row << " Col " << col << "\n";
+  cout << "Key value:" << map[row-1][col] << "\n";
 }
 
 int get_event(){
