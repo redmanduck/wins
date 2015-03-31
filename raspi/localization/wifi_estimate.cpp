@@ -224,13 +224,13 @@ vector<PointEstimate> WifiEstimate::MostProbableClubbed(vector<Result>& s,
   double total_weight_y_sq = 0;
   for (auto&& x_point : x_points) {
     double weight = pow((x_point.second).first, exp1) *
-        pow((x_point.second).second, exp2);
+        pow((x_point.second).second, exp2) / total_weight_x;
     total_weight_x_sq += weight * weight;
     var_x += pow(pred_x - x_point.first, 2) * weight;
   }
   for (auto&& y_point : y_points) {
     double weight = pow((y_point.second).first, exp1) *
-        pow((y_point.second).second, exp2);
+        pow((y_point.second).second, exp2) / total_weight_y;
     total_weight_y_sq += weight * weight;
     var_y += pow(pred_y - y_point.first, 2) * weight;
   }
@@ -270,7 +270,8 @@ vector<PointEstimate> WifiEstimate::MostProbableNotClubbed(vector<Result>& s,
   double var_y = 0;
   double total_weight_sq = 0;
   for (auto&& p_stat : point_stats) {
-    double weight = get<0>(p_stat) / total_weight;
+    double weight = pow(get<0>(p_stat), exp1) * pow(get<1>(p_stat), exp2) /
+        total_weight;
     total_weight_sq += weight * weight;
     var_x += pow(pred_x - get<2>(p_stat)->x, 2) * weight;
     var_y += pow(pred_y - get<2>(p_stat)->y, 2) * weight;

@@ -20,13 +20,15 @@ for d in dirs:
                 continue
             vals = map(float, vals)
 
-            initial = data.get((vals[2], vals[3]), [0, 0, 0, 0])
-            data[(vals[2], vals[3])] = map(sum, zip(initial, (rank, vals[0],
+            initial = data.get((vals[4], vals[5]), [0, 0, 0, 0])
+            data[(vals[4], vals[5])] = map(sum, zip(initial, (rank, vals[0],
                     vals[1], 1)))
             rank += 1
 out_file = open('best_exps.txt', 'w')
 num_types = len(dirs)
+pdb.set_trace()
 for f in maps:
+    print 'abc'
     for k in maps[f].keys():
         if maps[f][k][3] != num_types:
             del maps[f][k]

@@ -151,6 +151,7 @@ void learn_helper(int argc, vector<string> argv) {
 
   vector<result> results;
 
+  cout << ":::TYPE " << argv[5] << ":::\n";
   printf("%7s %7s %7s %7s %3s %3s\n", "mean", "std", "mvx", "mvy", "e1", "e2");
   double m;
   double s;
