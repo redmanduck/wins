@@ -40,7 +40,13 @@ namespace {
       for (auto&& scan : point->scans) {
         auto estimates = WifiEstimate::ClosestByMahalanobis(
             &scan, v, point->x, point->y, dp.exp1, dp.exp2, debug);
-        assert(estimates.size() == 1);
+        if (estimates.size() == 0) {
+          continue;
+        }
+        char buffer[100];
+        sprintf(buffer, "%5.0f %5.0f %5.0f %5.0f\n", point->x, point->y,
+            estimates[0].x_mean, estimates[0].y_mean);
+        //cout << buffer;
         distances.push_back(sqrt(
             pow(point->x - estimates[0].x_mean, 2) +
             pow(point->y - estimates[0].y_mean, 2)));

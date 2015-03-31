@@ -96,7 +96,6 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
     }
   }
 
-  vector<PointEstimate> estimates;
 //  if (v & WIFI_VARIANT_TOP1 or v & WIFI_VARIANT_TOP_FEW) {
 //    sort(point_stats.begin(), point_stats.end(),
 //        [](const stat &a, const stat &b) -> bool {
@@ -120,6 +119,11 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
 //        }
 //      }
 //    }
+  vector<PointEstimate> estimates;
+  if (point_stats.size() == 0) {
+    return estimates;
+  }
+
   if (v & WIFI_VARIANT_TOP1 or v & WIFI_VARIANT_TOP_FEW) {
     throw runtime_error("Not Supported");
   } else {
