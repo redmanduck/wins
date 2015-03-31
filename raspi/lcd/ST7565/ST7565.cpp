@@ -385,9 +385,9 @@ void ST7565::begin(uint8_t contrast) {
   wiringPiSetupGpio();
 
   st7565_init();
+  //st7565_set_brightness(contrast);
   st7565_command(CMD_DISPLAY_ON);
-  st7565_command(CMD_SET_ALLPTS_NORMAL);
-  st7565_set_brightness(contrast);
+  //st7565_command(CMD_SET_ALLPTS_NORMAL);
 }
 
 void ST7565::st7565_init(void) {
@@ -407,14 +407,15 @@ void ST7565::st7565_init(void) {
   digitalWrite(rst, HIGH);
 
   // LCD bias select
-  st7565_command(CMD_SET_BIAS_7);
+  st7565_command(CMD_SET_BIAS_9);
   // ADC select
   st7565_command(CMD_SET_ADC_NORMAL);
   // SHL select
+  st7565_command(CMD_SET_COM_REVERSE);
   st7565_command(CMD_SET_COM_NORMAL);
   // Initial display line
   st7565_command(CMD_SET_DISP_START_LINE);
-
+/*
   // turn on voltage converter (VC=1, VR=0, VF=0)
   st7565_command(CMD_SET_POWER_CONTROL | 0x4);
   // wait for 50% rising
@@ -439,7 +440,11 @@ void ST7565::st7565_init(void) {
   // write display data
 
   // set up a bounding box for screen updates
-
+*/
+	st7565_command(0x25);
+	st7565_command(0x81);
+	st7565_command(0x19);
+	st7565_command(0x2F);
   updateBoundingBox(0, 0, LCDWIDTH-1, LCDHEIGHT-1);
 }
 

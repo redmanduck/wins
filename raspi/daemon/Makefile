@@ -3,7 +3,7 @@ GCC=gcc
 winsd.o: winsd.c
 	$(GCC) winsd.c -o winsd -lbcm2835
 tools:
-	$(GCC) spisend.c -o spisend -lbcm2835
+	$(GCC) monitor.c -o monitor -lbcm2835
 
 clean:
 	rm *.o

@@ -29,7 +29,8 @@ int main()
 }
 
 void drawclock() {
-	int commonY = ((64 / 2) - (Minecrafter_height / 2));
+	//int commonY = ((64 / 2) - (Minecrafter_height / 2));
+	int commonY = 0;
 	int commonX = (128 / 2);
 
 	time_t temps = time(0);

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 #include "ST7565/ST7565.cpp"
 
 // Numéros GPIO Broadcom
@@ -23,17 +24,17 @@ void testdrawlineanim();
 
 int main()
 {
-	glcd.begin(0x18);
+	glcd.begin(0x19);
 
 	glcd.display();
 	usleep(20000);
 	glcd.clear();
 
 	glcd.setpixel(10, 10, BLACK);
-  	glcd.display();
-  	usleep(5000000);
+  glcd.display();
+  usleep(5000000);
 	glcd.clear();
-
+/*
 	testdrawline();
 	glcd.display();
 	usleep(5000000);
@@ -63,17 +64,17 @@ int main()
 	glcd.display();
 	usleep(2000000);
 	glcd.clear();
-
+*/
 	glcd.drawstring(0, 0, "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation");
 	glcd.display();
 	usleep(2000000);
 	glcd.clear();
-
+/*
 	testdrawlineanim();
 	glcd.clear();
 	glcd.display();
-	usleep(500000);
-	testdrawbitmap(logo16_glcd_bmp, 16, 16);
+	usleep(500000);*/
+//	testdrawbitmap(logo16_glcd_bmp, 16, 16);
 	return 0;
 }
 
