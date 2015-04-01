@@ -30,6 +30,8 @@
 
 #include "scan_result.h"
 
+namespace wins {
+
 using namespace std;
 
 struct Result;
@@ -204,6 +206,8 @@ public:
    vector<Result> Fetch();
   ///@}
 };
+
+}
 
 #endif // WIFISCAN_H
 // kate: indent-mode cstyle; indent-width 2; replace-tabs on;

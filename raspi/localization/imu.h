@@ -5,6 +5,8 @@
 
 #include "common_utils.h"
 
+namespace wins {
+
 using namespace Eigen;
 
 #define IMUS 1
@@ -46,8 +48,11 @@ class Imu{
 
   static ImuResult FetchAll();
   static void Init();
-  static PointEstimate EstimateLocation(ImuVariant v);
+  static PointEstimate EstimateLocation(
+      ImuVariant v = IMU_VARIANT_KALMAN_VANILLA);
   // static PointEstimate EstimateLocation1(PointEstimate current);
 };
+
+}
 
 #endif // IMU_H

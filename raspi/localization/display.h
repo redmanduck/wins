@@ -1,24 +1,12 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include <atomic>
-#include <condition_variable>
-#include <mutex>
-#include <thread>
-
 #include "map.h"
+#include "ST7565.h"
+
+namespace wins {
 
 using namespace std;
-
-enum DisplayUpdate {
-  DISPLAY_UPDATE_NONE               = 00,
-  DISPLAY_UPDATE_NAV_CHANGE         = 01,
-  DISPLAY_UPDATE_DEST_REACHED       = 02,
-  DISPLAY_UPDATE_KEYPRESS           = 04,
-  DISPLAY_UPDATE_BATTERY_LOW        = 010,
-  DISPLAY_UPDATE_BATTERY_CRITICAL   = 020,
-  DISPLAY_UPDATE_ALL                = 077
-};
 
 enum FontSize {
   FONT_SIZE_MEDIUM,
@@ -31,13 +19,17 @@ enum Alignment {
   ALIGNMENT_CENTER
 };
 
+enum Page {
+  PAGE_SHUT_DOWN,
+  PAGE_MENU,
+  PAGE_DESTINATION_PROMPT,
+  PAGE_NAVIGATING,
+  PAGE_DONE
+};
+
 class Display {
  private:
-  thread display_thread_;
-
-  condition_variable display_update_pending_;
-  mutex update_mutex_;
-  DisplayUpdate update_;
+  ST7565 glcd_;
 
   FontSize font_size_;
   Alignment alignment_;
@@ -45,30 +37,37 @@ class Display {
   int current_line_;
   bool flushed_;
 
-  void BlockForUpdate(DisplayUpdate type);
   void ClearLine(int line);
   void ClearScreen();
-  void PutChar(char character);
   char GetChar();
-  void PutString(string s, bool clear);
-  string GetString();
+  char GetCharAndEcho();
+  void PutString(string s, bool clear = false);
+  string GetStringAndEcho();
   void Flush();
   void SetFont(FontSize size, Alignment al, int expected_width = 5);
   void SetCurrentLine(int line);
-
- public:
-  void SetUpdateFlag(DisplayUpdate flag);
-
-  void Menu();
-  void WhereAmI();
-  void DestinationPrompt(NavMode mode);
-  void Navigating(NavMode mode);
-  void Done();
+  void IncrmLine();
 
   Display();
 
+  Page Menu();
+  Page DestinationPrompt();
+  Page Navigating();
+  Page Done();
+  Page ShutDown();
+ public:
+  Page FirstPage();
+  Page ShowPage(Page);
+
+  void SaveAsBitmap(string saveas);
+
+  static Display& GetInstance();
+
   // Prevent copying.
-  Display(const Display& other) = delete;
+  Display(const Display&) = delete;
+  void operator=(Display const&) = delete;
 };
+
+}
 
 #endif

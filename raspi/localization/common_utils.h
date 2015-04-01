@@ -3,17 +3,19 @@
 
 #include <algorithm>
 #include <atomic>
+#include <condition_variable>
 #include <cstdlib>
 #include <functional>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <cassert>
 
-class Display;
+namespace wins {
 
 using namespace std;
 
@@ -32,22 +34,7 @@ struct PointEstimate {
   }
 };
 
-class Global {
- private:
-  static Display* display_;
-
- public:
-  static int FilterableDistance;
-  static int FilterBiasX;
-  static int FilterBiasY;
-  static string MapFile;
-
-  static void Init();
-  static void Destroy();
-  static Display* MainDisplay();
-  static void ShutDown();
-};
-
+/*
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique_helper(std::false_type, Args&&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
@@ -127,6 +114,9 @@ std::vector<int> ones() {
 template <int N>
 std::vector<int> zeroes() {
   return std::vector<int>(0, N);
+}
+*/
+
 }
 
 #endif // COMMON_UTILS_H

@@ -5,15 +5,25 @@
 #include <unordered_map>
 
 #include "gamma.hpp"
+#include "global.h"
 #include "map.h"
 #include "wifi_estimate.h"
 
+namespace wins {
+
+#define MIN_OCCURENCE_PERCENT 0.9
 #define MIN_DF 5
 #define TOP_FEW_GOOD_PROB_THRESH 0.01
 #define TOP_FEW_MIN_PROB_THRESH 0.35
 
 // anonymous namespace
 namespace {
+  double mean(vector<double> v) {
+    double sum = std::accumulate(v.begin(), v.end(), 0.0);
+    double mean = sum / v.size();
+    return mean;
+  }
+
   double distance(double x1, double y1, double x2, double y2) {
     return sqrt(pow(x2-x1, 2) + pow(y2-y1, 2));
   }
@@ -48,7 +58,7 @@ namespace {
 
 } // anonymous namespace
 
-vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s,
+vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s,
     WiFiVariant v, double realx, double realy, double exp1, double exp2,
     bool debug) {
   using stat = tuple<double, Point*, int, double>;
@@ -66,7 +76,7 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
     }
     double sum = 0;
     int df = 0;
-    for (auto& mac : *s) {
+    for (auto& mac : s) {
       auto stats = Map::Stats(point, mac.name, mac.signal);
       if (stats.mean() < 0) {
         continue;
@@ -169,7 +179,7 @@ vector<PointEstimate> WifiEstimate::ClosestByMahalanobis(const vector<Result> *s
   return estimates;
 }
 
-vector<PointEstimate> WifiEstimate::MostProbableClubbed(vector<Result>& s,
+vector<PointEstimate> WiFiEstimate::MostProbableClubbed(vector<Result>& s,
     double realx, double realy, double exp1, double exp2, bool debug) {
   auto point_stats = ComputePointStats(s, realx, realy, debug);
 
@@ -252,7 +262,7 @@ vector<PointEstimate> WifiEstimate::MostProbableClubbed(vector<Result>& s,
   return estimates;
 }
 
-vector<PointEstimate> WifiEstimate::MostProbableNotClubbed(vector<Result>& s,
+vector<PointEstimate> WiFiEstimate::MostProbableNotClubbed(vector<Result>& s,
     double realx, double realy, double exp1, double exp2, bool debug) {
   auto point_stats = ComputePointStats(s, realx, realy, debug);
 
@@ -287,4 +297,48 @@ vector<PointEstimate> WifiEstimate::MostProbableNotClubbed(vector<Result>& s,
                         /* y_mean */ nearbyint(pred_y),
                         /* y_var */ var_y });
   return estimates;
+}
+
+vector<Result> AverageScans(vector<vector<Result>> scans) {
+  map<string, vector<double>> macs;
+  for (auto scan : scans) {
+    for (auto result: scan) {
+      auto iter = macs.find(result.name);
+      if (iter == macs.end()) {
+        iter = macs.emplace(result.name, vector<double>()).first;
+      }
+      iter->second.push_back(result.signal);
+    }
+  }
+  vector<Result> averaged;
+  size_t min_count = MIN_OCCURENCE_PERCENT * scans.size();
+  for (auto& kv : macs) {
+    if (kv.second.size() < min_count)
+      continue;
+    Result r = { kv.first, (int)mean(kv.second) };
+    averaged.push_back(r);
+  }
+  return averaged;
+}
+
+WiFiEstimate::WiFiEstimate(unique_ptr<WifiScan> scanner) {
+  scanner_ = move(scanner);
+}
+
+PointEstimate WiFiEstimate::EstimateLocation(int read_count,
+    WiFiVariant v) {
+  if (not scanner_) {
+    throw runtime_error("No scanner");
+  }
+  if (read_count > 1) {
+    vector<vector<Result>> scans;
+    for (int i = 0; i < read_count; ++i) {
+      scans.push_back(scanner_->Fetch());
+    }
+    return ClosestByMahalanobis(AverageScans(scans), v)[0];
+  } else {
+    return ClosestByMahalanobis(scanner_->Fetch(), v)[0];
+  }
+}
+
 }

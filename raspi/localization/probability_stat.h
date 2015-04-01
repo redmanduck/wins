@@ -1,6 +1,8 @@
 #ifndef PROBABILITY_STAT_H
 #define PROBABILITY_STAT_H
 
+namespace wins {
+
 class ProbabilityStat {
  private:
   double mean_;
@@ -18,5 +20,7 @@ class ProbabilityStat {
   double precision();
   double dist_mean();
 };
+
+}
 
 #endif // PROBABILITY_STAT_H

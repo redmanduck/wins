@@ -4,6 +4,8 @@
 #include "gamma.hpp"
 #include "probability_stat.h"
 
+namespace wins {
+
 namespace {
   double StandardDistribution(double x) {
     return exp(- x * x / 2) / sqrt(2 * M_PI);
@@ -32,4 +34,6 @@ double ProbabilityStat::prob() {
 
 double ProbabilityStat::dist_mean() {
   return fabs((x_ - mean_) / std_);
+}
+
 }

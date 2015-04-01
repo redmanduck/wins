@@ -12,6 +12,8 @@
 #include "cereal/types/list.hpp"
 #include "scan_result.h"
 
+namespace wins {
+
 #define POINT_VERSION 2
 
 struct MacInfo {
@@ -43,6 +45,8 @@ struct Point {
   }
 };
 
-CEREAL_CLASS_VERSION(Point, POINT_VERSION);
+}
+
+CEREAL_CLASS_VERSION(wins::Point, POINT_VERSION);
 
 #endif // POINT_H

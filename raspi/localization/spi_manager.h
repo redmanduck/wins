@@ -5,6 +5,8 @@
 
 #include "common_utils.h"
 
+namespace wins {
+
 class SPI {
  private:
   static void UpdateInputBuffer();
@@ -17,5 +19,7 @@ class SPI {
   static void ShowMenu();
   static void ShutDown();
 };
+
+}
 
 #endif

@@ -19,6 +19,8 @@
 
 #include "wifiscan.h"
 
+namespace wins {
+
 struct wireless_scan * WifiScan::iw_process_scanning_token(
     struct iw_event * event, struct wireless_scan * wscan)
 {
@@ -376,4 +378,6 @@ vector<Result> WifiScan::Fetch()
     results.push_back({ string(address), dBm });
   }
   return results;
+}
+
 }

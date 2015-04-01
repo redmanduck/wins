@@ -12,6 +12,8 @@
 #include "point.h"
 #include "wifi_estimate.h"
 
+namespace wins {
+
 #define SUM_LINES 20
 
 namespace {
@@ -36,10 +38,11 @@ namespace {
     vector<double> distances;
     vector<double> x_vars;
     vector<double> y_vars;
+    WiFiEstimate w;
     for (auto&& point : test_points) {
       for (auto&& scan : point->scans) {
-        auto estimates = WifiEstimate::ClosestByMahalanobis(
-            &scan, v, point->x, point->y, dp.exp1, dp.exp2, debug);
+        auto estimates = w.ClosestByMahalanobis(
+            scan, v, point->x, point->y, dp.exp1, dp.exp2, debug);
         if (estimates.size() == 0) {
           continue;
         }
@@ -65,9 +68,10 @@ namespace {
     vector<double> distances;
     vector<double> x_vars;
     vector<double> y_vars;
+    WiFiEstimate w;
     for (auto&& point : test_points) {
       for (auto&& scan : point->scans) {
-        auto estimates = WifiEstimate::MostProbableClubbed(scan,
+        auto estimates = w.MostProbableClubbed(scan,
             point->x, point->y, dp.exp1, dp.exp2, debug);
         assert(estimates.size() <= 1);
         if (estimates.size() == 0) {
@@ -91,9 +95,10 @@ namespace {
     vector<double> distances;
     vector<double> x_vars;
     vector<double> y_vars;
+    WiFiEstimate w;
     for (auto&& point : test_points) {
       for (auto&& scan : point->scans) {
-        auto estimates = WifiEstimate::MostProbableNotClubbed(scan,
+        auto estimates = w.MostProbableNotClubbed(scan,
             point->x, point->y, dp.exp1, dp.exp2, debug);
         assert(estimates.size() <= 1);
         if (estimates.size() == 0) {
@@ -208,4 +213,6 @@ void learn_helper(int argc, vector<string> argv) {
 
   summary_file << "\n";
   summary_file.close();
+}
+
 }
