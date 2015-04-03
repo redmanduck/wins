@@ -54,7 +54,7 @@ void Location::InitialEstimate() {
 void Location::InitKalman() {
   A = MatrixXd::Zero(2,2);
   A_t = MatrixXd::Zero(2,2);
-  P = MatrixXd::Constant(2,2,HIGH_VARIANCE);
+  P = HIGH_VARIANCE * MatrixXd::Identity(2,2);
 }
 
 void Location::Init() {
@@ -70,7 +70,7 @@ void Location::Init() {
 void Location::DoKalmanUpdate(bool imu_valid, vector<PointEstimate>
     wifi_estimates, PointEstimate imu_estimate) {
   throw runtime_error("Not Implemented");
-  /*
+
   MatrixXd X(2,2);
   MatrixXd Z(wifi_estimates.size() * 2, 1);
   MatrixXd H(wifi_estimates.size() * 2, 2);
@@ -100,7 +100,13 @@ void Location::DoKalmanUpdate(bool imu_valid, vector<PointEstimate>
   H_t = H.transpose();
 
   KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
-  */
+
+  if (imu_valid and variant_ & LOCATION_VARIANT_UPDATE_IMU) {
+    Vector2d V = (X - prev_X) /
+        chrono::duration_cast<std::chrono::milliseconds>(
+        chrono::steady_clock::now() - last_update_time_).count();
+    X.block<2,1>(2,0) = V;
+  }
 }
 
 kdtree::node<Point*>* Location::GetCurrentNode() {

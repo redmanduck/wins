@@ -13,12 +13,15 @@ namespace wins {
 
 enum LocationVariant {
   LOCATION_VARIANT_NONE       = 0,
-  LOCATION_VARIANT_FIXED_R    = 1
+  LOCATION_VARIANT_FIXED_R    = 1,
+  LOCATION_VARIANT_UPDATE_IMU = 2
 };
 
 class Location {
  private:
   static LocationVariant variant_;
+
+  static std::chrono::time_point<std::chrono::steady_clock> last_update_time_;
 
   static Eigen::Vector2d prev_X;
   static Eigen::MatrixXd P;
