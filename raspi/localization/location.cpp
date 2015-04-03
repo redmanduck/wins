@@ -5,6 +5,7 @@
 
 #include "global.h"
 #include "imu.h"
+#include "log.h"
 #include "kalman.h"
 #include "location.h"
 #include "wifi_estimate.h"
@@ -26,14 +27,15 @@ Eigen::MatrixXd Location::const_R;
 vector<unique_ptr<WiFiEstimate>> Location::wifi_estimators_;
 PointEstimate Location::point_estimate_;
 kdtree::node<Point*>* Location::current_node_ = nullptr;
-LocationVariant variant_ = (LocationVariant)
+LocationVariant Location::variant_ = (LocationVariant)
     (LOCATION_VARIANT_FIXED_R | LOCATION_VARIANT_UPDATE_IMU);
+std::chrono::time_point<std::chrono::steady_clock> Location::last_update_time_;
 
 vector<int> default_channels =
     { 1, 6, 11, 48, 149, 36, 40, 157, 44, 153, 161 };
 
 vector<PointEstimate> Location::GetWiFiReadings(int count) {
-  vector<PointEstimate> estimates = GetWiFiReadings();
+  vector<PointEstimate> estimates;
   vector<future<PointEstimate>> handles;
   for (auto& estimator : wifi_estimators_) {
     auto handle = async(launch::async, &WiFiEstimate::EstimateLocation,
@@ -69,7 +71,12 @@ void Location::Init() {
 
 void Location::DoKalmanUpdate(bool imu_valid, vector<PointEstimate>
     wifi_estimates, PointEstimate imu_estimate) {
-  throw runtime_error("Not Implemented");
+
+  if (wifi_estimates.size() == 0) {
+    FILE_LOG(logWARNING) << "No WIFI Estimates.";
+    this_thread::sleep_for(chrono::seconds(1));
+    return;
+  }
 
   MatrixXd X(2,2);
   MatrixXd Z(wifi_estimates.size() * 2, 1);
@@ -108,6 +115,7 @@ void Location::DoKalmanUpdate(bool imu_valid, vector<PointEstimate>
     X.block<2,1>(2,0) = V;
     X.block<2,1>(0,0) = X;
   }
+  last_update_time_ = chrono::steady_clock::now();
 }
 
 kdtree::node<Point*>* Location::GetCurrentNode() {
