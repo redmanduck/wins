@@ -2,9 +2,11 @@
 #define GLOBAL_H
 
 #include <condition_variable>
+#include <future>
 #include <mutex>
 #include <vector>
 #include <string>
+#include <thread>
 
 namespace wins {
 
@@ -17,6 +19,7 @@ enum WinsEvent {
   WINS_EVENT_KEYPRESS           = 04,
   WINS_EVENT_BATTERY_LOW        = 010,
   WINS_EVENT_BATTERY_CRITICAL   = 020,
+  WINS_EVENT_SHUTDOWN_DONE      = 040,
   WINS_EVENT_ALL                = 077
 };
 
@@ -25,6 +28,8 @@ class Global {
   static WinsEvent event_flags_;
   static condition_variable display_event_pending_;
   static mutex event_mutex_;
+  static thread::id mainthread_id_;
+  static string shutdown_command_;
 
  public:
   static int FilterableDistance;
@@ -34,12 +39,15 @@ class Global {
   static vector<string> WiFiDevices;
   static int InitWiFiReadings;
 
-  static void Init(int argc, char* argv[]);
+  static void RunMainLoop();
+  static void Init();
   static void Destroy();
   static void SetEventFlag(WinsEvent flag);
   static bool IsFlagSet(WinsEvent flag);
-  static void BlockForEvent(WinsEvent type);
+  static cv_status BlockForEvent(WinsEvent type, int millis = -1);
+  static thread::id GetMainThreadId();
   static void ShutDown();
+  static void SetTestMode();
 };
 
 }

@@ -30,12 +30,12 @@ struct ImuResult {
 
 class Imu{
  private:
-  static Matrix<double, OBSERVATIONS, OBSERVATIONS> R;  // Estimated sensor
-                                                        // error covariance.
-  static Matrix<double, SVARS, SVARS> Q;  // Estimated process error covariance.
+  static MatrixXd R;  // Estimated sensor
+                                  // error covariance.
+  static MatrixXd Q;  // Estimated process error covariance.
 
-  static Matrix<double, OBSERVATIONS, SVARS> H;
-  static Matrix<double, SVARS, OBSERVATIONS> H_t;
+  static MatrixXd H;
+  static MatrixXd H_t;
 
   static vector<double> current_state;
   static vector<double> current_variance;
@@ -43,8 +43,8 @@ class Imu{
   static vector<double> process_variance;
 
  public:
-  static Matrix<double, SVARS, 1> X;      // Current state estimate.
-  static Matrix<double, SVARS, SVARS> P;  // Current covariance estimate.
+  static MatrixXd X;      // Current state estimate.
+  static MatrixXd P;  // Current covariance estimate.
 
   static ImuResult FetchAll();
   static void Init();

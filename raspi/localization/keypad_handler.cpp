@@ -143,10 +143,10 @@ KeypadHandler& KeypadHandler::GetInstance() {
 
 void KeypadHandler::StartThread() {
   if (not keypad_thread_.joinable()) {
-    keypad_thread_ = thread(&KeypadHandler::MainLoop, &GetInstance());
+    keypad_thread_ = thread(&KeypadHandler::MainLoop,
+        &KeypadHandler::GetInstance());
   }
 }
-
 void KeypadHandler::TerminateThread() {
   sighandler(SIGTERM);
   keypad_thread_.join();
@@ -161,6 +161,14 @@ char KeypadHandler::GetChar() {
   buffer_.erase(0, 1);
 
   return input_char;
+}
+
+void KeypadHandler::FakeStringEnter(string s) {
+	lock_guard<mutex> lock(buffer_mutex_);
+  for (auto c : s) {
+    buffer_ += c;
+  }
+  Global::SetEventFlag(WINS_EVENT_KEYPRESS);
 }
 
 }
