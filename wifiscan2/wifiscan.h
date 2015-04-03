@@ -1,7 +1,7 @@
 /*
  The WifiScan class allows WiFi scans using iwlib.h.
  Copyright (C) 2013  Rafael Berkvens rafael.berkvens@ua.ac.be
-
+ and Yeah yeah (C) 2015
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -18,7 +18,8 @@
 
 #ifndef WIFISCAN_H
 #define WIFISCAN_H
-
+#include <sstream>
+#include <vector>
 #include <cstdio>
 #include <string>
 #include <map>
@@ -35,6 +36,8 @@
 */
 //#include <wifi_scan/Fingerprint.h>
 
+#define BEACON_TTL 1500
+
 #define WIFISCAN_ERROR_OPENING_IOCTL_SOCKET -1
 #define WIFISCAN_ERROR_IN_IW_SCAN -2
 #define WIFISCAN_ERROR_GETTING_RANGE_INFO -3
@@ -46,6 +49,23 @@
 #define SCAN_CHANNELS_FAILED_TO_READ -4
 #define SCAN_CHANNELS_PROBLEMS_PROCESSING -5
 
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
+}
+
+
 /**
  * @brief The wifi_scan main class.
  *
@@ -54,10 +74,36 @@
  **/
 typedef std::map<std::string, double> Duckta;
 
+typedef struct duck_scan
+{
+  /* Linked list */
+  struct duck_scan *	next;
+
+  /* Cell identifiaction */
+  int		has_ap_addr;
+  sockaddr	ap_addr;		/* Access point address */
+
+  /* Other information */
+  struct wireless_config	b;	/* Basic information */
+  iwstats	stats;			/* Signal strength */
+  int		has_stats;
+  iwparam	maxbitrate;		/* Max bit rate in bps */
+  int		has_maxbitrate;
+	char extra[IW_CUSTOM_MAX+1];
+} duck_scan;
+
+
+typedef struct duck_scan_head
+{
+	  duck_scan *	result;		/* Result of the scan */
+		  int			retry;		/* Retry level */
+} duck_scan_head;
+
+
 typedef struct WinData
 {
   /* Linked list */
-  struct wireless_scan *	next;
+  struct duck_scan *	next;
 
   /* Cell identifiaction */
   int		has_ap_addr;
@@ -110,7 +156,7 @@ class WifiScan
   };
 
   /**
-   * @brief Process/store one element from the scanning results in wireless_scan.
+   * @brief Process/store one element from the scanning results in duck_scan.
    *
    * @todo More documentation.
    *
@@ -118,8 +164,8 @@ class WifiScan
    * @param wscan
    * @return
    */
-  struct wireless_scan * iw_process_scanning_token(
-      struct iw_event * event, struct wireless_scan * wscan);
+  struct duck_scan * iw_process_scanning_token(
+      struct iw_event * event, struct duck_scan * wscan);
 
   /**
    * @brief Scan the channels indicated in channels.
@@ -135,7 +181,7 @@ class WifiScan
    * @param context Scan results.
    * @return 0 for success; see defines for other options.
    */
-  int scan_channels(wireless_scan_head * context);
+  int scan_channels(duck_scan_head * context);
 
   struct DeviceAddressCompare
   {
