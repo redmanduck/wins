@@ -23,12 +23,12 @@ class Location {
 
   static std::chrono::time_point<std::chrono::steady_clock> last_update_time_;
 
-  static Eigen::Vector2d prev_X;
+  static Eigen::MatrixXd prev_X;
   static Eigen::MatrixXd P;
   static Eigen::MatrixXd A;
   static Eigen::MatrixXd A_t;
   static Eigen::MatrixXd Q;
-  static Eigen::Vector2d const_R;
+  static Eigen::MatrixXd const_R;
 
   static vector<unique_ptr<WiFiEstimate>> wifi_estimators_;
   static kdtree::node<Point*>* current_node_;

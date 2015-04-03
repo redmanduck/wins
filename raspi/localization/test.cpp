@@ -10,8 +10,10 @@
 #include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
 #include "common_utils.h"
+#include "display.h"
 #include "global.h"
 #include "kdtree/kdtree.hpp"
+#include "keypad_handler.h"
 #include "test_helpers.h"
 #include "map.h"
 #include "point.h"
@@ -25,6 +27,8 @@ namespace wins {
 
 void Test(int argc, char *orig_argv[]) {
   vector<string> argv(orig_argv, orig_argv + argc);
+
+  Global::SetTestMode();
 
   if (string(argv[2]) == "make_binary") {
     assert(argc == 5);
@@ -176,6 +180,25 @@ void Test(int argc, char *orig_argv[]) {
     learn_helper(argc, argv);
     argv[5] = "9";
     learn_helper(argc, argv);
+  }
+  else if (string(argv[2]) == "full") {
+    Global::Init();
+    thread main_thread = thread(&Global::RunMainLoop);
+    auto& display = Display::GetInstance();
+    auto& keypad_handler = KeypadHandler::GetInstance();
+
+    // Save main menu.
+    display.SaveAsBitmap("Menu.png");
+
+    keypad_handler.FakeStringEnter("3");
+
+    auto result = Global::BlockForEvent(WINS_EVENT_SHUTDOWN_DONE, 5000);
+    if (result == cv_status::timeout) {
+      cout << "Main terminted cleanly.";
+    } else {
+      cout << "Main did not terminate. Forcing exit...";
+      exit(1);
+    }
   }
 }
 

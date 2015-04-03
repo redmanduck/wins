@@ -2,7 +2,6 @@
 #define WIFI_ESTIMATE_H
 
 #include "common_utils.h"
-#include "test.h"
 #include "scan_result.h"
 #include "wifiscan.h"
 

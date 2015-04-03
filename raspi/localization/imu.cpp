@@ -3,12 +3,12 @@
 
 namespace wins {
 
-Matrix<double, SVARS, 1> Imu::X;
-Matrix<double, SVARS, SVARS> Imu::P;
-Matrix<double, OBSERVATIONS, OBSERVATIONS> Imu::R;
-Matrix<double, SVARS, SVARS> Imu::Q;
-Matrix<double, OBSERVATIONS, SVARS> Imu::H;
-Matrix<double, SVARS, OBSERVATIONS> Imu::H_t;
+MatrixXd Imu::X(SVARS, 1);
+MatrixXd Imu::P(SVARS, SVARS);
+MatrixXd Imu::R(OBSERVATIONS, OBSERVATIONS);
+MatrixXd Imu::Q(SVARS, SVARS);
+MatrixXd Imu::H(OBSERVATIONS, SVARS);
+MatrixXd Imu::H_t(SVARS, OBSERVATIONS);
 
 vector<double> Imu::current_state;
 vector<double> Imu::current_variance;
@@ -23,6 +23,8 @@ void Imu::Init() {
     H(i * 2 + 1, 5) = 1;
   }
   H_t = H.transpose();
+
+  R.setZero();
 }
 
 ImuResult Imu::FetchAll() {

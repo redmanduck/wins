@@ -16,21 +16,21 @@ using namespace Eigen;
 
 #define HIGH_VARIANCE 10000
 
-Eigen::Vector2d Location::prev_X;
+Eigen::MatrixXd Location::prev_X;
 Eigen::MatrixXd Location::P;
 Eigen::MatrixXd Location::A;
 Eigen::MatrixXd Location::A_t;
 Eigen::MatrixXd Location::Q;
-Eigen::Vector2d Location::const_R;
+Eigen::MatrixXd Location::const_R;
 
 vector<unique_ptr<WiFiEstimate>> Location::wifi_estimators_;
 PointEstimate Location::point_estimate_;
 kdtree::node<Point*>* Location::current_node_ = nullptr;
-LocationVariant variant_ = LOCATION_VARIANT_FIXED_R;
+LocationVariant variant_ = (LocationVariant)
+    (LOCATION_VARIANT_FIXED_R | LOCATION_VARIANT_UPDATE_IMU);
 
 vector<int> default_channels =
     { 1, 6, 11, 48, 149, 36, 40, 157, 44, 153, 161 };
-
 
 vector<PointEstimate> Location::GetWiFiReadings(int count) {
   vector<PointEstimate> estimates = GetWiFiReadings();
@@ -101,11 +101,12 @@ void Location::DoKalmanUpdate(bool imu_valid, vector<PointEstimate>
 
   KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
 
-  if (imu_valid and variant_ & LOCATION_VARIANT_UPDATE_IMU) {
+  if (variant_ & LOCATION_VARIANT_UPDATE_IMU) {
     Vector2d V = (X - prev_X) /
         chrono::duration_cast<std::chrono::milliseconds>(
         chrono::steady_clock::now() - last_update_time_).count();
     X.block<2,1>(2,0) = V;
+    X.block<2,1>(0,0) = X;
   }
 }
 

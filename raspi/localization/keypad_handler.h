@@ -32,6 +32,7 @@ class KeypadHandler{
   static void TerminateThread();
 
   char GetChar();
+  void FakeStringEnter(string s);
 };
 
 }
