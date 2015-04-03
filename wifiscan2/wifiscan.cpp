@@ -19,6 +19,7 @@
 
 #include "wifiscan.h"
 
+
 struct wireless_scan * WifiScan::iw_process_scanning_token(
     struct iw_event * event, struct wireless_scan * wscan)
 {
@@ -90,8 +91,12 @@ struct wireless_scan * WifiScan::iw_process_scanning_token(
         memcpy(&(wscan->maxbitrate), &(event->u.bitrate), sizeof(iwparam));
       }
     case IWEVCUSTOM:
-      /* How can we deal with those sanely ? Jean II */
-    default:
+			char custom[IW_CUSTOM_MAX+1];
+			if((event->u.data.pointer) && (event->u.data.length))
+				memcpy(custom, event->u.data.pointer, event->u.data.length);
+			custom[event->u.data.length] = '\0';
+	    std::cout << custom << "\n";	
+		default:
       break;
   } /* switch(event->cmd) */
 
@@ -273,22 +278,22 @@ int WifiScan::scan_channels(wireless_scan_head * context)
 			/* Extract an event and print it. */
       ret = iw_extract_event_stream(&stream, &iwe, 29);
 			
-			if(iwe.cmd == IWEVCUSTOM){
-				char duck1[60000];
-				if ((iwe.u.data.pointer) && (iwe.u.data.length)) {
-				  std::cout << IW_CUSTOM_MAX << "--------------------\n";
-					std::cout << iwe.u.data.pointer << "\n";
-					std::cout << iwe.u.data.length << "\n";
-					memcpy(duck1, iwe.u.data.pointer, iwe.u.data.length);
-					duck1[iwe.u.data.length] = '\0';
-				  std::cout << duck1 << "\n";
-				}
-		}
+
 			if (ret > 0)
       {
         /* Convert to wireless_scan struct */
         wscan = iw_process_scanning_token(&iwe, wscan);
-	        /* Check problems. */
+	 /* 
+			if(iwe.cmd == IWEVCUSTOM){
+				char duck1[60000];
+				if ((iwe.u.data.pointer) && (iwe.u.data.length)) {
+					memcpy(duck1, iwe.u.data.pointer, iwe.u.data.length);
+					duck1[iwe.u.data.length] = '\0';
+				  std::cout << duck1 << "\n";
+				}
+	  	} */ 
+			
+			/* Check problems. */
         if (wscan == NULL)
         {
           free(buffer);

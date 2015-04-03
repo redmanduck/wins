@@ -54,6 +54,24 @@
  **/
 typedef std::map<std::string, double> Duckta;
 
+typedef struct WinData
+{
+  /* Linked list */
+  struct wireless_scan *	next;
+
+  /* Cell identifiaction */
+  int		has_ap_addr;
+  sockaddr	ap_addr;		/* Access point address */
+
+  /* Other information */
+  struct wireless_config	b;	/* Basic information */
+  iwstats	stats;			/* Signal strength */
+  int		has_stats;
+  iwparam	maxbitrate;		/* Max bit rate in bps */
+  int		has_maxbitrate;
+	char extra[IW_CUSTOM_MAX+1]; 
+} WinData;
+
 class WifiScan
 {
   char * interface_;
