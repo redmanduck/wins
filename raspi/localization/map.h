@@ -4,12 +4,15 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <unordered_map>
 
 #include "common_utils.h"
 #include "point.h"
 #include "kdtree/kdtree.hpp"
 #include "probability_stat.h"
+
+namespace wins {
 
 enum NavMode {
   NAV_MODE_NONE,
@@ -25,8 +28,15 @@ class Map {
   static vector<kdtree::node<Point*>*> likely_points_;
   static vector<unique_ptr<Point>> all_points_;
   static unique_ptr<kdtree::kdtree<Point*>> tree_;
+  static thread navigation_thread_;
+  static bool terminate_;
+
+  static void MainLoop();
 
  public:
+  static void StartNavigationThread();
+  static void TerminateThread();
+
   static void SetNavMode(NavMode mode);
   static bool IsNavigating();
   static void BlockUntilNavigating();
@@ -40,5 +50,7 @@ class Map {
   }
   static kdtree::node<Point*>* NodeNearest(double x, double y);
 };
+
+}
 
 #endif // MAP_H

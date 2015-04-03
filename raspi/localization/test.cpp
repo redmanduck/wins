@@ -10,6 +10,7 @@
 #include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
 #include "common_utils.h"
+#include "global.h"
 #include "kdtree/kdtree.hpp"
 #include "test_helpers.h"
 #include "map.h"
@@ -19,6 +20,8 @@
 #include "wifi_estimate.h"
 
 #include <cassert>
+
+namespace wins {
 
 void Test(int argc, char *orig_argv[]) {
   vector<string> argv(orig_argv, orig_argv + argc);
@@ -39,6 +42,7 @@ void Test(int argc, char *orig_argv[]) {
     archive(test_points);
     is.close();
 
+    auto w = WiFiEstimate();
     int count = 0;
     for (auto&& point : test_points) {
       printf("Ground Truth: %2.0f, %2.0f\n", point->x, point->y);
@@ -48,10 +52,10 @@ void Test(int argc, char *orig_argv[]) {
         if (count == 15) {
           cout <<15;
         }
-        for (auto&& estimate : WifiEstimate::ClosestByMahalanobis(
-            &scan, (WiFiVariant)(WIFI_VARIANT_TOP1),
+        for (auto&& estimate : w.ClosestByMahalanobis(
+            scan, (WiFiVariant)(WIFI_VARIANT_TOP1),
             point->x, point->y)) {
-        //for (auto&& estimate : WifiEstimate::MostProbableNotClubbed(scan)) {
+        //for (auto&& estimate : WiFiEstimate::MostProbableNotClubbed(scan)) {
           out_file << estimate.to_string();
           out_file << ",";
         }
@@ -100,7 +104,8 @@ void Test(int argc, char *orig_argv[]) {
   else if (string(argv[2]) == "wifi") {
     std::vector<int> EEchan = { 1, 6, 11, 48, 149, 36, 40, 157, 44, 153,161};
 
-    vector<Result> results = ScanResult::Fetch("wlp2s0", EEchan);
+    WifiScan w(EEchan, "wlp2s0");
+    vector<Result> results = w.Fetch();
 
     for(auto& kv : results) {
       std::cout << kv.name << " = " << kv.signal << std::endl;
@@ -172,4 +177,6 @@ void Test(int argc, char *orig_argv[]) {
     argv[5] = "9";
     learn_helper(argc, argv);
   }
+}
+
 }

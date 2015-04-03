@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+namespace wins {
+
 using namespace std;
 using result = tuple<double, double, double, double, double, double>;
 
@@ -17,5 +19,7 @@ struct DebugParams {
 };
 
 void learn_helper(int argc, vector<string> argv);
+
+}
 
 #endif

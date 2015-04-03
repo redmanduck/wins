@@ -4,56 +4,53 @@
 
 #include "common_utils.h"
 #include "display.h"
+#include "global.h"
+#include "keypad_handler.h"
 #include "navigation.h"
 #include "spi_manager.h"
 
+namespace wins {
+
 using namespace std;
 
-char RETURN_CHARACTER = '\0';
+char RETURN_CHARACTER = '#';
 
 int MaxLength(FontSize size) {
-  throw runtime_error("Not Implemented");
+    if(size == FONT_SIZE_MEDIUM){
+        return (int)(128/6);
+    }
+    throw runtime_error("Not Supported");
 }
 
 int MaxLines(FontSize size) {
-  throw runtime_error("Not Implemented");
-}
-
-void Display::BlockForUpdate(DisplayUpdate type) {
-  unique_lock<mutex> lock(update_mutex_);
-  while (not update_ & type) {
-    display_update_pending_.wait(lock);
-    if (update_ & DISPLAY_UPDATE_BATTERY_CRITICAL) {
-      Global::ShutDown();
+    if(size == FONT_SIZE_MEDIUM){
+         return 8;
     }
-  }
+    throw runtime_error("Not Supported");
+    return 0;
 }
 
 void Display::ClearLine(int line) {
-  throw runtime_error("Not Implemented");
+    glcd_.fillrect(0, line*8 , 128, 8, 0);
 }
 
 void Display::ClearScreen() {
-  throw runtime_error("Not Implemented");
-}
-
-void Display::PutChar(char character) {
-  throw runtime_error("Not Implemented");
+    glcd_.clear();
+    SetCurrentLine(1);
 }
 
 char Display::GetChar() {
   Flush();
-  BlockForUpdate(DISPLAY_UPDATE_KEYPRESS);
-  assert(SPI::input_buffer.length() > 0);
+  Global::BlockForEvent(WINS_EVENT_KEYPRESS);
+  KeypadHandler& keyhandler = KeypadHandler::GetInstance();
 
-  // Acquire lock to read buffer till end of method.
-  lock_guard<mutex> lock(SPI::buffer_mutex);
+  return keyhandler.GetChar();
+}
 
-  // Read the buffer and mark as read.
-  char input_char = SPI::input_buffer[0];
-  SPI::input_buffer.erase(0, 1);
-
-  return input_char;
+char Display::GetCharAndEcho() {
+  char c = GetChar();
+  PutString(string(1, c));
+  return c;
 }
 
 void Display::PutString(string s, bool clear) {
@@ -61,15 +58,11 @@ void Display::PutString(string s, bool clear) {
     ClearLine(current_line_);
     cursor_ = 0;
   }
-  for (char c : s) {
-    PutChar(c);
-    cursor_ += 1;
-    if (cursor_ >= MaxLength(font_size_))
-      break;
-  }
+  glcd_.drawstring_P(cursor_, current_line_, s.c_str());
+  cursor_ += s.length();
 }
 
-string Display::GetString() {
+string Display::GetStringAndEcho() {
   int char_count = 0;
   string buffer;
   char last_character;
@@ -97,33 +90,53 @@ void Display::SetFont(FontSize size, Alignment al, int expected_width) {
 }
 
 void Display::SetCurrentLine(int line) {
+  if (line == 0){
+    throw runtime_error("Reserved space for PIC!");
+  }
   current_line_ = line;
   if (line > MaxLines(font_size_)) {
     current_line_ = MaxLines(font_size_) - 1;
   }
 }
 
-void Display::SetUpdateFlag(DisplayUpdate flag) {
-  throw runtime_error("Not Implemented");
+void Display::IncrmLine(){
+    SetCurrentLine(++current_line_);
 }
 
-void Display::Menu() {
-  SPI::ShowMenu();
-  char option = GetChar();
-  switch (option) {
-    case '1': display_thread_ =
-        thread(&Display::DestinationPrompt, this, NAV_MODE_ROUTE); break;
-    case '2': display_thread_ =
-        thread(&Display::DestinationPrompt, this, NAV_MODE_LOCATE); break;
-    case '3': Global::ShutDown(); break;
+Display::Display()
+  : glcd_(0) {
+  font_size_ = FONT_SIZE_MEDIUM;
+  cursor_ = 0;
+  current_line_ = 0;
+  flushed_ = true;
+}
+
+Page Display::Menu() {
+  ClearScreen();
+
+  PutString("1. NAVIGATION");
+  IncrmLine();
+  IncrmLine();
+  PutString("2. WHERE AM I?");
+  IncrmLine();
+  IncrmLine();
+  PutString("3. SHUT DOWN");
+  IncrmLine();
+  IncrmLine();
+
+  while (true) {
+    char option = GetChar();
+    switch (option) {
+      case '1':
+      case '2':
+          return PAGE_NAVIGATING;
+      case '3': return PAGE_SHUT_DOWN;
+      default : PutString("Enter 1, 2 or 3", true);
+    }
   }
 }
 
-void Display::WhereAmI() {
-  throw runtime_error("Not Implemented");
-}
-
-void Display::DestinationPrompt(NavMode mode) {
+Page Display::DestinationPrompt() {
   SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
 
   while (true) {
@@ -133,21 +146,19 @@ void Display::DestinationPrompt(NavMode mode) {
     PutString("Enter destination:", true);
 
     SetCurrentLine(3);
-    if (Navigation::TrySetDestinationFromCoords(GetString())) {
+    if (Navigation::TrySetDestinationFromCoords(GetStringAndEcho())) {
       SetCurrentLine(1);
       PutString("Invalid location", true);
       break;
     }
   }
-  display_thread_ = thread(&Display::Navigating, this, mode);
+  return PAGE_NAVIGATING;
 }
 
-void Display::Navigating(NavMode mode) {
+Page Display::Navigating() {
   while(true) {
-    if (update_ == DISPLAY_UPDATE_NONE) {
-      BlockForUpdate(DISPLAY_UPDATE_ALL);
-    }
-    if (update_ & DISPLAY_UPDATE_KEYPRESS) {
+    Global::BlockForEvent(WINS_EVENT_ALL);
+    if (Global::IsFlagSet(WINS_EVENT_KEYPRESS)) {
       SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
       SetCurrentLine(2);
       PutString("What's up?", true);
@@ -156,33 +167,61 @@ void Display::Navigating(NavMode mode) {
       PutString("1: Menu 2: Continue", true);
       char input = GetChar();
       if (input == '1') {
-        display_thread_ = thread(&Display::Menu, this);
-        return;
+        Navigation::ResetDestination();
+        return PAGE_MENU;
       } else {
         continue;
       }
     }
-    if (update_ & DISPLAY_UPDATE_NAV_CHANGE) {
+    if (Global::IsFlagSet(WINS_EVENT_NAV_CHANGE)) {
       lock_guard<mutex> lock(Navigation::route_mutex);
 
       // TODO: Read the Route and Point estimate buffers and mark as read.
     }
-    if (update_ & DISPLAY_UPDATE_DEST_REACHED) {
-      display_thread_ = thread(&Display::Done, this);
-      return;
+    if (Global::IsFlagSet(WINS_EVENT_DEST_REACHED)) {
+      Navigation::ResetDestination();
+      return PAGE_DONE;
     }
   }
 }
 
-void Display::Done() {
+Page Display::Done() {
+  ClearScreen();
+  SetCurrentLine(4);
+  PutString("Destination reached");
   GetChar();
-  display_thread_ = thread(&Display::Menu, this);
+  return PAGE_MENU;
 }
 
-Display::Display() {
-  display_thread_ = thread(&Display::Menu, this);
-  font_size_ = FONT_SIZE_MEDIUM;
-  cursor_ = 0;
-  current_line_ = 0;
-  flushed_ = true;
+Page Display::ShutDown() {
+  ClearScreen();
+  SetCurrentLine(4);
+  PutString("Shutting Down");
+  return PAGE_SHUT_DOWN;
+}
+
+Page Display::FirstPage() {
+  return PAGE_MENU;
+}
+
+Page Display::ShowPage(Page p) {
+  switch (p) {
+    case PAGE_MENU:                 return Menu();
+    case PAGE_NAVIGATING:           return Navigating();
+    case PAGE_DESTINATION_PROMPT:   return DestinationPrompt();
+    case PAGE_SHUT_DOWN:            return ShutDown();
+    case PAGE_DONE:                 return Done();
+    default: throw runtime_error("Unknown Page");
+  }
+}
+
+void Display::SaveAsBitmap(string saveas){
+    glcd_.savebitmap(saveas);
+}
+
+Display& Display::GetInstance() {
+  static Display display;
+  return display;
+}
+
 }

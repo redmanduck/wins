@@ -1,6 +1,8 @@
 #include "imu.h"
 #include "kalman.h"
 
+namespace wins {
+
 Matrix<double, SVARS, 1> Imu::X;
 Matrix<double, SVARS, SVARS> Imu::P;
 Matrix<double, OBSERVATIONS, OBSERVATIONS> Imu::R;
@@ -67,7 +69,7 @@ PointEstimate Imu::EstimateLocation(ImuVariant v) {
       1.0 / imu_result.readings.size());
 
   if (v == IMU_VARIANT_KALMAN_DISTANCE_AVG) {
-    X.block<2,1>(0,0) = average_state.block<2,1>(2,0);
+    X.block<2,1>(0,0) = average_state.block<2,1>(0,0);
     P.block<2,2>(0,0) = average_error.block<2,2>(0,0);
   } else if (v == IMU_VARIANT_KALMAN_ALL_AVERAGE) {
     X = average_state;
@@ -106,3 +108,5 @@ PointEstimate Imu::EstimateLocation1(PointEstimate current) {
   auto average_state = sum / vector<double>(imu_result.readings.size(),
       STATE_SIZE);
 } */
+
+}

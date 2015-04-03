@@ -1,0 +1,6 @@
+*.o
+*.d
+*.csv
+*.xlsx
+*.txt
+raspi/localization/wireless_tools.29/*

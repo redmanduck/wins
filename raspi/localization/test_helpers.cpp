@@ -12,6 +12,8 @@
 #include "point.h"
 #include "wifi_estimate.h"
 
+namespace wins {
+
 #define SUM_LINES 20
 
 namespace {
@@ -36,11 +38,18 @@ namespace {
     vector<double> distances;
     vector<double> x_vars;
     vector<double> y_vars;
+    WiFiEstimate w;
     for (auto&& point : test_points) {
       for (auto&& scan : point->scans) {
-        auto estimates = WifiEstimate::ClosestByMahalanobis(
-            &scan, v, point->x, point->y, dp.exp1, dp.exp2, debug);
-        assert(estimates.size() == 1);
+        auto estimates = w.ClosestByMahalanobis(
+            scan, v, point->x, point->y, dp.exp1, dp.exp2, debug);
+        if (estimates.size() == 0) {
+          continue;
+        }
+        char buffer[100];
+        sprintf(buffer, "%5.0f %5.0f %5.0f %5.0f\n", point->x, point->y,
+            estimates[0].x_mean, estimates[0].y_mean);
+        //cout << buffer;
         distances.push_back(sqrt(
             pow(point->x - estimates[0].x_mean, 2) +
             pow(point->y - estimates[0].y_mean, 2)));
@@ -59,9 +68,10 @@ namespace {
     vector<double> distances;
     vector<double> x_vars;
     vector<double> y_vars;
+    WiFiEstimate w;
     for (auto&& point : test_points) {
       for (auto&& scan : point->scans) {
-        auto estimates = WifiEstimate::MostProbableClubbed(scan,
+        auto estimates = w.MostProbableClubbed(scan,
             point->x, point->y, dp.exp1, dp.exp2, debug);
         assert(estimates.size() <= 1);
         if (estimates.size() == 0) {
@@ -85,9 +95,10 @@ namespace {
     vector<double> distances;
     vector<double> x_vars;
     vector<double> y_vars;
+    WiFiEstimate w;
     for (auto&& point : test_points) {
       for (auto&& scan : point->scans) {
-        auto estimates = WifiEstimate::MostProbableNotClubbed(scan,
+        auto estimates = w.MostProbableNotClubbed(scan,
             point->x, point->y, dp.exp1, dp.exp2, debug);
         assert(estimates.size() <= 1);
         if (estimates.size() == 0) {
@@ -202,4 +213,6 @@ void learn_helper(int argc, vector<string> argv) {
 
   summary_file << "\n";
   summary_file.close();
+}
+
 }

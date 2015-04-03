@@ -60,7 +60,7 @@
 MY_CFLAGS = -std=c++11 -I. -Iwireless_tools.29 -Lwireless_tools.29
 
 # The linker options.
-MY_LIBS   = -liw
+MY_LIBS   = -liw -lbcm2835
 
 # The pre-processor options used by the cpp (man cpp for more).
 CPPFLAGS  = -Wall

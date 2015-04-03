@@ -8,7 +8,12 @@
 #include "cereal/archives/json.hpp"
 #include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
+#include "global.h"
+#include "location.h"
+#include "navigation.h"
 #include "map.h"
+
+namespace wins {
 
 mutex Map::navmode_mutex_;
 NavMode Map::navmode_ = NAV_MODE_NONE;
@@ -17,9 +22,31 @@ vector<kdtree::node<Point*>*> Map::likely_points_;
 vector<unique_ptr<Point>> Map::all_points_;
 unique_ptr<kdtree::kdtree<Point*>> Map::tree_;
 
+thread Map::navigation_thread_;
+bool Map::terminate_ = false;
+
 inline bool file_exists(const std::string& name) {
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0);
+}
+
+void Map::MainLoop() {
+  while(not terminate_) {
+    Location::UpdateEstimate();
+    Navigation::UpdateRoute();
+    Global::SetEventFlag(WINS_EVENT_NAV_CHANGE);
+  }
+}
+
+void Map::StartNavigationThread() {
+  if (not navigation_thread_.joinable()) {
+    navigation_thread_ = thread(&Map::MainLoop);
+  }
+}
+
+void Map::TerminateThread() {
+  terminate_ = true;
+  navigation_thread_.join();
 }
 
 void Map::SetNavMode(NavMode mode) {
@@ -84,4 +111,6 @@ const vector<kdtree::node<Point*>*>& Map::CurrentLikelyPoints() {
 kdtree::node<Point*>* Map::NodeNearest(double x, double y) {
   Point p({ x, y });
   return tree_->nearest(&p);
+}
+
 }

@@ -19,6 +19,8 @@
 
 #include "direction.h"
 
+using namespace wins;
+
 namespace kdtree {
     template <typename T>
     class node {
@@ -120,13 +122,11 @@ namespace kdtree {
 
           node<T>* pp = NULL;
           node<T>* p = this->parent;
-          node<T>* c = this;
           if (p != NULL && p->parent != NULL) {
             pp = p->parent;
           }
           while (pp != NULL && p == pp->right)
           {
-              c = pp;
               p = pp->parent;
               pp = p == NULL ? NULL : p->parent;
           }
@@ -145,13 +145,11 @@ namespace kdtree {
 
           node<T>* pp = NULL;
           node<T>* p = this->parent;
-          node<T>* c = this;
           if (p != NULL && p->parent != NULL) {
             pp = p->parent;
           }
           while (pp != NULL && p == pp->left)
           {
-              c = pp;
               p = pp->parent;
               pp = p == NULL ? NULL : p->parent;
           }

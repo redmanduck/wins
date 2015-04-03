@@ -6,6 +6,8 @@
 #include "navigation.h"
 #include "location.h"
 
+namespace wins {
+
 using namespace std;
 
 #define MULTIPLIER 10
@@ -60,7 +62,16 @@ bool Navigation::TrySetDestinationFromCoords(string s) {
   return false;
 }
 
+void Navigation::ResetDestination() {
+  destination_node_ = nullptr;
+}
+
 void Navigation::UpdateRoute() {
+  if (destination_node_ == nullptr) {
+    current_route_.clear();
+    return;
+  }
+
   // Current node on map.
   auto current_node = Location::GetCurrentNode();
 
@@ -123,4 +134,6 @@ vector<kdtree::node<Point*>*>::const_reverse_iterator Navigation::route_begin() 
 
 vector<kdtree::node<Point*>*>::const_reverse_iterator Navigation::route_end() {
   return current_route_.rend();
+}
+
 }

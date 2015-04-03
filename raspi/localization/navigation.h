@@ -7,6 +7,8 @@
 #include "kdtree/node.hpp"
 #include "point.h"
 
+namespace wins {
+
 class Navigation {
  private:
   static kdtree::node<Point*>* destination_node_;
@@ -17,8 +19,11 @@ class Navigation {
   static mutex route_mutex;
   static bool TrySetDestinationFromCoords(string s);
   static void UpdateRoute();
+  static void ResetDestination();
   static vector<kdtree::node<Point*>*>::const_reverse_iterator route_begin();
   static vector<kdtree::node<Point*>*>::const_reverse_iterator route_end();
 };
+
+}
 
 #endif

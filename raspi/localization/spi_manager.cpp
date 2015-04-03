@@ -2,6 +2,8 @@
 
 #include "spi_manager.h"
 
+namespace wins {
+
 mutex SPI::buffer_mutex;
 string SPI::input_buffer;
 
@@ -15,4 +17,6 @@ void SPI::ShowMenu() {
 
 void SPI::ShutDown() {
   throw runtime_error("Not Implemented");
+}
+
 }
