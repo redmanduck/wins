@@ -31,8 +31,8 @@ void sighandler(int sig)
 		bcm2835_gpio_write(W4, LOW);
 }
 
-void init_gpio(){
-   if (!bcm2835_init()) return;
+bool init_gpio(){
+   if (!bcm2835_init()) return false;
 
 	  bcm2835_gpio_fsel(W1, BCM2835_GPIO_FSEL_OUTP);
 		bcm2835_gpio_fsel(W2, BCM2835_GPIO_FSEL_OUTP);
@@ -53,6 +53,8 @@ void init_gpio(){
     bcm2835_gpio_fen(R2);
     bcm2835_gpio_fen(R3);
     bcm2835_gpio_fen(R4);
+
+    return true;
 }
 
 char map[4][4]  = {
@@ -75,12 +77,15 @@ void KeypadHandler::ProcessButton(int row, int col) {
 }
 
 void KeypadHandler::MainLoop() {
-    signal(SIGABRT, &sighandler);
-		signal(SIGTERM, &sighandler);
-		signal(SIGINT, &sighandler);
-		buffer_ = "";
-		int state = 0, old_state = -1, new_state = 0;
-    init_gpio();
+  signal(SIGABRT, &sighandler);
+  signal(SIGTERM, &sighandler);
+  signal(SIGINT, &sighandler);
+  buffer_ = "";
+  int state = 0, old_state = -1, new_state = 0;
+  if(!init_gpio()) {
+    cout << "GPIO Failed to Initialize!";
+		while(not terminate_);
+  } else {
 		while(not terminate_){
 			for(int i = 0; i < 4; i++){
 				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4)));
@@ -113,6 +118,7 @@ void KeypadHandler::MainLoop() {
 			delay(300);
 		}
     bcm2835_close();
+  }
 }
 
 KeypadHandler::KeypadHandler() {
@@ -148,6 +154,7 @@ void KeypadHandler::StartThread() {
   }
 }
 void KeypadHandler::TerminateThread() {
+  cout << "TERMINATING KEYPAD";
   sighandler(SIGTERM);
   keypad_thread_.join();
 }

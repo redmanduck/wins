@@ -36,6 +36,7 @@ class Display {
   int cursor_;
   int current_line_;
   bool flushed_;
+  Page current_page_;
 
   void ClearLine(int line);
   void ClearScreen();
@@ -58,6 +59,7 @@ class Display {
  public:
   Page FirstPage();
   Page ShowPage(Page);
+  Page CurrentPage();
 
   void SaveAsBitmap(string saveas);
 

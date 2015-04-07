@@ -182,10 +182,19 @@ void Test(int argc, char *orig_argv[]) {
     learn_helper(argc, argv);
   }
   else if (string(argv[2]) == "full") {
+    string file_name = "Menu.png";
+    std::ofstream stream(file_name.c_str(),std::ios::binary);
+    if (!stream) {
+      std::cout << "bitmap_image::save_image(): Error - Could not open file "  << file_name << " for writing!" << std::endl;
+      return;
+    }
+    stream.close();
     Global::Init();
     thread main_thread = thread(&Global::RunMainLoop);
     auto& display = Display::GetInstance();
     auto& keypad_handler = KeypadHandler::GetInstance();
+
+    while(display.CurrentPage() != PAGE_MENU);
 
     // Save main menu.
     display.SaveAsBitmap("Menu.png");
@@ -194,6 +203,7 @@ void Test(int argc, char *orig_argv[]) {
 
     auto result = Global::BlockForEvent(WINS_EVENT_SHUTDOWN_DONE, 5000);
     if (result == cv_status::timeout) {
+      main_thread.join();
       cout << "Main terminted cleanly.";
     } else {
       cout << "Main did not terminate. Forcing exit...";

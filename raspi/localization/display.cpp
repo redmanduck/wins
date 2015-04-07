@@ -40,7 +40,6 @@ void Display::ClearScreen() {
 }
 
 char Display::GetChar() {
-  Flush();
   Global::BlockForEvent(WINS_EVENT_KEYPRESS);
   KeypadHandler& keyhandler = KeypadHandler::GetInstance();
 
@@ -97,6 +96,7 @@ void Display::SetCurrentLine(int line) {
   if (line > MaxLines(font_size_)) {
     current_line_ = MaxLines(font_size_) - 1;
   }
+  cursor_ = 0;
 }
 
 void Display::IncrmLine(){
@@ -123,6 +123,7 @@ Page Display::Menu() {
   PutString("3. SHUT DOWN");
   IncrmLine();
   IncrmLine();
+  current_page_ = PAGE_MENU;
 
   while (true) {
     char option = GetChar();
@@ -144,6 +145,7 @@ Page Display::DestinationPrompt() {
 
     SetCurrentLine(2);
     PutString("Enter destination:", true);
+    current_page_ = PAGE_DESTINATION_PROMPT;
 
     SetCurrentLine(3);
     if (Navigation::TrySetDestinationFromCoords(GetStringAndEcho())) {
@@ -156,6 +158,8 @@ Page Display::DestinationPrompt() {
 }
 
 Page Display::Navigating() {
+  ClearScreen();
+  current_page_ = PAGE_NAVIGATING;
   while(true) {
     Global::BlockForEvent(WINS_EVENT_ALL);
     if (Global::IsFlagSet(WINS_EVENT_KEYPRESS)) {
@@ -175,8 +179,8 @@ Page Display::Navigating() {
     }
     if (Global::IsFlagSet(WINS_EVENT_NAV_CHANGE)) {
       lock_guard<mutex> lock(Navigation::route_mutex);
-
-      // TODO: Read the Route and Point estimate buffers and mark as read.
+      SetCurrentLine(3);
+      PutString("Navigating...");
     }
     if (Global::IsFlagSet(WINS_EVENT_DEST_REACHED)) {
       Navigation::ResetDestination();
@@ -189,6 +193,7 @@ Page Display::Done() {
   ClearScreen();
   SetCurrentLine(4);
   PutString("Destination reached");
+  current_page_ = PAGE_DONE;
   GetChar();
   return PAGE_MENU;
 }
@@ -197,6 +202,7 @@ Page Display::ShutDown() {
   ClearScreen();
   SetCurrentLine(4);
   PutString("Shutting Down");
+  current_page_ = PAGE_SHUT_DOWN;
   return PAGE_SHUT_DOWN;
 }
 
@@ -213,6 +219,10 @@ Page Display::ShowPage(Page p) {
     case PAGE_DONE:                 return Done();
     default: throw runtime_error("Unknown Page");
   }
+}
+
+Page Display::CurrentPage() {
+  return current_page_;
 }
 
 void Display::SaveAsBitmap(string saveas){
