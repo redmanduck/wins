@@ -112,6 +112,10 @@
 #define MPU6050_RA_FIFO_R_W 0x74
 #define MPU6050_RA_WHO_AM_I 0x75
 
+#define FUELGAUGE_ADDRESS 0b01101100
+#define FUELGAUGE_SOC 0x04
+#define FUELGAUGE_CONFIG 0x0C
+
 #define true 1
 #define false 0
 #define USE_AND_OR	// To enable AND_OR mask setting for I2C.
@@ -122,12 +126,12 @@
 _CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & COE_OFF & FWDTEN_OFF & ICS_PGx2)
 // Disable CLK switch and CLK monitor, OSCO or Fosc/2, HS oscillator,
 // Primary oscillator
-_CONFIG2(FCKSM_CSECMD & OSCIOFNC_ON & POSCMOD_HS & FNOSC_PRI)
+_CONFIG2(FCKSM_CSECMD & OSCIOFNC_ON & POSCMOD_HS & FNOSC_PRIPLL)
 
 
 // calculate baud rate of I2C
 #define Fosc	(8000000) 	// crystal
-#define Fcy		(Fosc/2)	// w.PLL (Instruction Per Second)
+#define Fcy		(Fosc*4/2)	// w.PLL (Instruction Per Second)
 #define Fsck	400000		// 400kHz I2C
 #define I2C_BRG	((Fcy/2/Fsck)-1)
 
@@ -162,6 +166,8 @@ static spiData rpiData;
 
 void LDByteWriteI2C(unsigned char SlaveAddress, unsigned char data, unsigned  char reg);
 void LDByteReadI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char *data, int num);
+void LDWordWriteI2C(unsigned char SlaveAddress, unsigned char reg, unsigned  char data1, unsigned char data2);
+void LDWordReadI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char *data1, unsigned char *data2, int num);
 void Setup_MPU6050();
 void SPI1Init(void);
 void TimerInit(void);
@@ -189,9 +195,9 @@ int main (void)
         TRISAbits.TRISA0 = 0;
         TRISAbits.TRISA1 = 0;
         TRISAbits.TRISA5 = 0;
-        TRISAbits.TRISA2 = 0;
+        //TRISAbits.TRISA2 = 0; scl2
         TRISAbits.TRISA4 = 0;
-        TRISAbits.TRISA3 = 0;
+        //TRISAbits.TRISA3 = 0; sda2
         
         // push button
         TRISAbits.TRISA7 = 1;
@@ -203,13 +209,14 @@ int main (void)
         //Enable channel
         SPI1Init();
         LCDInit();
-        TimerInit();
 	OpenI2C1( I2C_ON, I2C_BRG );
+	OpenI2C2( I2C_ON, I2C_BRG );
         unsigned char lcd_data1[16];
         unsigned char lcd_data2[16];
         Setup_MPU6050();
         LDByteWriteI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , 0x00);   //turn on IMU
-        _05ms = 0;
+        _05ms = false;
+        TimerInit();
 
         lcd_data1[12] = ' ';
         lcd_data1[13] = ' ';
@@ -231,8 +238,10 @@ int main (void)
 
             if(_05ms==true){
                 //do something
+                
                 if(accel_queue){
                     LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_H , &rpiData.imu[accel_p], 6);
+                    
                 accel_xh=rpiData.imu[accel_p];
                 accel_xl=rpiData.imu[accel_p+1];
                 accel_yh=rpiData.imu[accel_p+2];
@@ -240,6 +249,8 @@ int main (void)
                 accel_zh=rpiData.imu[accel_p+4];
                 accel_zl=rpiData.imu[accel_p+5];
                     accel_p+=12;
+                    if (accel_p>=1200)
+                        accel_p=0;
                     lcd_data1[7] = 'A';
                     lcd_data1[8] = 'C';
                     lcd_data1[9] = 'C';
@@ -249,6 +260,7 @@ int main (void)
                 }
                 else{
                     LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_GYRO_XOUT_H , &rpiData.imu[gyro_p], 6);
+                    
                 accel_xh=rpiData.imu[gyro_p];
                 accel_xl=rpiData.imu[gyro_p+1];
                 accel_yh=rpiData.imu[gyro_p+2];
@@ -256,6 +268,9 @@ int main (void)
                 accel_zh=rpiData.imu[gyro_p+4];
                 accel_zl=rpiData.imu[gyro_p+5];
                     gyro_p+=12;
+                    if (gyro_p>=1206)
+                        gyro_p=6;
+
                     lcd_data1[7] = 'G';
                     lcd_data1[8] = 'Y';
                     lcd_data1[9] = 'R';
@@ -263,6 +278,7 @@ int main (void)
                     lcd_data1[11] = ' ';
                     accel_queue=true;
                 }
+                 
                 LCDwriteLine(LCD_LINE1, lcd_data1);
                 LCDwriteLine(LCD_LINE2, lcd_data2);
                 _05ms=false;
@@ -277,7 +293,6 @@ int main (void)
                 g_z=accel_zl|accel_zh<<8;
                 lcd_data2[10]=g_z < 0? '-' : ' ';
                 g_z=g_z > 0 ? g_z : -g_z;
-                lcd_data1[6]=' ';
                 lcd_data1[5]=(g_x%10)+'0';
                 lcd_data1[4]=(g_x/10)%10+'0';
                 lcd_data1[3]=(g_x/100)%10+'0';
@@ -297,21 +312,7 @@ int main (void)
                 lcd_data2[11]=(g_z/10000)%10+'0';
 
             }
-            if(accel_p==1200){
-                accel_p=0;
-                LATAbits.LATA4 = 1;
-            }
-            else{
-                LATAbits.LATA4 = 0;
-            }
-            if(gyro_p==1206){
-                gyro_p=6;
-                LATAbits.LATA4 = 1;
-            }
-            else{
-                LATAbits.LATA4 = 0;
-            }
-
+/*
             if(!PORTDbits.RD13){
                 LATAbits.LATA0 = 1;
                 // some code
@@ -328,6 +329,7 @@ int main (void)
                 accel_zh=rpiData.imu[accel_p+4];
                 accel_zl=rpiData.imu[accel_p+5];
                 accel_p+=12;
+                lcd_data1[6] = ' ';
                 lcd_data1[7] = 'A';
                 lcd_data1[8] = 'C';
                 lcd_data1[9] = 'C';
@@ -375,68 +377,33 @@ int main (void)
             }
             else if(!PORTDbits.RD7){
                 LATAbits.LATA5 = 1;
+                //read percent
+                accel_xh=0;
+                accel_yh=0;
+                LDWordReadI2C(FUELGAUGE_ADDRESS, FUELGAUGE_CONFIG, &accel_xl, &accel_yl, 1);
+                lcd_data1[6] = ' ';
+                lcd_data1[7] = 'C';
+                lcd_data1[8] = 'O';
+                lcd_data1[9] = 'N';
+                lcd_data1[10] = 'F';
+                lcd_data1[11] = 'I';
+                lcd_data1[12] = 'G';
             }
             else if (!PORTDbits.RD6){
                 LATAbits.LATA6 = 1;
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_H , &rpiData.imu[gyro_p], 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_L , &rpiData.imu[gyro_p+1], 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_YOUT_H , &rpiData.imu[gyro_p+2], 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_YOUT_L , &rpiData.imu[gyro_p+3], 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_ZOUT_H , &rpiData.imu[gyro_p+4], 1);
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_ZOUT_L , &rpiData.imu[gyro_p+5], 1);
-                accel_xh=rpiData.imu[gyro_p];
-                accel_xl=rpiData.imu[gyro_p+1];
-                accel_yh=rpiData.imu[gyro_p+2];
-                accel_yl=rpiData.imu[gyro_p+3];
-                accel_zh=rpiData.imu[gyro_p+4];
-                accel_zl=rpiData.imu[gyro_p+5];
-                gyro_p+=12;
-
-                lcd_data1[7] = 'G';
-                lcd_data1[8] = 'Y';
-                lcd_data1[9] = 'R';
-                lcd_data1[10] = 'O';
-                lcd_data1[11] = ' ';
+                //read config
+                accel_xh=0;
+                accel_yh=0;
+                LDWordReadI2C(FUELGAUGE_ADDRESS, FUELGAUGE_SOC, &accel_xl, &accel_yl, 1);
+                lcd_data1[6] = '%';
+                lcd_data1[7] = ' ';
+                lcd_data1[8] = 'F';
+                lcd_data1[9] = 'U';
+                lcd_data1[10] = 'E';
+                lcd_data1[11] = 'L';
                 lcd_data1[12] = ' ';
-                lcd_data1[13] = ' ';
-                lcd_data1[14] = ' ';
-                lcd_data1[15] = ' ';
-
-                lcd_data2[6]='y';
-                lcd_data2[7]=' ';
-                lcd_data2[8]=' ';
-                lcd_data2[9]='z';
-
-                g_x=accel_xl|accel_xh<<8;
-                lcd_data1[0]=g_x < 0? '-' : ' ';
-                g_x=g_x > 0 ? g_x : -g_x;
-
-                g_y=accel_yl|accel_yh<<8;
-                lcd_data2[0]=g_y < 0? '-' : ' ';
-                g_y=g_y > 0 ? g_y : -g_y;
-
-                g_z=accel_zl|accel_zh<<8;
-                lcd_data2[10]=g_z < 0? '-' : ' ';
-                g_z=g_z > 0 ? g_z : -g_z;
-                lcd_data1[6]=' ';
-                lcd_data1[5]=(g_x%10)+'0';
-                lcd_data1[4]=(g_x/10)%10+'0';
-                lcd_data1[3]=(g_x/100)%10+'0';
-                lcd_data1[2]=(g_x/1000)%10+'0';
-                lcd_data1[1]=(g_x/10000)%10+'0';
-
-                lcd_data2[5]=(g_y%10)+'0';
-                lcd_data2[4]=((g_y/10)%10)+'0';
-                lcd_data2[3]=((g_y/100)%10)+'0';
-                lcd_data2[2]=(g_y/1000)%10+'0';
-                lcd_data2[1]=(g_y/10000)%10+'0';
-
-                lcd_data2[15]=(g_z%10)+'0';
-                lcd_data2[14]=(g_z/10)%10+'0';
-                lcd_data2[13]=(g_z/100)%10+'0';
-                lcd_data2[12]=(g_z/1000)%10+'0';
-                lcd_data2[11]=(g_z/10000)%10+'0';
             }
+ * */
       }
 	return 0;
 }
@@ -444,7 +411,7 @@ int main (void)
 void TimerInit(void){
     TMR1 = 0x00;
     T1CON = 0x00;
-    PR1 = 0xFA;
+    PR1 = 0x3E8;        //without PLL FA,or 250
     IPC0bits.T1IP = 2;  // interrupt priority
     IFS0bits.T1IF = 0;  // reset interrupt flag
     T1CONbits.TCKPS = 1; //
@@ -455,7 +422,7 @@ void TimerInit(void){
 void _ISR _T1Interrupt(void);
 void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void){
     //set some flag every 0.5ms
-    LATAbits.LATA3 = ~LATAbits.LATA3;
+    LATAbits.LATA4 = ~LATAbits.LATA4;
     _05ms = true;
     IFS0bits.T1IF = 0;
 }
@@ -483,20 +450,23 @@ void __attribute__((__interrupt__, auto_psv)) _SPI1Interrupt(void){
             rpiData.lcd[data_p]= SPI1BUF;
          */
             // each time read a byte and compare it with the last sent byte
-        for(i=0; i<1200; i++){
+        for(i=0; i<12; i++){
             SPI1BUF = rpiData.imu[data_p+i];
             while(!SPI1STATbits.SPIRBF);
             rpiData.lcd[data_p+i]= SPI1BUF;
         }
+        data_p+=12;
+        if(data_p>=1200)
+            data_p=0;
         // send done byte
         SPI1BUF=ack;
         while(!SPI1STATbits.SPIRBF);
         i=SPI1BUF;
-        data_p=0;
     }
     else{
         SPI1BUF=ERROR;
-        SPI1Init();
+        //need to restart the PIC or SPI 
+        SPI1STATbits.SPIROV = 0;
     }
     SPI1BUF = 0x5A;
     IFS0bits.SPI1IF = 0;
@@ -519,7 +489,7 @@ void SPI1Init(void)
     SPI1CON1bits.MODE16 	= 0;	// set in 16-bit mode, clear in 8-bit mode
     SPI1CON1bits.SMP		= 0;	// Input data sampled at middle of data output time
     SPI1CON1bits.CKP 		= 0;	// CKP and CKE is subject to change ...
-    SPI1CON1bits.CKE 		= 1;	// ... based on your communication mode.
+    SPI1CON1bits.CKE 		= 0;	// ... based on your communication mode.
     SPI1CON1bits.MSTEN 		= 0; 	// 1 =  Master mode; 0 =  Slave mode
     SPI1CON1bits.SPRE 		= 4; 	// Secondary Prescaler = 4:1
     SPI1CON1bits.PPRE 		= 2; 	// Primary Prescaler = 4:1
@@ -576,6 +546,49 @@ void LDByteReadI2C(unsigned char SlaveAddress, unsigned  char reg, unsigned char
       		MastergetsI2C1(num, data, 30);
 		StopI2C1();	//Send the Stop condition
 		IdleI2C1();	//Wait to complete
+}
+
+void LDWordWriteI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char data1, unsigned char data2){
+    StartI2C1();	//Send the Start Bit
+    IdleI2C1();		//Wait to complete
+    MasterWriteI2C1(SlaveAddress); //transmit write command
+    IdleI2C1();		//Wait to complete
+    MasterWriteI2C1(reg);
+    IdleI2C1();
+    MasterWriteI2C1(data1);
+    IdleI2C1();
+    MasterWriteI2C1(data2);
+    IdleI2C1();
+    StopI2C1();
+    IdleI2C1();
+}
+
+void LDWordReadI2C(unsigned char SlaveAddress, unsigned  char reg, unsigned char *data1, unsigned char *data2, int num){
+                StartI2C1();	//Send the Start Bit
+		IdleI2C1();		//Wait to complete
+		MasterWriteI2C1(SlaveAddress); //transmit write command
+		IdleI2C1();		//Wait to complete
+                MasterWriteI2C1(reg);
+                IdleI2C1();
+                StopI2C1();
+                IdleI2C1();
+
+
+                StartI2C1();	//Send the Start Bit
+		IdleI2C1();		//Wait to complete
+		MasterWriteI2C1(SlaveAddress|0x01); //transmit read command
+		IdleI2C1();		//Wait to complete
+                unsigned char data[2];
+      		MastergetsI2C1(2, data, 30);		// "MCHP I2C"
+                *data1=data[0];
+                *data2=data[1];
+//		if (status!=0)
+//			while(1);
+
+		StopI2C1();	//Send the Stop condition
+		IdleI2C1();	//Wait to complete
+
+
 }
 
 void Setup_MPU6050()
