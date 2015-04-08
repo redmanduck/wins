@@ -222,14 +222,14 @@ __CONFIG1         0x0157fe          0x2
 .comment
  *(.comment)
 
-.debug_info       0x000000       0x1607
+.debug_info       0x000000       0x1649
  *(.debug_info)
- .debug_info      0x000000         0xaf build/XC16_24FJ256GA110/production/configuration_bits.o
- .debug_info      0x0000af        0x11a build/XC16_24FJ256GA110/production/interrupts.o
- .debug_info      0x0001c9        0xf05 build/XC16_24FJ256GA110/production/main.o
- .debug_info      0x0010ce        0x139 build/XC16_24FJ256GA110/production/system.o
- .debug_info      0x001207        0x2d5 build/XC16_24FJ256GA110/production/traps.o
- .debug_info      0x0014dc        0x12b build/XC16_24FJ256GA110/production/user.o
+ .debug_info      0x000000         0xba build/XC16_24FJ256GA110/production/configuration_bits.o
+ .debug_info      0x0000ba        0x125 build/XC16_24FJ256GA110/production/interrupts.o
+ .debug_info      0x0001df        0xf10 build/XC16_24FJ256GA110/production/main.o
+ .debug_info      0x0010ef        0x144 build/XC16_24FJ256GA110/production/system.o
+ .debug_info      0x001233        0x2e0 build/XC16_24FJ256GA110/production/traps.o
+ .debug_info      0x001513        0x136 build/XC16_24FJ256GA110/production/user.o
  *(.gnu.linkonce.wi.*)
 
 .debug_abbrev     0x000000        0x295
