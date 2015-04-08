@@ -148,6 +148,7 @@ enum opcode{
     POSITION = 'P',
     VALID = 'V',
     ERROR = 'E',
+    BAT = 'B',
 };
 
 typedef int bool;
@@ -162,13 +163,15 @@ unsigned char lcd_data2[16];
 unsigned int accel_p = 0;           //index of buffer where the next accel data will be inserted
 unsigned int gyro_p = 6;            //index of buffer where the next gyro data will be inserted
 unsigned int data_p = 0;            //index of buffer that will be transmitted next to the RPi
+unsigned char bat1 = 0;
+unsigned char bat2 = 0;
 static spiData rpiData;
 
 void LDByteWriteI2C(unsigned char SlaveAddress, unsigned char data, unsigned  char reg);
 void LDByteReadI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char *data, int num);
 void LDWordWriteI2C(unsigned char SlaveAddress, unsigned char reg, unsigned  char data1, unsigned char data2);
-void LDWordReadI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char *data1, unsigned char *data2, int num);
-void Setup_MPU6050();
+void LDWordReadI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char *data1, unsigned char *data2);
+void Setup_MPU6050(void);
 void SPI1Init(void);
 void TimerInit(void);
 unsigned short writeSPI1( unsigned short data );
@@ -184,6 +187,7 @@ int main (void)
         unsigned char accel_yl = 0x00;
         unsigned char accel_zh = 0x00;
         unsigned char accel_zl = 0x00;
+        unsigned int _60s = 0;
         int g_x=0;
         int g_y=0;
         int g_z=0;
@@ -214,8 +218,8 @@ int main (void)
         unsigned char lcd_data1[16];
         unsigned char lcd_data2[16];
         Setup_MPU6050();
-        LDByteWriteI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , 0x00);   //turn on IMU
         _05ms = false;
+        LDByteWriteI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , 0x00);   //turn on IMU
         TimerInit();
 
         lcd_data1[12] = ' ';
@@ -231,16 +235,23 @@ int main (void)
 
 
         while (1) {
-            LATAbits.LATA0 = 0;
-            LATAbits.LATA6 = 0;
-            LATAbits.LATA5 = 0;
-            LATAbits.LATA1 = 0;
-
+            //LATAbits.LATA0 = 0;
+            //LATAbits.LATA6 = 0;
+            //LATAbits.LATA5 = 0;
+            //LATAbits.LATA1 = 0;
+            if (_60s==20000){
+                _60s = 0;
+                LDWordReadI2C(FUELGAUGE_ADDRESS, FUELGAUGE_CONFIG, &bat1, &bat2);
+                LDWordReadI2C(FUELGAUGE_ADDRESS, FUELGAUGE_SOC, &bat1, &bat2);
+            }
             if(_05ms==true){
                 //do something
-                
+                _60s+=1;
                 if(accel_queue){
                     LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_H , &rpiData.imu[accel_p], 6);
+
+                    if(rpiData.imu[accel_p]==0xff && rpiData.imu[accel_p+1]==0xff)
+                        LDByteWriteI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , 0x00);   //turn on IMU
                     
                 accel_xh=rpiData.imu[accel_p];
                 accel_xl=rpiData.imu[accel_p+1];
@@ -312,98 +323,6 @@ int main (void)
                 lcd_data2[11]=(g_z/10000)%10+'0';
 
             }
-/*
-            if(!PORTDbits.RD13){
-                LATAbits.LATA0 = 1;
-                // some code
-                LDByteWriteI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , 0x00);   //turn on IMU
-        
-            }
-            else if(!PORTAbits.RA7){
-                LATAbits.LATA1 = 1;
-                LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_ACCEL_XOUT_H , &rpiData.imu[accel_p], 6);
-                accel_xh=rpiData.imu[accel_p];
-                accel_xl=rpiData.imu[accel_p+1];
-                accel_yh=rpiData.imu[accel_p+2];
-                accel_yl=rpiData.imu[accel_p+3];
-                accel_zh=rpiData.imu[accel_p+4];
-                accel_zl=rpiData.imu[accel_p+5];
-                accel_p+=12;
-                lcd_data1[6] = ' ';
-                lcd_data1[7] = 'A';
-                lcd_data1[8] = 'C';
-                lcd_data1[9] = 'C';
-                lcd_data1[10] = 'E';
-                lcd_data1[11] = 'L';
-                lcd_data1[12] = ' ';
-                lcd_data1[13] = ' ';
-                lcd_data1[14] = ' ';
-                lcd_data1[15] = ' ';
-
-                lcd_data2[6]='y';
-                lcd_data2[7]=' ';
-                lcd_data2[8]=' ';
-                lcd_data2[9]='z';
-
-                g_x=accel_xl|accel_xh<<8;
-                lcd_data1[0]=g_x < 0? '-' : ' ';
-                g_x=g_x > 0 ? g_x : -g_x;
-
-                g_y=accel_yl|accel_yh<<8;
-                lcd_data2[0]=g_y < 0? '-' : ' ';
-                g_y=g_y > 0 ? g_y : -g_y;
-
-                g_z=accel_zl|accel_zh<<8;
-                lcd_data2[10]=g_z < 0? '-' : ' ';
-                g_z=g_z > 0 ? g_z : -g_z;
-                lcd_data1[6]=' ';
-                lcd_data1[5]=(g_x%10)+'0';
-                lcd_data1[4]=(g_x/10)%10+'0';
-                lcd_data1[3]=(g_x/100)%10+'0';
-                lcd_data1[2]=(g_x/1000)%10+'0';
-                lcd_data1[1]=(g_x/10000)%10+'0';
-
-                lcd_data2[5]=(g_y%10)+'0';
-                lcd_data2[4]=((g_y/10)%10)+'0';
-                lcd_data2[3]=((g_y/100)%10)+'0';
-                lcd_data2[2]=(g_y/1000)%10+'0';
-                lcd_data2[1]=(g_y/10000)%10+'0';
-
-                lcd_data2[15]=(g_z%10)+'0';
-                lcd_data2[14]=(g_z/10)%10+'0';
-                lcd_data2[13]=(g_z/100)%10+'0';
-                lcd_data2[12]=(g_z/1000)%10+'0';
-                lcd_data2[11]=(g_z/10000)%10+'0';
-            }
-            else if(!PORTDbits.RD7){
-                LATAbits.LATA5 = 1;
-                //read percent
-                accel_xh=0;
-                accel_yh=0;
-                LDWordReadI2C(FUELGAUGE_ADDRESS, FUELGAUGE_CONFIG, &accel_xl, &accel_yl, 1);
-                lcd_data1[6] = ' ';
-                lcd_data1[7] = 'C';
-                lcd_data1[8] = 'O';
-                lcd_data1[9] = 'N';
-                lcd_data1[10] = 'F';
-                lcd_data1[11] = 'I';
-                lcd_data1[12] = 'G';
-            }
-            else if (!PORTDbits.RD6){
-                LATAbits.LATA6 = 1;
-                //read config
-                accel_xh=0;
-                accel_yh=0;
-                LDWordReadI2C(FUELGAUGE_ADDRESS, FUELGAUGE_SOC, &accel_xl, &accel_yl, 1);
-                lcd_data1[6] = '%';
-                lcd_data1[7] = ' ';
-                lcd_data1[8] = 'F';
-                lcd_data1[9] = 'U';
-                lcd_data1[10] = 'E';
-                lcd_data1[11] = 'L';
-                lcd_data1[12] = ' ';
-            }
- * */
       }
 	return 0;
 }
@@ -462,6 +381,17 @@ void __attribute__((__interrupt__, auto_psv)) _SPI1Interrupt(void){
         SPI1BUF=ack;
         while(!SPI1STATbits.SPIRBF);
         i=SPI1BUF;
+    }
+    else if (ack==BAT){
+        SPI1BUF = BAT;
+        while(!SPI1STATbits.SPIRBF);
+        ack=SPI1BUF;
+        SPI1BUF=bat1;
+        while(!SPI1STATbits.SPIRBF);
+        ack=SPI1BUF;
+        SPI1BUF=bat2;
+        while(!SPI1STATbits.SPIRBF);
+        ack=SPI1BUF;
     }
     else{
         SPI1BUF=ERROR;
@@ -549,44 +479,44 @@ void LDByteReadI2C(unsigned char SlaveAddress, unsigned  char reg, unsigned char
 }
 
 void LDWordWriteI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char data1, unsigned char data2){
-    StartI2C1();	//Send the Start Bit
-    IdleI2C1();		//Wait to complete
-    MasterWriteI2C1(SlaveAddress); //transmit write command
-    IdleI2C1();		//Wait to complete
-    MasterWriteI2C1(reg);
-    IdleI2C1();
-    MasterWriteI2C1(data1);
-    IdleI2C1();
-    MasterWriteI2C1(data2);
-    IdleI2C1();
-    StopI2C1();
-    IdleI2C1();
+    StartI2C2();	//Send the Start Bit
+    IdleI2C2();		//Wait to complete
+    MasterWriteI2C2(SlaveAddress); //transmit write command
+    IdleI2C2();		//Wait to complete
+    MasterWriteI2C2(reg);
+    IdleI2C2();
+    MasterWriteI2C2(data1);
+    IdleI2C2();
+    MasterWriteI2C2(data2);
+    IdleI2C2();
+    StopI2C2();
+    IdleI2C2();
 }
 
-void LDWordReadI2C(unsigned char SlaveAddress, unsigned  char reg, unsigned char *data1, unsigned char *data2, int num){
-                StartI2C1();	//Send the Start Bit
-		IdleI2C1();		//Wait to complete
-		MasterWriteI2C1(SlaveAddress); //transmit write command
-		IdleI2C1();		//Wait to complete
-                MasterWriteI2C1(reg);
-                IdleI2C1();
-                StopI2C1();
-                IdleI2C1();
+void LDWordReadI2C(unsigned char SlaveAddress, unsigned  char reg, unsigned char *data1, unsigned char *data2){
+                StartI2C2();	//Send the Start Bit
+		IdleI2C2();		//Wait to complete
+		MasterWriteI2C2(SlaveAddress); //transmit write command
+		IdleI2C2();		//Wait to complete
+                MasterWriteI2C2(reg);
+                IdleI2C2();
+                StopI2C2();
+                IdleI2C2();
 
 
-                StartI2C1();	//Send the Start Bit
-		IdleI2C1();		//Wait to complete
-		MasterWriteI2C1(SlaveAddress|0x01); //transmit read command
-		IdleI2C1();		//Wait to complete
+                StartI2C2();	//Send the Start Bit
+		IdleI2C2();		//Wait to complete
+		MasterWriteI2C2(SlaveAddress|0x01); //transmit read command
+		IdleI2C2();		//Wait to complete
                 unsigned char data[2];
-      		MastergetsI2C1(2, data, 30);		// "MCHP I2C"
+      		MastergetsI2C2(2, data, 30);		// "MCHP I2C"
                 *data1=data[0];
                 *data2=data[1];
 //		if (status!=0)
 //			while(1);
 
-		StopI2C1();	//Send the Stop condition
-		IdleI2C1();	//Wait to complete
+		StopI2C2();	//Send the Stop condition
+		IdleI2C2();	//Wait to complete
 
 
 }
