@@ -86,7 +86,7 @@ PointEstimate Imu::DoKalman(ImuResult imu_result, ImuVariant v) {
   return { X(0,0), P(0,0), X(1,0), P(1,1) };
 }
 
-PointEstimate Imu::EstimateLocation1(ImuVariant v) {
+PointEstimate Imu::EstimateLocation(ImuVariant v) {
   auto imu_result = FetchAll();
   return DoKalman(imu_result, v);
 }
