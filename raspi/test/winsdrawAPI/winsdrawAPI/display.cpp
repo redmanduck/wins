@@ -206,6 +206,11 @@ void Display::Done() {
     display_thread_ = thread(&Display::Menu, this);
 }
 
+uint8_t * Display::gimme_st7565_buffer(){
+    return glcd.get_st7565_buffer();
+}
+
+
 Display::Display() {
     font_size_ = FONT_SIZE_MEDIUM;
     cursor_ = 0;

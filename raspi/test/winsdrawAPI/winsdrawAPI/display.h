@@ -63,6 +63,7 @@ private:
 public:
     void SetUpdateFlag(DisplayUpdate flag);
     void gimmebitmap(string saveas);
+    uint8_t * gimme_st7565_buffer();
 
     void Menu();
     void WhereAmI();
