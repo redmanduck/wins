@@ -48,6 +48,8 @@ class Imu{
 
   static ImuResult FetchAll();
   static void Init();
+  static PointEstimate DoKalman(ImuResult imu_result,
+      ImuVariant v = IMU_VARIANT_KALMAN_VANILLA);
   static PointEstimate EstimateLocation(
       ImuVariant v = IMU_VARIANT_KALMAN_VANILLA);
   // static PointEstimate EstimateLocation1(PointEstimate current);

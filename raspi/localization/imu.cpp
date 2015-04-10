@@ -31,8 +31,7 @@ ImuResult Imu::FetchAll() {
   return ImuResult();
 }
 
-PointEstimate Imu::EstimateLocation(ImuVariant v) {
-  auto imu_result = FetchAll();
+PointEstimate Imu::DoKalman(ImuResult imu_result, ImuVariant v) {
   auto delta_t = imu_result.duration / imu_result.readings.size();
 
   Matrix<double, SVARS, 1> x_sum;
@@ -85,6 +84,11 @@ PointEstimate Imu::EstimateLocation(ImuVariant v) {
   }
 
   return { X(0,0), P(0,0), X(1,0), P(1,1) };
+}
+
+PointEstimate Imu::EstimateLocation1(ImuVariant v) {
+  auto imu_result = FetchAll();
+  return DoKalman(imu_result, v);
 }
 /*
 PointEstimate Imu::EstimateLocation1(PointEstimate current) {

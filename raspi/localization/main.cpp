@@ -12,7 +12,6 @@ int main(int argc, char *argv[]) {
   if (string(argv[1]) == "test") {
     Test(argc, argv);
   } else {
-    Global::Init();
     Global::RunMainLoop();
   }
   return 0;

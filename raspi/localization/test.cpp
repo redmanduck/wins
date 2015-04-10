@@ -189,26 +189,28 @@ void Test(int argc, char *orig_argv[]) {
       return;
     }
     stream.close();
-    Global::Init();
     thread main_thread = thread(&Global::RunMainLoop);
     auto& display = Display::GetInstance();
     auto& keypad_handler = KeypadHandler::GetInstance();
 
     while(display.CurrentPage() != PAGE_MENU);
+    this_thread::sleep_for(chrono::seconds(1));
 
     // Save main menu.
-    display.SaveAsBitmap("Menu.png");
+    display.SaveAsBitmap("Menu.bmp");
 
     keypad_handler.FakeStringEnter("3");
 
     auto result = Global::BlockForEvent(WINS_EVENT_SHUTDOWN_DONE, 5000);
     if (result == cv_status::timeout) {
-      main_thread.join();
-      cout << "Main terminted cleanly.";
-    } else {
-      cout << "Main did not terminate. Forcing exit...";
+      cout << "Main did not terminate. Forcing exit...\n";
       exit(1);
+    } else {
+      main_thread.join();
+      cout << "Main terminted cleanly.\n";
     }
+  } else if (string(argv[2]) == "imu1") {
+
   }
 }
 

@@ -83,7 +83,7 @@ void KeypadHandler::MainLoop() {
   buffer_ = "";
   int state = 0, old_state = -1, new_state = 0;
   if(!init_gpio()) {
-    cout << "GPIO Failed to Initialize!";
+    cout << "GPIO Failed to Initialize!\n";
 		while(not terminate_);
   } else {
 		while(not terminate_){

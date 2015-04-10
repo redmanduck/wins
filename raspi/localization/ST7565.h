@@ -21,9 +21,12 @@
 
  // some of this code was written by <cstone@pobox.com> originally; it is in the public domain.
  */
-#include <unistd.h>
+#include <memory>
 #include <string>
+#include <unistd.h>
 //#include "glcdfont.c"
+
+#include "bitmap_image.hpp"
 
 namespace wins {
 
@@ -109,6 +112,7 @@ public:
 
     uint8_t * get_st7565_buffer();
     void savebitmap(std::string filename);
+    std::unique_ptr<bitmap_image> getImage();
 
 private:
     int8_t sid, sclk, a0, rst, cs;

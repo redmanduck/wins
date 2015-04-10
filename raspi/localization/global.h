@@ -30,6 +30,7 @@ class Global {
   static mutex event_mutex_;
   static thread::id mainthread_id_;
   static string shutdown_command_;
+  static bool is_test_;
 
  public:
   static int FilterableDistance;
@@ -48,6 +49,7 @@ class Global {
   static thread::id GetMainThreadId();
   static void ShutDown();
   static void SetTestMode();
+  static bool IsTest();
 };
 
 }

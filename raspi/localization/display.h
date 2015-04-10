@@ -7,6 +7,8 @@
 
 #include "ST7565.h"
 
+#define RETURN_CHARACTER '#'
+
 namespace wins {
 
 using namespace std;
@@ -32,7 +34,6 @@ enum Page {
 
 class Display {
  private:
-  ST7565 glcd_;
 
   FontSize font_size_;
   Alignment alignment_;
@@ -47,7 +48,6 @@ class Display {
   char GetCharAndEcho();
   void PutString(string s, bool clear = false);
   string GetStringAndEcho();
-  void Flush();
   void SetFont(FontSize size, Alignment al, int expected_width = 5);
   void SetCurrentLine(int line);
   void IncrmLine();
@@ -59,6 +59,11 @@ class Display {
   Page Navigating();
   Page Done();
   Page ShutDown();
+
+ protected:
+  ST7565 glcd_;
+  virtual void Flush();
+
  public:
   Page FirstPage();
   Page ShowPage(Page);

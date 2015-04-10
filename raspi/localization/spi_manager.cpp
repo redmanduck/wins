@@ -11,6 +11,9 @@ void SPI::Init() {
   // WINSTODO: Pic handshake
 }
 
+void SPI::Transfer() {
+  //
+
 void SPI::ShutDown() {
   // WINSTODO: Pic handshake
 }
