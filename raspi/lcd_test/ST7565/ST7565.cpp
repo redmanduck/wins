@@ -38,12 +38,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "ST7565.h"
 
-#define ST7565_STARTBYTES 1
+#define ST7565_STARTBYTES 0
 
 uint8_t is_reversed = 0;
 
 // a handy reference to where the pages are on the screen
-const uint8_t pagemap[] = { 3, 2, 1, 0, 7, 6, 5, 4 };
+const uint8_t pagemap[] = { 7, 6, 5, 4, 3, 2, 1, 0};
 
 // a 5x7 font table
 extern uint8_t font[];
