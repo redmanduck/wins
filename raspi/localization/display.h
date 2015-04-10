@@ -1,10 +1,11 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include "map.h"
 #ifndef ISOLATED_TEST
-#include "ST7565.h"
+#include "map.h"
 #endif
+
+#include "ST7565.h"
 
 namespace wins {
 
