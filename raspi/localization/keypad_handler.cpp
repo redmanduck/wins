@@ -5,6 +5,7 @@
 #include "common_utils.h"
 #include "global.h"
 #include "keypad_handler.h"
+#include "log.h"
 
 namespace wins {
 
@@ -23,7 +24,7 @@ bool terminate_ = false;
 
 void sighandler(int sig)
 {
-    cout<< "Signal " << sig << ": Gracefully closing" << endl;
+    FILE_LOG(logINFO) << "Signal " << sig << ": Keypad Gracefully closing" << endl;
     terminate_ = true;
 		bcm2835_gpio_write(W1, LOW);
 		bcm2835_gpio_write(W2, LOW);
@@ -67,8 +68,8 @@ char map[4][4]  = {
 void KeypadHandler::ProcessButton(int row, int col) {
 	if(row == -1 || col == -1) return;
 
-	cout << "Row Pressed " << row << " Col " << col << "\n";
-  cout << "Key value:" << map[row-1][col] << "\n";
+	//cout << "Row Pressed " << row << " Col " << col << "\n";
+  //cout << "Key value:" << map[row-1][col] << "\n";
 
 	//get lock
 	lock_guard<mutex> lock(buffer_mutex_);
@@ -83,7 +84,7 @@ void KeypadHandler::MainLoop() {
   buffer_ = "";
   int state = 0, old_state = -1, new_state = 0;
   if(!init_gpio()) {
-    cout << "GPIO Failed to Initialize!\n";
+    FILE_LOG(logERROR) << "GPIO Failed to Initialize!\n";
 		while(not terminate_);
   } else {
 		while(not terminate_){
@@ -154,7 +155,6 @@ void KeypadHandler::StartThread() {
   }
 }
 void KeypadHandler::TerminateThread() {
-  cout << "TERMINATING KEYPAD";
   sighandler(SIGTERM);
   keypad_thread_.join();
 }

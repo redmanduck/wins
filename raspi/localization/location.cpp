@@ -73,8 +73,10 @@ void Location::DoKalmanUpdate(bool imu_valid, vector<PointEstimate>
     wifi_estimates, PointEstimate imu_estimate) {
 
   if (wifi_estimates.size() == 0) {
-    FILE_LOG(logWARNING) << "No WIFI Estimates.";
+    FILE_LOG(logERROR) << "No WIFI Estimates.";
+#ifdef TEST
     this_thread::sleep_for(chrono::seconds(1));
+#endif
     return;
   }
 

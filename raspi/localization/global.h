@@ -10,6 +10,8 @@
 
 namespace wins {
 
+#define TEST 1
+
 using namespace std;
 
 enum WinsEvent {
