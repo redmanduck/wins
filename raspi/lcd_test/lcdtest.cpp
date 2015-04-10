@@ -26,14 +26,14 @@ int main()
 {
 	glcd.begin(0x19);
 
-	glcd.display();
-	usleep(20000);
-	glcd.clear();
+	// glcd.display();
+	// usleep(20000);
+	// glcd.clear();
 
-	glcd.setpixel(10, 10, BLACK);
-    glcd.display();
-    usleep(5000000);
-	glcd.clear();
+	// glcd.setpixel(10, 10, BLACK);
+ //    glcd.display();
+ //    usleep(5000000);
+	// glcd.clear();
 /*
 	testdrawline();
 	glcd.display();
