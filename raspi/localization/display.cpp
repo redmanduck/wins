@@ -2,12 +2,17 @@
 #include <functional>
 #include <stdexcept>
 
+#ifndef ISOLATED_TEST
 #include "common_utils.h"
+#endif
 #include "display.h"
+
+#ifndef ISOLATED_TEST
 #include "global.h"
 #include "keypad_handler.h"
 #include "navigation.h"
 #include "spi_manager.h"
+#endif
 
 namespace wins {
 

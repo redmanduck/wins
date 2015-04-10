@@ -2,7 +2,9 @@
 #define DISPLAY_H
 
 #include "map.h"
+#ifndef ISOLATED_TEST
 #include "ST7565.h"
+#endif
 
 namespace wins {
 
