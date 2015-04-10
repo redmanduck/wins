@@ -66,7 +66,7 @@ int main()
 	glcd.clear();
 */
 	/*glcd.drawstring(0, 0, "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation");*/
-	glcd.hackBuffer();
+	// glcd.hackBuffer();
 	glcd.display();
 	usleep(2000000);
 	glcd.clear();
