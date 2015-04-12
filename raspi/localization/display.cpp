@@ -18,8 +18,6 @@ namespace wins {
 
 using namespace std;
 
-char RETURN_CHARACTER = '#';
-
 int MaxLength(FontSize size) {
     if(size == FONT_SIZE_MEDIUM){
         return (int)(128/6);
@@ -37,14 +35,17 @@ int MaxLines(FontSize size) {
 
 void Display::ClearLine(int line) {
     glcd_.fillrect(0, line*8 , 128, 8, 0);
+    Flush();
 }
 
 void Display::ClearScreen() {
     glcd_.clear();
     SetCurrentLine(1);
+    Flush();
 }
 
 char Display::GetChar() {
+  Flush();
   Global::BlockForEvent(WINS_EVENT_KEYPRESS);
   KeypadHandler& keyhandler = KeypadHandler::GetInstance();
 
@@ -64,6 +65,7 @@ void Display::PutString(string s, bool clear) {
   }
   glcd_.drawstring_P(cursor_, current_line_, s.c_str());
   cursor_ += s.length();
+  Flush();
 }
 
 string Display::GetStringAndEcho() {
@@ -79,7 +81,32 @@ string Display::GetStringAndEcho() {
 }
 
 void Display::Flush() {
-  throw runtime_error("Not Implemented");
+  static int refresh_count = 0;
+  if (Global::IsTest()) {
+    system("clear");
+    cout << "Screen refresh count = " << ++refresh_count << "\n";
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unique_ptr<bitmap_image> image = glcd_.getImage();
+    for (unsigned int y = 0; y < 32; ++y) {
+      for (unsigned int x = 0; x < 128; ++x) {
+        image->get_pixel(x, y*2, r, g, b);
+        bool up = r > 0;
+        image->get_pixel(x, y*2+1, r, g, b);
+        bool down = r > 0;
+        if (up and down)
+          cout << "█";
+        else if (up)
+          cout << "▀";
+        else if (down)
+          cout << "▄";
+        else
+          cout << " ";
+      }
+      cout <<"\n";
+    }
+  }
   flushed_ = true;
 }
 
@@ -113,13 +140,14 @@ Display::Display()
   font_size_ = FONT_SIZE_MEDIUM;
   cursor_ = 0;
   current_line_ = 0;
-  flushed_ = true;
+  Flush();
 }
 
 Page Display::Menu() {
+  this_thread::sleep_for(chrono::seconds(1));
   ClearScreen();
 
-  PutString("1. NAVIGATION");
+  PutString("1. NAVIGATE");
   IncrmLine();
   IncrmLine();
   PutString("2. WHERE AM I?");

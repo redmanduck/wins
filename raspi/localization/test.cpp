@@ -84,11 +84,13 @@ void Test(int argc, char *orig_argv[]) {
   else if (string(argv[2]) == "sample") {
       vector<unique_ptr<Point>> points;
       points.emplace_back(unique_ptr<Point>(new Point {10, 0, {1,1,1,1},
-        {{"mac1", {100, 90}}, {"mac6", {150, 95}}},
-        {{{"mac11", 60}, {"mac12", 70}},
-         {{"mac11", 65}, {"mac12", 75}}}}));
+        {{"mac11", {100, 90}}, {"mac12", {150, 95}}},
+        {{{"mac11", 60.0}, {"mac12", 70.0}},
+         {{"mac11", 65.0}, {"mac12", 75.0}}}}));
       points.emplace_back(unique_ptr<Point>(new Point { 9, 1, {1,1,1,1},
-        {{"mac2", {110, 91}}, {"mac7", {160, 96}}}}));
+        {{"mac11", {110, 91}}, {"mac12", {160, 96}}},
+        {{{"mac11", 60.0}, {"mac12", 70.0}},
+         {{"mac11", 65.0}, {"mac12", 75.0}}}}));
 
       ofstream os("sample.json");
       cereal::JSONOutputArchive archive(os);
@@ -189,26 +191,28 @@ void Test(int argc, char *orig_argv[]) {
       return;
     }
     stream.close();
-    Global::Init();
     thread main_thread = thread(&Global::RunMainLoop);
     auto& display = Display::GetInstance();
     auto& keypad_handler = KeypadHandler::GetInstance();
 
     while(display.CurrentPage() != PAGE_MENU);
+    this_thread::sleep_for(chrono::seconds(1));
 
     // Save main menu.
-    display.SaveAsBitmap("Menu.png");
+    display.SaveAsBitmap("Menu.bmp");
 
     keypad_handler.FakeStringEnter("3");
 
     auto result = Global::BlockForEvent(WINS_EVENT_SHUTDOWN_DONE, 5000);
     if (result == cv_status::timeout) {
-      main_thread.join();
-      cout << "Main terminted cleanly.";
-    } else {
-      cout << "Main did not terminate. Forcing exit...";
+      cout << "Main did not terminate. Forcing exit...\n";
       exit(1);
+    } else {
+      main_thread.join();
+      cout << "Main terminted cleanly.\n";
     }
+  } else if (string(argv[2]) == "imu1") {
+
   }
 }
 

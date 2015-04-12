@@ -15,6 +15,8 @@
 namespace wins {
 
 #define SUM_LINES 20
+#define MAX_UNKNOWN 3
+#define BAD_READING 10000000
 
 namespace {
   double mean(vector<double> v) {
@@ -40,12 +42,20 @@ namespace {
     vector<double> y_vars;
     WiFiEstimate w;
     for (auto&& point : test_points) {
+      int unknown_count = 0;
       for (auto&& scan : point->scans) {
         auto estimates = w.ClosestByMahalanobis(
             scan, v, point->x, point->y, dp.exp1, dp.exp2, debug);
         if (estimates.size() == 0) {
+          unknown_count += 1;
+          if (unknown_count > MAX_UNKNOWN) {
+            distances.push_back(BAD_READING);
+            x_vars.push_back(BAD_READING);
+            y_vars.push_back(BAD_READING);
+          }
           continue;
         }
+        unknown_count = 0;
         char buffer[100];
         sprintf(buffer, "%5.0f %5.0f %5.0f %5.0f\n", point->x, point->y,
             estimates[0].x_mean, estimates[0].y_mean);
@@ -70,13 +80,21 @@ namespace {
     vector<double> y_vars;
     WiFiEstimate w;
     for (auto&& point : test_points) {
+      int unknown_count = 0;
       for (auto&& scan : point->scans) {
         auto estimates = w.MostProbableClubbed(scan,
             point->x, point->y, dp.exp1, dp.exp2, debug);
         assert(estimates.size() <= 1);
         if (estimates.size() == 0) {
+          unknown_count += 1;
+          if (unknown_count > MAX_UNKNOWN) {
+            distances.push_back(BAD_READING);
+            x_vars.push_back(BAD_READING);
+            y_vars.push_back(BAD_READING);
+          }
           continue;
         }
+        unknown_count = 0;
         distances.push_back(sqrt(
             pow(point->x - estimates[0].x_mean, 2) +
             pow(point->y - estimates[0].y_mean, 2)));
@@ -97,13 +115,21 @@ namespace {
     vector<double> y_vars;
     WiFiEstimate w;
     for (auto&& point : test_points) {
+      int unknown_count = 0;
       for (auto&& scan : point->scans) {
         auto estimates = w.MostProbableNotClubbed(scan,
             point->x, point->y, dp.exp1, dp.exp2, debug);
         assert(estimates.size() <= 1);
         if (estimates.size() == 0) {
+          unknown_count += 1;
+          if (unknown_count > MAX_UNKNOWN) {
+            distances.push_back(BAD_READING);
+            x_vars.push_back(BAD_READING);
+            y_vars.push_back(BAD_READING);
+          }
           continue;
         }
+        unknown_count = 0;
         distances.push_back(sqrt(
             pow(point->x - estimates[0].x_mean, 2) +
             pow(point->y - estimates[0].y_mean, 2)));
@@ -168,8 +194,8 @@ void learn_helper(int argc, vector<string> argv) {
   double s;
   double mvx;
   double mvy;
-  for (double exp1 = -5; exp1 <= 5; exp1 += 0.5) {
-    for (double exp2 = -5; exp2 <= 5; exp2 += 0.5) {
+  for (double exp1 = -5; exp1 <= 5; exp1 += 1) {
+    for (double exp2 = -5; exp2 <= 5; exp2 += 1) {
       analysis_func(test_points, {exp1, exp2, m, s, mvx, mvy});
       if (not std::isnan(m)) {
         results.push_back(make_tuple(m, s, mvx, mvy, exp1, exp2));

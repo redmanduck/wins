@@ -30,6 +30,7 @@
 #include <iterator>
 #include <limits>
 #include <string>
+#include <cstring>
 
 
 class bitmap_image
@@ -85,40 +86,14 @@ public:
      create_bitmap();
    }
 
-   bitmap_image(const bitmap_image& image)
-   : file_name_(image.file_name_),
-     data_(0),
-     width_(image.width_),
-     height_(image.height_),
-     row_increment_(0),
-     bytes_per_pixel_(3),
-     channel_mode_(bgr_mode)
-   {
-      create_bitmap();
-      std::copy(image.data_, image.data_ + image.length_, data_);
-   }
+   bitmap_image(const bitmap_image& image) = delete;
 
   ~bitmap_image()
    {
       delete [] data_;
    }
 
-   bitmap_image& operator=(const bitmap_image& image)
-   {
-      if (this != &image)
-      {
-         file_name_       = image.file_name_;
-         bytes_per_pixel_ = image.bytes_per_pixel_;
-         width_           = image.width_;
-         height_          = image.height_;
-         row_increment_   = 0;
-         channel_mode_    = image.channel_mode_;
-         create_bitmap();
-         std::copy(image.data_, image.data_ + image.length_, data_);
-      }
-
-      return *this;
-   }
+   bitmap_image& operator=(const bitmap_image& image) = delete;
 
    inline bool operator!()
    {
@@ -1365,6 +1340,7 @@ private:
       }
 
       data_ = new unsigned char[length_];
+      memset(data_, 0, length_);
    }
 
    void load_bitmap()

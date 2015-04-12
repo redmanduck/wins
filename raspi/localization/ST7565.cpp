@@ -25,11 +25,11 @@
 //#include <Wire.h>
 //#include <avr/pgmspace.h>
 //#include <util/delay.h>
+#include <cassert>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "bitmap_image.hpp"
 #include "ST7565.h"
 
 namespace wins {
@@ -432,8 +432,8 @@ void ST7565::drawbitmap(uint8_t x, uint8_t y,
     updateBoundingBox(x, y, x+w, y+h);
 }
 
-void ST7565::savebitmap(std::string filename){
-     bitmap_image image(128, 64);
+std::unique_ptr<bitmap_image> ST7565::getImage(){
+    std::unique_ptr<bitmap_image> image(new bitmap_image(128, 64));
 
      for (unsigned int x = 0; x < 128; ++x)
      {
@@ -443,13 +443,17 @@ void ST7565::savebitmap(std::string filename){
                  if((st7565_buffer[x + (y * 128)] & (0x01 << j)) == 0){
                      continue;
                  }
-                 image.set_pixel(x,y*8+ (8-j),255,255,255);
+                 image->set_pixel(x,y*8+ (8-j),255,255,255);
              }
          }
      }
 
+     return image;
+}
+void ST7565::savebitmap(std::string filename){
+     auto image = getImage();
 
-     image.save_image(filename);
+     image->save_image(filename);
 }
 
 void ST7565::drawstring(uint8_t x, uint8_t line, char *c) {
