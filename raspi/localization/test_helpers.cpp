@@ -163,18 +163,18 @@ void learn_helper(int argc, vector<string> argv) {
   vector<result> results;
 
   cout << ":::TYPE " << argv[5] << ":::\n";
-  printf("%7s %7s %7s %7s %3s %3s\n", "mean", "std", "mvx", "mvy", "e1", "e2");
+  //printf("%7s %7s %7s %7s %3s %3s\n", "mean", "std", "mvx", "mvy", "e1", "e2");
   double m;
   double s;
   double mvx;
   double mvy;
-  for (double exp1 = -5; exp1 <= 5; exp1 += 0.5) {
-    for (double exp2 = -5; exp2 <= 5; exp2 += 0.5) {
+  for (double exp1 = -5; exp1 <= 5; exp1 += 1) {
+    for (double exp2 = -5; exp2 <= 5; exp2 += 1) {
       analysis_func(test_points, {exp1, exp2, m, s, mvx, mvy});
       if (not std::isnan(m)) {
         results.push_back(make_tuple(m, s, mvx, mvy, exp1, exp2));
-        printf("%7.2f %7.2f %7.2f %7.2f %3.1f %3.1f\n",
-            m, s, mvx, mvy, exp1, exp2);
+        //printf("%7.2f %7.2f %7.2f %7.2f %3.1f %3.1f\n",
+        //    m, s, mvx, mvy, exp1, exp2);
       }
     }
   }
