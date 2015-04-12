@@ -111,8 +111,6 @@ for line in in_file:
             cur_x += scale
         elif parts[0][5] == 'W':
             cur_x -= scale
-        elif parts[0][5] == '=':
-            continue
         else:
             pdb.set_trace()
             raise Exception('Unknown direction')
