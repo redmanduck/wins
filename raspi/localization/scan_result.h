@@ -12,7 +12,7 @@ using namespace std;
 
 struct Result {
   string name;
-  int signal;
+  double signal;
 
   template<class Archive>
   void serialize(Archive & archive) {
