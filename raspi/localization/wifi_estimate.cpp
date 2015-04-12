@@ -15,6 +15,7 @@ namespace wins {
 #define MIN_DF 5
 #define TOP_FEW_GOOD_PROB_THRESH 0.01
 #define TOP_FEW_MIN_PROB_THRESH 0.35
+#define MIN_WEIGHT 1E-37
 
 // anonymous namespace
 namespace {
@@ -142,6 +143,9 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
     double total_weight = 0;
     for (auto&& p_stat : point_stats) {
       double weight = get<0>(p_stat);
+      if (weight < MIN_WEIGHT) {
+        weight = MIN_WEIGHT;
+      }
       total_weight += weight;
       pred_x += get<1>(p_stat)->x * weight;
       pred_y += get<1>(p_stat)->y * weight;
