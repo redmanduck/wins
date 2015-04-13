@@ -1,5 +1,6 @@
 import json
 import sys
+import math
 #
 # Scale pseudo coordinate
 # to scale coordinate
@@ -11,17 +12,18 @@ filename = sys.argv[1]
 f =  open(filename, "r")
 pres = json.loads(f.read())
 
-dx = -1
-for corridor in pres:
-	pts = pres[corridor]['points']
-	L = pres[corridor]['norm']
-	p = L/(len(pts)-1)
-	if(dx == -1):
-		dx = p
-	if p < dx:
-		dx = p
+def FCD(C):
+	# fake coordinate world distance
+	# takes cooridor
 
-csv =[]
+	first = C['points'][0]
+	last = C['points'][len(C['points']) - 1]
+
+	return math.sqrt( (first[0] - last[0])**2 + (first[1] - last[1])**2 )
+
+dx = -1
+dx_corridor = -1
+
 for corridor in pres:
 	pts = pres[corridor]['points']
 	
@@ -29,19 +31,36 @@ for corridor in pres:
 	pts.sort(key=lambda x: x[0], reverse=False)
 	pts.sort(key=lambda x: x[1], reverse=False)
 
+	p = pres[corridor]['norm']
 
-	gap = 1
-	multiplier  = gap/dx
-	pred = pts[0]
-	csv.append(pred)
-	for i in range(1,len(pts)):
-		if(pred[0] - pts[i][0] == 0):
-			pts[i][1] = gap*multiplier +  pred[1]
+	if(dx == -1):
+		dx = p
+		dx_corridor = corridor
+	if p < dx:
+		dx = p
+		dx_corridor = corridor
+
+csv =[]
+for corridor in pres:
+	
+	pts = pres[corridor]['points']
+
+	current_factor = FCD(pres[corridor])/FCD(pres[dx_corridor])
+	multiplier  = pres[corridor]['norm']/dx
+
+	#print "wanted", multiplier
+	#print "current", current_factor
+	
+	multiplier = multiplier/current_factor  # effective multiplier
+
+	#print "multip", corridor, multiplier
+	for i in range(0,len(pts)):
+		if(pts[0][0] - pts[1][0] == 0):
+			pts[i][1] = pts[i][1]*multiplier 
 		else:
-			pts[i][0] = gap*multiplier +  pred[0]
+			pts[i][0] = pts[i][0]*multiplier
 
 		csv.append(pts[i])
-		pred = pts[i]
 
 
 # print as csv
