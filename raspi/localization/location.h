@@ -21,13 +21,12 @@ class Location {
  private:
   static LocationVariant variant_;
 
-  static std::chrono::time_point<std::chrono::steady_clock> last_update_time_;
+  static chrono::steady_clock::time_point tp_epoch_;
+  static chrono::steady_clock::time_point last_update_time_;
 
   static Eigen::MatrixXd prev_X;
-  static Eigen::MatrixXd P;
   static Eigen::MatrixXd A;
   static Eigen::MatrixXd A_t;
-  static Eigen::MatrixXd Q;
   static Eigen::MatrixXd const_R;
 
   static vector<unique_ptr<WiFiEstimate>> wifi_estimators_;
@@ -39,8 +38,7 @@ class Location {
   static void InitialEstimate();
   static void InitKalman();
   static void Init();
-  static void DoKalmanUpdate(bool imu_valid, vector<PointEstimate>
-      wifi_estimates, PointEstimate imu_estimate = {});
+  static void DoKalmanUpdate(vector<PointEstimate> wifi_estimates);
   static kdtree::node<Point*>* GetCurrentNode();
   static void UpdateEstimate();
 };

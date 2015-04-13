@@ -3,6 +3,8 @@
 
 namespace wins {
 
+#define HIGH_VARIANCE 10000
+
 MatrixXd Imu::X(SVARS, 1);
 MatrixXd Imu::P(SVARS, SVARS);
 MatrixXd Imu::R(OBSERVATIONS, OBSERVATIONS);
@@ -24,7 +26,10 @@ void Imu::Init() {
   }
   H_t = H.transpose();
 
-  R.setZero();
+  X.setZero();
+  P = HIGH_VARIANCE * MatrixXd::Identity(SVARS, SVARS);
+
+  R = HIGH_VARIANCE * MatrixXd::Identity(OBSERVATIONS, OBSERVATIONS);
 }
 
 ImuResult Imu::FetchAll() {
