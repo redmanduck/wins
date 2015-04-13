@@ -5,18 +5,16 @@ import numpy as np
 import pdb
 from multiprocessing import Pool
 
-GSUFFIX = 'pi1'
+GSUFFIX = 'pi3exp3'
 
-primaries = ['data/ee_ab_map_4lin.dat', 'data/ee_ab_map_5rlin.dat',
-        'data/ee_ab_map_6lin.dat', 'data/ee_ab_map_7rlin.dat']
+primaries = ['data/ee_ab_map_9lin.dat']
 #maps = [m for m in os.listdir('.') if os.path.isfile(m) and m.startswith('ee_ab')]
-maps = ['data/ee_ab_map_4lin.dat', 'data/ee_ab_map_5rlin.dat',
-        'data/ee_ab_map_6lin.dat', 'data/ee_ab_map_7rlin.dat']
+maps = ['data/ee_ab_map_8lin.dat']
 
-dirs= { '10_5': [('10', '5', '5'),
-                 ('10', '-5', '5'),
-                 ('10', '5', '-5'),
-                 ('10', '-5', '-5')],
+dirs= { #'10_5': [('10', '5', '5'),
+        #         ('10', '-5', '5'),
+        #         ('10', '5', '-5'),
+        #         ('10', '-5', '-5')],
         '10_7': [('10', '7', '-7'),
                  ('10', '7', '7'),
                  ('10', '-7', '7'),

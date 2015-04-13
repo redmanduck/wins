@@ -156,17 +156,20 @@ void learn_helper(int argc, vector<string> argv) {
   is.close();
 
   function<void(vector<unique_ptr<Point>>&, DebugParams)> analysis_func;
+  int offset = 0;
 
   using namespace std::placeholders;
   switch(stoi(argv[5])) {
     case 0: return;
     case 1: analysis_func = bind(
         MahalanobisAnalysis, _1, _2, false,
-        (WiFiVariant)(WIFI_VARIANT_NONE)); break;
+        (WiFiVariant)(WIFI_VARIANT_NONE));
+        offset = 5; break;
     case 2: return;
     case 3: analysis_func = bind(
         MahalanobisAnalysis, _1, _2, false,
-        (WiFiVariant)(WIFI_VARIANT_CHI_SQ)); break;
+        (WiFiVariant)(WIFI_VARIANT_CHI_SQ));
+        offset = 5; break;
     case 4: analysis_func = bind(
         MostProbableClubbedAnalysis, _1, _2, false); break;
     case 5: analysis_func = bind(
@@ -174,11 +177,13 @@ void learn_helper(int argc, vector<string> argv) {
     case 6: return;
     case 7: analysis_func = bind(
         MahalanobisAnalysis, _1, _2, true,
-        (WiFiVariant)(WIFI_VARIANT_NONE)); break;
+        (WiFiVariant)(WIFI_VARIANT_NONE));
+        offset = 5; break;
     case 8: return;
     case 9: analysis_func = bind(
         MahalanobisAnalysis, _1, _2, true,
-        (WiFiVariant)(WIFI_VARIANT_CHI_SQ)); break;
+        (WiFiVariant)(WIFI_VARIANT_CHI_SQ));
+        offset = 5; break;
     case 10: analysis_func = bind(
         MostProbableClubbedAnalysis, _1, _2, true); break;
     case 11: analysis_func = bind(
@@ -194,8 +199,8 @@ void learn_helper(int argc, vector<string> argv) {
   double s;
   double mvx;
   double mvy;
-  for (double exp1 = -5; exp1 <= 5; exp1 += 1) {
-    for (double exp2 = -5; exp2 <= 5; exp2 += 1) {
+  for (double exp1 = 0; exp1 <= 10; exp1 += 1) {
+    for (double exp2 = -5 + offset; exp2 <= 5 + offset; exp2 += 1) {
       analysis_func(test_points, {exp1, exp2, m, s, mvx, mvy});
       if (not std::isnan(m)) {
         results.push_back(make_tuple(m, s, mvx, mvy, exp1, exp2));
@@ -206,7 +211,7 @@ void learn_helper(int argc, vector<string> argv) {
   }
   sort(results.begin(), results.end(),
       [](const result &a, const result &b) -> bool {
-          return get<0>(a) < get<0>(b);
+          return (get<0>(a) + get<1>(a)) < (get<0>(b) + get<1>(b));
       });
   ofstream out_file;
   out_file.open("analysis" + string(argv[5]) + "_results.csv");

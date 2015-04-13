@@ -98,13 +98,13 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
         // Weight of a point is the probability that the collected signal data
         // was taken at that point.
         point_stats.push_back(make_tuple(
-              pow(df, exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
+              pow(pow(10, df), exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
               point, df, sqrt(sum)));
       else
         // Weight of a point is proportional to the number of APs common to
         // that location and inversely proportinal to the M-distance.
-        point_stats.push_back(make_tuple(pow(df, exp1) * pow(sqrt(sum), exp2),
-              point, df, sqrt(sum)));
+        point_stats.push_back(make_tuple(pow(exp(df), exp1) / pow(2 + exp2,
+              sum), point, df, sqrt(sum)));
     }
   }
 
