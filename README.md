@@ -3,4 +3,4 @@ Autonomous indoor navigation robot
 
 
 # Find out Pi's address
-http://ecn.ninja/view/berry
+http://www.ecn.ninja/view/berry
