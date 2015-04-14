@@ -8,6 +8,8 @@
 #include "cereal/archives/json.hpp"
 #include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
+#include "global.h"
+#include "location.h"
 #include "map.h"
 #include "point.h"
 #include "wifi_estimate.h"
@@ -142,6 +144,51 @@ namespace {
     dp.mean_var_x = mean(x_vars);
     dp.mean_var_y = mean(y_vars);
   }
+
+  void LocationAnalysis(vector<unique_ptr<Point>>& test_points,
+      DebugParams dp) {
+    vector<double> distances;
+    vector<double> x_vars;
+    vector<double> y_vars;
+    WiFiEstimate w;
+
+    // Walk at 1m/s.
+    Global::DurationOverride = 1000;
+
+    Global::LocationQFactor = dp.exp1;
+    Global::LocationRFactor = dp.exp2;
+
+    assert((int)test_points[0]->scans.size() >= Global::InitWiFiReadings);
+    auto setup_points = vector<vector<Result>>(
+        &test_points[0]->scans[0],
+        &test_points[0]->scans[Global::InitWiFiReadings]);
+
+    for (size_t i = 0; i < (test_points[0]->scans[0].size() / 5) * 5; ++i) {
+      auto fakescanner = Location::TestInit(setup_points);
+
+      for (auto&& point : test_points) {
+        auto& scan = point->scans[i];
+        fakescanner->result_queue.push(scan);
+
+        Location::UpdateEstimate();
+
+        //char buffer[100];
+        //sprintf(buffer, "%5.0f %5.0f %5.0f %5.0f\n", point->x, point->y,
+        //    estimates[0].x_mean, estimates[0].y_mean);
+        //cout << buffer;
+        auto node = Location::GetCurrentNode();
+        distances.push_back(sqrt(
+            pow(point->x - node->point->x, 2) +
+            pow(point->y - node->point->y, 2)));
+        x_vars.push_back(-1);
+        y_vars.push_back(-1);
+      }
+    }
+    dp.mean = mean(distances);
+    dp.std = std(distances);
+    dp.mean_var_x = mean(x_vars);
+    dp.mean_var_y = mean(y_vars);
+  }
 }
 
 void learn_helper(int argc, vector<string> argv) {
@@ -188,6 +235,9 @@ void learn_helper(int argc, vector<string> argv) {
         MostProbableClubbedAnalysis, _1, _2, true); break;
     case 11: analysis_func = bind(
         MostProbableNotClubbedAnalysis, _1, _2, true); break;
+    case 20: analysis_func = bind(
+        LocationAnalysis, _1, _2);
+        offset = 6; break;
     default: cout << "Unknown learn type\n"; exit(1);
   }
 
@@ -199,7 +249,7 @@ void learn_helper(int argc, vector<string> argv) {
   double s;
   double mvx;
   double mvy;
-  for (double exp1 = 0; exp1 <= 10; exp1 += 1) {
+  for (double exp1 = 1; exp1 <= 10; exp1 += 1) {
     for (double exp2 = -5 + offset; exp2 <= 5 + offset; exp2 += 1) {
       analysis_func(test_points, {exp1, exp2, m, s, mvx, mvy});
       if (not std::isnan(m)) {

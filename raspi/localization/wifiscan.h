@@ -203,7 +203,7 @@ public:
    * @throw WIFISCAN_ERROR_OPENING_IOCTL_SOCKET Error opening ioctl socket.
    * @throw WIFISCAN_ERROR_IN_IW_SCAN Error in iw_scan().
    **/
-   vector<Result> Fetch();
+   virtual vector<Result> Fetch();
   ///@}
 };
 

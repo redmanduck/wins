@@ -17,19 +17,19 @@ void KalmanUpdate(
     const MatrixXd& R,
     const MatrixXd& Q) {
   // State prediction.
-  auto X_pred = A * X;
+  MatrixXd X_pred = A * X;
 
   // Covariance prediction.
-  auto P_pred = A * P * A_t + Q;
+  MatrixXd P_pred = A * P * A_t + Q;
 
   // Innovation.
-  auto Y = Z - H * X_pred;
+  MatrixXd Y = Z - H * X_pred;
 
   // Innovaion covariance.
-  auto I = H * P_pred * H_t + R;
+  MatrixXd I = H * P_pred * H_t + R;
 
   // Kalman gain.
-  auto K = P_pred * H_t * I.inverse();
+  MatrixXd K = P_pred * H_t * I.inverse();
 
   // State update.
   X += K * Y;

@@ -184,9 +184,9 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
       var_y += pow(pred_y - get<1>(p_stat)->y, 2) * weight;
     }
 
-    estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+    estimates.push_back({ /* x_mean */ pred_x,
                           /* x_var */ var_x,
-                          /* y_mean */ nearbyint(pred_y),
+                          /* y_mean */ pred_y,
                           /* y_var */ var_y});
   }
 
@@ -279,9 +279,9 @@ vector<PointEstimate> WiFiEstimate::MostProbableClubbed(vector<Result>& s,
     return estimates;
   }
 
-  estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+  estimates.push_back({ /* x_mean */ pred_x,
                         /* x_var */ var_x,
-                        /* y_mean */ nearbyint(pred_y),
+                        /* y_mean */ pred_y,
                         /* y_var */ var_y });
   return estimates;
 }
@@ -316,9 +316,9 @@ vector<PointEstimate> WiFiEstimate::MostProbableNotClubbed(vector<Result>& s,
   }
 
   vector<PointEstimate> estimates;
-  estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+  estimates.push_back({ /* x_mean */ pred_x,
                         /* x_var */ var_x,
-                        /* y_mean */ nearbyint(pred_y),
+                        /* y_mean */ pred_y,
                         /* y_var */ var_y });
   return estimates;
 }

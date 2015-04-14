@@ -5,15 +5,15 @@
 
 #include "global.h"
 #include "imu.h"
-#include "log.h"
 #include "kalman.h"
 #include "location.h"
+#include "log.h"
+#include "map.h"
 #include "wifi_estimate.h"
 
 namespace wins {
 
 using namespace std;
-using namespace Eigen;
 
 #define HIGH_VARIANCE 10000
 #define SCALE (1/1.45)
@@ -54,20 +54,40 @@ void Location::InitialEstimate() {
 }
 
 void Location::InitKalman() {
-  A = MatrixXd::Zero(2,2);
-  A_t = MatrixXd::Zero(2,2);
-  const_R = 2 * MatrixXd::Identity(2,2);
+  A = Eigen::MatrixXd::Identity(2,2);
+  A_t = A.transpose();
+  //const_R = 2 * Eigen::MatrixXd::Identity(2,2);
+  const_R = 2 * Eigen::MatrixXd::Identity(2,2) * Global::LocationRFactor / 3;
 }
 
 void Location::Init() {
   Imu::Init();
   InitKalman();
+  last_update_time_ = tp_epoch_;
+
+  wifi_estimators_.clear();
   for (auto device : Global::WiFiDevices) {
     wifi_estimators_.push_back(unique_ptr<WiFiEstimate>(
         new WiFiEstimate(unique_ptr<WifiScan>(
         new WifiScan(default_channels, device)))));
   }
   InitialEstimate();
+}
+
+FakeWifiScan* Location::TestInit(vector<vector<Result>> setup_points) {
+  Imu::Init();
+  InitKalman();
+  last_update_time_ = tp_epoch_;
+
+  unique_ptr<FakeWifiScan> fakescanner(new FakeWifiScan(setup_points));
+  FakeWifiScan* fakescannerptr = fakescanner.get();
+  wifi_estimators_.clear();
+  wifi_estimators_.push_back(unique_ptr<WiFiEstimate>(
+      new WiFiEstimate(unique_ptr<WifiScan>(move(fakescanner)))));
+
+  InitialEstimate();
+
+  return fakescannerptr;
 }
 
 void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
@@ -84,32 +104,38 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   chrono::steady_clock::time_point new_update_time =
       chrono::steady_clock::now();
   if (last_update_time_ > tp_epoch_) {
-    msecs = chrono::duration_cast<std::chrono::milliseconds>(
-      new_update_time - last_update_time_).count();
+    if (Global::DurationOverride > 0) {
+      msecs = Global::DurationOverride;
+    } else {
+      msecs = chrono::duration_cast<std::chrono::milliseconds>(
+        new_update_time - last_update_time_).count();
+    }
   } else {
     msecs = 0;
   }
 
-  MatrixXd X(2,1);
-  MatrixXd P(2,2);
-  MatrixXd Z(wifi_estimates.size() * 2, 1);
-  MatrixXd H(wifi_estimates.size() * 2, 2);
-  MatrixXd H_t(2, wifi_estimates.size() * 2);
-  MatrixXd R(wifi_estimates.size() * 2, wifi_estimates.size() * 2);
-  MatrixXd Q(2,2);
+  Eigen::MatrixXd X(2,1);
+  Eigen::MatrixXd P(2,2);
+  Eigen::MatrixXd Z(wifi_estimates.size() * 2, 1);
+  Eigen::MatrixXd H(wifi_estimates.size() * 2, 2);
+  Eigen::MatrixXd H_t(2, wifi_estimates.size() * 2);
+  Eigen::MatrixXd R(wifi_estimates.size() * 2, wifi_estimates.size() * 2);
+  Eigen::MatrixXd Q(2,2);
 
   X = Imu::X.block<2,1>(0,0);
   P = Imu::P.block<2,2>(0,0);
 
-  Q = SCALE * MatrixXd::Identity(2,2) * (msecs / 1000);
+  Q = SCALE * Eigen::MatrixXd::Identity(2,2) * (msecs / 1000) *
+      Global::LocationQFactor / 3;
+  R.setZero();
+
   for (size_t i = 0; i < wifi_estimates.size(); ++i) {
     Z(i*2, 0) = wifi_estimates[i].x_mean;
     Z(i*2+1, 0) = wifi_estimates[i].y_mean;
     H.block<2,2>(i*2, 0) << 1, 0,
                             0, 1;
     if (variant_ & LOCATION_VARIANT_FIXED_R) {
-      R(i*2, i*2) = const_R(0);
-      R(i*2+1, i*2+1) = const_R(1);
+      R.block<2,2>(i*2, i*2) = const_R;
     } else {
       R(i*2, i*2) = wifi_estimates[i].x_var;
       R(i*2+1, i*2+1) = wifi_estimates[i].y_var;
@@ -120,7 +146,7 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
 
   if (last_update_time_ > tp_epoch_) {
-    Vector2d V = (X - prev_X) / msecs;
+    Eigen::Vector2d V = (X - prev_X) / msecs;
     Imu::X.block<2,1>(2,0) = V;
   }
   Imu::X.block<2,1>(0,0) = X;
@@ -128,6 +154,8 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
 
   last_update_time_ = new_update_time;
   prev_X = X;
+
+  current_node_ = Map::NodeNearest(X(0,0), X(1,0));
 }
 
 kdtree::node<Point*>* Location::GetCurrentNode() {
@@ -135,9 +163,11 @@ kdtree::node<Point*>* Location::GetCurrentNode() {
 }
 
 void Location::UpdateEstimate() {
-  auto wifi_estimates = GetWiFiReadings(Global::InitWiFiReadings);
+  auto wifi_estimates = GetWiFiReadings(1);
   Imu::EstimateLocation();
-  DoKalmanUpdate(wifi_estimates);
+  if (wifi_estimates.size() > 0) {
+    DoKalmanUpdate(wifi_estimates);
+  }
 }
 
 }

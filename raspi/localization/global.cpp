@@ -24,8 +24,11 @@ thread::id Global::mainthread_id_;
 int Global::FilterableDistance = 10;
 int Global::FilterBiasX = 5;
 int Global::FilterBiasY = 5;
+int Global::LocationRFactor = 4;
+int Global::LocationQFactor = 5;
+int Global::DurationOverride = -1;
 vector<string> Global::WiFiDevices({ "wlan0" });
-int Global::InitWiFiReadings = 10;
+int Global::InitWiFiReadings = 3;
 string Global::shutdown_command_ = "sudo shutdown -hP now";
 bool Global::is_test_ = false;
 

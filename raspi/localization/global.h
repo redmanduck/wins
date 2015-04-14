@@ -38,6 +38,9 @@ class Global {
   static int FilterableDistance;
   static int FilterBiasX;
   static int FilterBiasY;
+  static int LocationRFactor;
+  static int LocationQFactor;
+  static int DurationOverride;
   static string MapFile;
   static vector<string> WiFiDevices;
   static int InitWiFiReadings;

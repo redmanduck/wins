@@ -4,6 +4,7 @@
 #include<Eigen/Dense>
 
 #include "common_utils.h"
+#include "fake_wifiscan.h"
 #include "kdtree/node.hpp"
 #include "point.h"
 #include "wifi_estimate.h"
@@ -33,12 +34,14 @@ class Location {
   static kdtree::node<Point*>* current_node_;
   static PointEstimate point_estimate_;
 
- public:
-  static vector<PointEstimate> GetWiFiReadings(int count = 1);
   static void InitialEstimate();
   static void InitKalman();
-  static void Init();
   static void DoKalmanUpdate(vector<PointEstimate> wifi_estimates);
+
+ public:
+  static vector<PointEstimate> GetWiFiReadings(int count = 1);
+  static void Init();
+  static FakeWifiScan* TestInit(vector<vector<Result>> setup_points);
   static kdtree::node<Point*>* GetCurrentNode();
   static void UpdateEstimate();
 };

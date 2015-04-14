@@ -17,6 +17,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "log.h"
 #include "wifiscan.h"
 
 namespace wins {
@@ -320,11 +321,13 @@ WifiScan::WifiScan(std::vector<int> channels, std::string interface)
   std::strcpy(interface_, interface.c_str());
   channels_ = channels;
 
-  if ((socket_ = iw_sockets_open()) < 0)
-    throw WIFISCAN_ERROR_OPENING_IOCTL_SOCKET;
+  if ((socket_ = iw_sockets_open()) < 0) {
+    FILE_LOG(logERROR) << "WIFISCAN_ERROR_OPENING_IOCTL_SOCKET";
+  }
   kernel_version_ = iw_get_kernel_we_version();
-  if (iw_get_range_info(socket_, interface_, &range_) < 0)
-    throw WIFISCAN_ERROR_GETTING_RANGE_INFO;
+  if (iw_get_range_info(socket_, interface_, &range_) < 0) {
+    FILE_LOG(logERROR) << "WIFISCAN_ERROR_GETTING_RANGE_INFO";
+  }
 }
 
 WifiScan::~WifiScan()
@@ -375,7 +378,7 @@ vector<Result> WifiScan::Fetch()
       dBm = (i->stats.qual.level / 2.0) - 110.0;
     }
 
-    results.push_back({ string(address), dBm });
+    results.push_back({ string(address), (double)dBm });
   }
   return results;
 }
