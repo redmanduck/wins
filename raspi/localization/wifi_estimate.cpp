@@ -349,7 +349,7 @@ WiFiEstimate::WiFiEstimate(unique_ptr<WifiScan> scanner) {
   scanner_ = move(scanner);
 }
 
-PointEstimate WiFiEstimate::EstimateLocation(int read_count,
+vector<PointEstimate> WiFiEstimate::EstimateLocation(int read_count,
     WiFiVariant v) {
   if (not scanner_) {
     throw runtime_error("No scanner");
@@ -359,9 +359,9 @@ PointEstimate WiFiEstimate::EstimateLocation(int read_count,
     for (int i = 0; i < read_count; ++i) {
       scans.push_back(scanner_->Fetch());
     }
-    return ClosestByMahalanobis(AverageScans(scans), v)[0];
+    return ClosestByMahalanobis(AverageScans(scans), v);
   } else {
-    return ClosestByMahalanobis(scanner_->Fetch(), v)[0];
+    return ClosestByMahalanobis(scanner_->Fetch(), v);
   }
 }
 

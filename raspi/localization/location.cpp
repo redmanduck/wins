@@ -16,7 +16,7 @@ namespace wins {
 using namespace std;
 
 #define HIGH_VARIANCE 10000
-#define SCALE (1/1.45)
+#define MAX_DIST 10
 
 Eigen::MatrixXd Location::prev_X;
 Eigen::MatrixXd Location::A;
@@ -36,14 +36,17 @@ vector<int> default_channels =
 
 vector<PointEstimate> Location::GetWiFiReadings(int count) {
   vector<PointEstimate> estimates;
-  vector<future<PointEstimate>> handles;
+  vector<future<vector<PointEstimate>>> handles;
   for (auto& estimator : wifi_estimators_) {
     auto handle = async(launch::async, &WiFiEstimate::EstimateLocation,
-          estimator.get(), count, WIFI_VARIANT_NONE);
+          estimator.get(), count, WIFI_VARIANT_CHI_SQ);
     handles.push_back(move(handle));
   }
   for (auto& result : handles) {
-    estimates.push_back(result.get());
+    auto vec = result.get();
+    if (vec.size() > 0) {
+      estimates.push_back(vec[0]);
+    }
   }
   return estimates;
 }
@@ -74,20 +77,26 @@ void Location::Init() {
   InitialEstimate();
 }
 
-FakeWifiScan* Location::TestInit(vector<vector<Result>> setup_points) {
+vector<FakeWifiScan*> Location::TestInit(vector<vector<Result>> setup_points,
+    int num_wifis) {
   Imu::Init();
   InitKalman();
   last_update_time_ = tp_epoch_;
 
-  unique_ptr<FakeWifiScan> fakescanner(new FakeWifiScan(setup_points));
-  FakeWifiScan* fakescannerptr = fakescanner.get();
-  wifi_estimators_.clear();
-  wifi_estimators_.push_back(unique_ptr<WiFiEstimate>(
-      new WiFiEstimate(unique_ptr<WifiScan>(move(fakescanner)))));
+  vector<FakeWifiScan*> fakescanners;
 
+  wifi_estimators_.clear();
+  for (int i = 0; i < num_wifis; ++i) {
+    unique_ptr<FakeWifiScan> fakescanner(new FakeWifiScan(setup_points));
+    fakescanners.push_back(fakescanner.get());
+    wifi_estimators_.push_back(unique_ptr<WiFiEstimate>(
+        new WiFiEstimate(unique_ptr<WifiScan>(move(fakescanner)))));
+  }
+
+  Map::UpdateLikelyPoints(numeric_limits<double>::max());
   InitialEstimate();
 
-  return fakescannerptr;
+  return fakescanners;
 }
 
 void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
@@ -95,6 +104,7 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
 
   if (wifi_estimates.size() == 0) {
     FILE_LOG(logERROR) << "No WIFI Estimates.";
+    cout << "No WIFI Estimates.";
 #ifdef TEST
     this_thread::sleep_for(chrono::seconds(1));
 #endif
@@ -125,7 +135,7 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   X = Imu::X.block<2,1>(0,0);
   P = Imu::P.block<2,2>(0,0);
 
-  Q = SCALE * Eigen::MatrixXd::Identity(2,2) * (msecs / 1000) *
+  Q = Global::Scale * Eigen::MatrixXd::Identity(2,2) * (msecs / 1000) *
       Global::LocationQFactor / 3;
   R.setZero();
 
@@ -151,6 +161,8 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   }
   Imu::X.block<2,1>(0,0) = X;
   Imu::P.block<2,2>(0,0) = P;
+  //Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+  //cout << P.format(CleanFmt) << "\n\n";
 
   last_update_time_ = new_update_time;
   prev_X = X;
@@ -163,10 +175,13 @@ kdtree::node<Point*>* Location::GetCurrentNode() {
 }
 
 void Location::UpdateEstimate() {
-  auto wifi_estimates = GetWiFiReadings(1);
+  auto wifi_estimates = GetWiFiReadings(Global::ReadingsPerUpdate);
   Imu::EstimateLocation();
+  Map::UpdateLikelyPoints(MAX_DIST * Global::Scale);
   if (wifi_estimates.size() > 0) {
     DoKalmanUpdate(wifi_estimates);
+  } else {
+    cout << "SKIPPING___________________________\n";
   }
 }
 

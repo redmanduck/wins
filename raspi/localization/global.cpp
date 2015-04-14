@@ -29,6 +29,8 @@ int Global::LocationQFactor = 5;
 int Global::DurationOverride = -1;
 vector<string> Global::WiFiDevices({ "wlan0" });
 int Global::InitWiFiReadings = 3;
+int Global::ReadingsPerUpdate = 1;
+double Global::Scale = (1/1.45);
 string Global::shutdown_command_ = "sudo shutdown -hP now";
 bool Global::is_test_ = false;
 

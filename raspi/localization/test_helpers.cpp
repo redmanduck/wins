@@ -146,7 +146,7 @@ namespace {
   }
 
   void LocationAnalysis(vector<unique_ptr<Point>>& test_points,
-      DebugParams dp) {
+      DebugParams dp, int readings_per_update, int num_wifis) {
     vector<double> distances;
     vector<double> x_vars;
     vector<double> y_vars;
@@ -157,19 +157,31 @@ namespace {
 
     Global::LocationQFactor = dp.exp1;
     Global::LocationRFactor = dp.exp2;
+    Global::ReadingsPerUpdate = readings_per_update;
 
     assert((int)test_points[0]->scans.size() >= Global::InitWiFiReadings);
     auto setup_points = vector<vector<Result>>(
         &test_points[0]->scans[0],
         &test_points[0]->scans[Global::InitWiFiReadings]);
 
-    for (size_t i = 0; i < (test_points[0]->scans[0].size() / 5) * 5; ++i) {
-      auto fakescanner = Location::TestInit(setup_points);
+    for (size_t i = 0; i < (test_points[0]->scans[0].size() / 5) * 5;
+        i += readings_per_update * num_wifis) {
+      auto fakescanners = Location::TestInit(setup_points, num_wifis);
 
       for (auto&& point : test_points) {
-        auto& scan = point->scans[i];
-        fakescanner->result_queue.push(scan);
+        int index = i;
+        for (auto fakescanner : fakescanners) {
+          for (int r = 0; r < readings_per_update; ++r) {
+            // Wrap around if this scan does not have enough elements.
+            // This is rare.
+            auto& scan = point->scans[index % point->scans.size()];
 
+            fakescanner->result_queue.push(scan);
+            index += 1;
+          }
+        }
+
+        //cout << "Testing x = " << point->x << ", y = " << point->y;
         Location::UpdateEstimate();
 
         //char buffer[100];
@@ -177,9 +189,9 @@ namespace {
         //    estimates[0].x_mean, estimates[0].y_mean);
         //cout << buffer;
         auto node = Location::GetCurrentNode();
-        distances.push_back(sqrt(
-            pow(point->x - node->point->x, 2) +
-            pow(point->y - node->point->y, 2)));
+        auto distance = sqrt(pow(point->x - node->point->x, 2) +
+            pow(point->y - node->point->y, 2));
+        distances.push_back(distance);
         x_vars.push_back(-1);
         y_vars.push_back(-1);
       }
@@ -204,6 +216,7 @@ void learn_helper(int argc, vector<string> argv) {
 
   function<void(vector<unique_ptr<Point>>&, DebugParams)> analysis_func;
   int offset = 0;
+  int no_range = false;
 
   using namespace std::placeholders;
   switch(stoi(argv[5])) {
@@ -236,8 +249,13 @@ void learn_helper(int argc, vector<string> argv) {
     case 11: analysis_func = bind(
         MostProbableNotClubbedAnalysis, _1, _2, true); break;
     case 20: analysis_func = bind(
-        LocationAnalysis, _1, _2);
-        offset = 6; break;
+        LocationAnalysis, _1, _2, 1, 1); no_range = true; break;
+    case 21: analysis_func = bind(
+        LocationAnalysis, _1, _2, 1, 2); no_range = true; break;
+    case 22: analysis_func = bind(
+        LocationAnalysis, _1, _2, 2, 1); no_range = true; break;
+    case 23: analysis_func = bind(
+        LocationAnalysis, _1, _2, 2, 2); no_range = true; break;
     default: cout << "Unknown learn type\n"; exit(1);
   }
 
@@ -249,20 +267,30 @@ void learn_helper(int argc, vector<string> argv) {
   double s;
   double mvx;
   double mvy;
-  for (double exp1 = 1; exp1 <= 10; exp1 += 1) {
-    for (double exp2 = -5 + offset; exp2 <= 5 + offset; exp2 += 1) {
-      analysis_func(test_points, {exp1, exp2, m, s, mvx, mvy});
-      if (not std::isnan(m)) {
-        results.push_back(make_tuple(m, s, mvx, mvy, exp1, exp2));
-        printf("%7.2f %7.2f %7.2f %7.2f %3.1f %3.1f\n",
-            m, s, mvx, mvy, exp1, exp2);
+  if (not no_range) {
+    for (double exp1 = 1; exp1 <= 10; exp1 += 1) {
+      for (double exp2 = -5 + offset; exp2 <= 5 + offset; exp2 += 1) {
+        analysis_func(test_points, {exp1, exp2, m, s, mvx, mvy});
+        if (not std::isnan(m)) {
+          results.push_back(make_tuple(m, s, mvx, mvy, exp1, exp2));
+          printf("%7.2f %7.2f %7.2f %7.2f %3.1f %3.1f\n",
+              m, s, mvx, mvy, exp1, exp2);
+        }
       }
     }
+    sort(results.begin(), results.end(),
+        [](const result &a, const result &b) -> bool {
+            return (get<0>(a) + get<1>(a)) < (get<0>(b) + get<1>(b));
+        });
+  } else {
+    analysis_func(test_points, {5, 1, m, s, mvx, mvy});
+    if (not std::isnan(m)) {
+      results.push_back(make_tuple(m, s, mvx, mvy, 5, 1));
+      printf("%7.2f %7.2f %7.2f %7.2f\n",
+          m, s, mvx, mvy);
+    }
   }
-  sort(results.begin(), results.end(),
-      [](const result &a, const result &b) -> bool {
-          return (get<0>(a) + get<1>(a)) < (get<0>(b) + get<1>(b));
-      });
+
   ofstream out_file;
   out_file.open("analysis" + string(argv[5]) + "_results.csv");
 

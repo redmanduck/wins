@@ -9,6 +9,7 @@
 #include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
 #include "global.h"
+#include "imu.h"
 #include "location.h"
 #include "navigation.h"
 #include "map.h"
@@ -91,6 +92,21 @@ void Map::TryConvertJSONMap(string in_filename, string out_filename) {
   cereal::BinaryOutputArchive out_archive(os);
   out_archive(all_points_);
   os.close();
+}
+
+void Map::UpdateLikelyPoints(double radius) {
+  auto current = Location::GetCurrentNode();
+  auto from = current == nullptr ? all_points_[0].get() : current->point;
+  likely_points_ = tree_->radius_nearest(from, radius);
+  //printf("-------\n%3s %3s\n", "X", "Y");
+  //if (current != nullptr) {
+  //  printf("%3f %3f\n", current->point->x, current->point->y);
+  //}
+  //printf("-------\n");
+  //for (auto p : likely_points_) {
+  //  printf("%3f %3f\n", p->point->x, p->point->y);
+  //}
+  //printf("-------\n");
 }
 
 ProbabilityStat Map::Stats(const Point* p, string mac, int signal) {

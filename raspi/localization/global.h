@@ -44,6 +44,8 @@ class Global {
   static string MapFile;
   static vector<string> WiFiDevices;
   static int InitWiFiReadings;
+  static int ReadingsPerUpdate;
+  static double Scale;
 
   static void RunMainLoop();
   static void Init();

@@ -33,7 +33,7 @@ class WiFiEstimate {
       double exp1 = 1, double exp2 = 1, bool debug = false);
   WiFiEstimate(unique_ptr<WifiScan> scanner);
   WiFiEstimate() {}
-  PointEstimate EstimateLocation(int read_count = 1,
+  vector<PointEstimate> EstimateLocation(int read_count = 1,
       WiFiVariant v = WIFI_VARIANT_CHI_SQ);
 };
 
