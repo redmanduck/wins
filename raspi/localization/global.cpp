@@ -21,6 +21,8 @@ condition_variable Global::display_event_pending_;
 mutex Global::event_mutex_;
 thread::id Global::mainthread_id_;
 
+auto& spi_ = SPI::GetInstance();
+
 int Global::FilterableDistance = 10;
 int Global::FilterBiasX = 5;
 int Global::FilterBiasY = 5;
@@ -56,7 +58,7 @@ void Global::RunMainLoop() {
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
-  SPI::Init();
+  spi_.Init();
   KeypadHandler::StartThread();
   Map::StartNavigationThread();
 }
@@ -116,7 +118,7 @@ void Global::ShutDown() {
   Global::Destroy();
   KeypadHandler::TerminateThread();
   Map::TerminateThread();
-  SPI::ShutDown();
+  spi_.ShutDown();
   system(shutdown_command_.c_str());
 }
 
