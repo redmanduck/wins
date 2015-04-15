@@ -17,4 +17,9 @@ install:
   - make
   - sudo make install
   - cd ..
-script: cd raspi/localization && make
+  - cd raspi/localization/wireless_tools.29
+  - make
+  - sudo make install
+  - cd ../
+script: cd localization && make
+
