@@ -2,15 +2,17 @@
 #include <queue>
 #include <stdexcept>
 
+#include "global.h"
+#include "location.h"
 #include "map.h"
 #include "navigation.h"
-#include "location.h"
 
 namespace wins {
 
 using namespace std;
 
 #define MULTIPLIER 10
+#define NEIGHBOR_RADIUS 3
 
 namespace {
   std::vector<std::string> &split(const std::string &s,
@@ -33,11 +35,7 @@ namespace {
 
 struct PriorityNode {
   kdtree::node<Point*>* node;
-  int priority;
-
-  bool operator < (const PriorityNode& pn) const {
-    return priority < pn.priority;
-  }
+  double priority;
 };
 
 kdtree::node<Point*>* Navigation::destination_node_ = nullptr;
@@ -88,9 +86,15 @@ void Navigation::UpdateRoute() {
   auto target_node = destination_node_;
   assert(target_node != nullptr);
 
+  auto compareFunc = [](PriorityNode a, PriorityNode b) {
+    return a.priority > b.priority;
+  };
+  typedef priority_queue<PriorityNode, vector<PriorityNode>,
+      decltype(compareFunc)> pqueue;
+
   unordered_map<kdtree::node<Point*>*, kdtree::node<Point*>*> came_from;
-  unordered_map<kdtree::node<Point*>*, int> cost_so_far;
-  priority_queue<PriorityNode> frontier;
+  unordered_map<kdtree::node<Point*>*, double> cost_so_far;
+  pqueue frontier(compareFunc);
 
   frontier.push({ Location::GetCurrentNode(), 0 });
   came_from[current_node] = current_node;
@@ -105,18 +109,32 @@ void Navigation::UpdateRoute() {
       break;
     }
 
-    auto neighbors = current.node->neighbors();
+    auto neighbors = Map::NodesInRadius(current.node,
+        NEIGHBOR_RADIUS * Global::Scale);
+    auto rem_iter = neighbors.begin();
+    for (auto n = neighbors.begin(); n != neighbors.end(); ++n) {
+      if (*n == current.node) {
+        rem_iter = n;
+        //cout << "Removed current\n";
+      }
+    }
+    neighbors.erase(rem_iter);
+    //printf("%3.0f %3.0f\n", current.node->point->x, current.node->point->y);
     for (size_t i = 0; i < neighbors.size(); ++i) {
       kdtree::node<Point*>* next = neighbors[i];
-      int new_cost = cost_so_far[current.node] + current.node->point->cost[i];
+      double new_cost = cost_so_far[current.node] + current.node->distance(next);
+      //printf("%3.0f %3.0f %5.3f", next->point->x, next->point->y, new_cost);
       if (cost_so_far.count(next) == 0 ||
           new_cost < cost_so_far[next]) {
         cost_so_far[next] = new_cost;
-        int priority = new_cost + next->distance(target_node);
+        double priority = new_cost + next->distance(target_node);
+        //printf(" %5.3f", priority);
         frontier.push(PriorityNode{ next, priority });
         came_from[next] = current.node;
       }
+      //cout << "\n";
     }
+    //cout << "\n";
   }
 
   lock_guard<mutex> lock(route_mutex);

@@ -77,28 +77,6 @@ void Location::Init() {
   InitialEstimate();
 }
 
-vector<FakeWifiScan*> Location::TestInit(vector<vector<Result>> setup_points,
-    int num_wifis) {
-  Imu::Init();
-  InitKalman();
-  last_update_time_ = tp_epoch_;
-
-  vector<FakeWifiScan*> fakescanners;
-
-  wifi_estimators_.clear();
-  for (int i = 0; i < num_wifis; ++i) {
-    unique_ptr<FakeWifiScan> fakescanner(new FakeWifiScan(setup_points));
-    fakescanners.push_back(fakescanner.get());
-    wifi_estimators_.push_back(unique_ptr<WiFiEstimate>(
-        new WiFiEstimate(unique_ptr<WifiScan>(move(fakescanner)))));
-  }
-
-  Map::UpdateLikelyPoints(numeric_limits<double>::max());
-  InitialEstimate();
-
-  return fakescanners;
-}
-
 void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   int msecs;
 
@@ -183,6 +161,33 @@ void Location::UpdateEstimate() {
   } else {
     cout << "SKIPPING___________________________\n";
   }
+}
+
+vector<FakeWifiScan*> Location::TestInit(vector<vector<Result>> setup_points,
+    int num_wifis) {
+  Imu::Init();
+  InitKalman();
+  last_update_time_ = tp_epoch_;
+  current_node_ = nullptr;
+
+  vector<FakeWifiScan*> fakescanners;
+
+  wifi_estimators_.clear();
+  for (int i = 0; i < num_wifis; ++i) {
+    unique_ptr<FakeWifiScan> fakescanner(new FakeWifiScan(setup_points));
+    fakescanners.push_back(fakescanner.get());
+    wifi_estimators_.push_back(unique_ptr<WiFiEstimate>(
+        new WiFiEstimate(unique_ptr<WifiScan>(move(fakescanner)))));
+  }
+
+  Map::UpdateLikelyPoints(numeric_limits<double>::max());
+  InitialEstimate();
+
+  return fakescanners;
+}
+
+void Location::TestSetCurrentNode(kdtree::node<Point*>* node) {
+  current_node_ = node;
 }
 
 }

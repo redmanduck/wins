@@ -79,6 +79,13 @@ void Map::InitMap(string filename) {
       numeric_limits<double>::max());
 }
 
+void Map::TestInitMap(vector<unique_ptr<Point>>&& all_points) {
+  all_points_ = move(all_points);
+  tree_.reset(new kdtree::kdtree<Point*>(&all_points_));
+  likely_points_ = tree_->radius_nearest(all_points_[0].get(),
+      numeric_limits<double>::max());
+}
+
 void Map::TryConvertJSONMap(string in_filename, string out_filename) {
   ifstream is(in_filename);
   if (not file_exists(in_filename)) {
@@ -107,6 +114,11 @@ void Map::UpdateLikelyPoints(double radius) {
   //  printf("%3f %3f\n", p->point->x, p->point->y);
   //}
   //printf("-------\n");
+}
+
+vector<kdtree::node<Point*>*> Map::NodesInRadius(kdtree::node<Point*>* node,
+    const double radius) {
+  return tree_->radius_nearest(node, radius);
 }
 
 ProbabilityStat Map::Stats(const Point* p, string mac, int signal) {

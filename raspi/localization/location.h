@@ -41,10 +41,12 @@ class Location {
  public:
   static vector<PointEstimate> GetWiFiReadings(int count = 1);
   static void Init();
-  static vector<FakeWifiScan*> TestInit(vector<vector<Result>> setup_points,
-      int num_wifis);
   static kdtree::node<Point*>* GetCurrentNode();
   static void UpdateEstimate();
+
+  static vector<FakeWifiScan*> TestInit(vector<vector<Result>> setup_points,
+      int num_wifis);
+  static void TestSetCurrentNode(kdtree::node<Point*>* node);
 };
 
 }

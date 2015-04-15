@@ -270,7 +270,7 @@ void learn_helper(int argc, vector<string> argv) {
     case 26: analysis_func = bind(
         LocationAnalysis, _1, _2, 2, 1);
         override_range = make_tuple(true, 5, 1); break;
-    case 28: analysis_func = bind(
+    case 27: analysis_func = bind(
         LocationAnalysis, _1, _2, 2, 2);
         override_range = make_tuple(true, 5, 1); break;
     default: cout << "Unknown learn type\n"; exit(1);

@@ -12,10 +12,12 @@
 #include "common_utils.h"
 #include "display.h"
 #include "global.h"
+#include "location.h"
 #include "kdtree/kdtree.hpp"
 #include "keypad_handler.h"
 #include "test_helpers.h"
 #include "map.h"
+#include "navigation.h"
 #include "point.h"
 #include "scan_result.h"
 #include "gamma.hpp"
@@ -173,7 +175,6 @@ void Test(int argc, char *orig_argv[]) {
   else if (string(argv[2]) == "learn_good") {
     argc += 1;
     argv.push_back("-");
-    remove("analysis_summary.csv");
     argv[5] = "1";
     learn_helper(argc, argv);
     argv[5] = "3";
@@ -186,17 +187,33 @@ void Test(int argc, char *orig_argv[]) {
   else if (string(argv[2]) == "llocs_all") {
     argc += 1;
     argv.push_back("-");
-    remove("analysis_summary.csv");
     for (int i = 20; i < 24; ++i) {
       argv[5] = std::to_string(i);
       learn_helper(argc, argv);
+    }
+  }
+  else if (string(argv[2]) == "nav") {
+    vector<unique_ptr<Point>> points;
+    for (double i = 0; i < 10; ++i) {
+      for (double j = 0; j < 10; ++j) {
+        points.push_back(unique_ptr<Point>(new Point({i, j})));
+      }
+    }
+    Map::TestInitMap(move(points));
+    Navigation::TrySetDestinationFromCoords("9.0, 9.0");
+    Location::TestSetCurrentNode(Map::NodeNearest(0, 0));
+    Navigation::UpdateRoute();
+    //for (auto iter = Navigation::route_begin(); iter != Navigation::route_end();
+    //    ++iter) {
+    //  printf("%3.0f %3.0f\n", (*iter)->point->x, (*iter)->point->y);
     }
   }
   else if (string(argv[2]) == "full") {
     string file_name = "Menu.png";
     std::ofstream stream(file_name.c_str(),std::ios::binary);
     if (!stream) {
-      std::cout << "bitmap_image::save_image(): Error - Could not open file "  << file_name << " for writing!" << std::endl;
+      std::cout << "bitmap_image::save_image(): Error - Could not open file "
+          << file_name << " for writing!" << std::endl;
       return;
     }
     stream.close();
