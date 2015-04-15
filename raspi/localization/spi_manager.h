@@ -29,7 +29,7 @@ namespace wins {
 	 public:
 	  mutex buffer_mutex;
 	  string input_buffer;
-
+	  void Exchange();
 	  void Init();
 	  void ShutDown();
 

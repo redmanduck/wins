@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include "spi_manager.h"
+#include "display.h"
 
 namespace wins {
 
@@ -20,8 +21,17 @@ namespace wins {
 		  bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
 	}
 
+	//The Kenzhebalin Protocol
 	void SPI::Transmit(){
-			
+		auto& disp = Display::GetInstance();
+		disp.UpdateBufferSnapshot();	
+		std::cout << disp.buffer_snapshot[0];
+					
+	}
+
+	//IMU-LCD Exchange for Kenzhebalin Protocol
+	void SPI::Exchange(){
+		
 	}
 
 	SPI& SPI::GetInstance() {
