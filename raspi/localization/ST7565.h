@@ -81,6 +81,8 @@ public:
     ST7565(int8_t SID, int8_t SCLK, int8_t A0, int8_t RST) :sid(SID), sclk(SCLK), a0(A0), rst(RST), cs(-1) {}
     ST7565(int8_t JSD) {}
 
+    static uint8_t st7565_buffer[1024];
+
     void st7565_init(void);
     void begin(uint8_t contrast);
     void st7565_command(uint8_t c);
