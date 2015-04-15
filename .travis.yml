@@ -16,4 +16,5 @@ install:
   - ./configure
   - make
   - sudo make install
+  - cd ..
 script: cd raspi/localization && make
