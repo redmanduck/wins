@@ -4,6 +4,7 @@
 #include <string>
 //#include "common_utils.h"
 #include "display.h"
+
 //#include "navigation.h"
 //#include "spi_manager.h"
 
@@ -36,6 +37,136 @@ int MaxLines(FontSize size) {
 //        }
 //    }
 //}
+
+
+void Display::ShowMap(string path_to_map){
+    
+    glcd.drawpixel(75,30, BLACK);
+    glcd.drawpixel(82,30, BLACK);
+    glcd.drawpixel(88,30, BLACK);
+    glcd.drawpixel(95,30, BLACK);
+    glcd.drawpixel(102,30, BLACK);
+    glcd.drawpixel(108,30, BLACK);
+    glcd.drawpixel(13,33, BLACK);
+    glcd.drawpixel(19,33, BLACK);
+    glcd.drawpixel(26,33, BLACK);
+    glcd.drawpixel(33,33, BLACK);
+    glcd.drawpixel(39,33, BLACK);
+    glcd.drawpixel(46,33, BLACK);
+    glcd.drawpixel(46,32, BLACK);
+    glcd.drawpixel(46,30, BLACK);
+    glcd.drawpixel(53,30, BLACK);
+    glcd.drawpixel(59,30, BLACK);
+    glcd.drawpixel(66,30, BLACK);
+    glcd.drawpixel(73,30, BLACK);
+    glcd.drawpixel(79,30, BLACK);
+    glcd.drawpixel(86,30, BLACK);
+    glcd.drawpixel(93,30, BLACK);
+    glcd.drawpixel(99,30, BLACK);
+    glcd.drawpixel(106,30, BLACK);
+    glcd.drawpixel(10,33, BLACK);
+    glcd.drawpixel(17,33, BLACK);
+    glcd.drawpixel(24,33, BLACK);
+    glcd.drawpixel(30,33, BLACK);
+    glcd.drawpixel(37,33, BLACK);
+    glcd.drawpixel(44,33, BLACK);
+    glcd.drawpixel(50,30, BLACK);
+    glcd.drawpixel(57,30, BLACK);
+    glcd.drawpixel(64,30, BLACK);
+    glcd.drawpixel(70,30, BLACK);
+    glcd.drawpixel(77,30, BLACK);
+    glcd.drawpixel(84,30, BLACK);
+    glcd.drawpixel(90,30, BLACK);
+    glcd.drawpixel(97,30, BLACK);
+    glcd.drawpixel(104,30, BLACK);
+    glcd.drawpixel(110,30, BLACK);
+    glcd.drawpixel(110,29, BLACK);
+    glcd.drawpixel(15,33, BLACK);
+    glcd.drawpixel(110,27, BLACK);
+    glcd.drawpixel(110,26, BLACK);
+    glcd.drawpixel(22,33, BLACK);
+    glcd.drawpixel(110,24, BLACK);
+    glcd.drawpixel(110,23, BLACK);
+    glcd.drawpixel(28,33, BLACK);
+    glcd.drawpixel(110,21, BLACK);
+    glcd.drawpixel(110,20, BLACK);
+    glcd.drawpixel(35,33, BLACK);
+    glcd.drawpixel(110,18, BLACK);
+    glcd.drawpixel(110,17, BLACK);
+    glcd.drawpixel(42,33, BLACK);
+    glcd.drawpixel(48,30, BLACK);
+    glcd.drawpixel(55,30, BLACK);
+    glcd.drawpixel(62,30, BLACK);
+    glcd.drawpixel(68,30, BLACK);
+    glcd.drawpixel(39,60, BLACK);
+    glcd.drawpixel(46,60, BLACK);
+    glcd.drawpixel(53,60, BLACK);
+    glcd.drawpixel(59,60, BLACK);
+    glcd.drawpixel(66,60, BLACK);
+    glcd.drawpixel(73,60, BLACK);
+    glcd.drawpixel(79,60, BLACK);
+    glcd.drawpixel(10,60, BLACK);
+    glcd.drawpixel(10,59, BLACK);
+    glcd.drawpixel(10,57, BLACK);
+    glcd.drawpixel(17,60, BLACK);
+    glcd.drawpixel(10,56, BLACK);
+    glcd.drawpixel(10,54, BLACK);
+    glcd.drawpixel(24,60, BLACK);
+    glcd.drawpixel(10,53, BLACK);
+    glcd.drawpixel(10,51, BLACK);
+    glcd.drawpixel(30,60, BLACK);
+    glcd.drawpixel(10,50, BLACK);
+    glcd.drawpixel(10,48, BLACK);
+    glcd.drawpixel(37,60, BLACK);
+    glcd.drawpixel(10,47, BLACK);
+    glcd.drawpixel(10,45, BLACK);
+    glcd.drawpixel(44,60, BLACK);
+    glcd.drawpixel(10,44, BLACK);
+    glcd.drawpixel(50,60, BLACK);
+    glcd.drawpixel(10,42, BLACK);
+    glcd.drawpixel(10,41, BLACK);
+    glcd.drawpixel(57,60, BLACK);
+    glcd.drawpixel(10,39, BLACK);
+    glcd.drawpixel(10,38, BLACK);
+    glcd.drawpixel(64,60, BLACK);
+    glcd.drawpixel(10,36, BLACK);
+    glcd.drawpixel(10,35, BLACK);
+    glcd.drawpixel(70,60, BLACK);
+    glcd.drawpixel(10,33, BLACK);
+    glcd.drawpixel(77,60, BLACK);
+    glcd.drawpixel(84,60, BLACK);
+    glcd.drawpixel(84,59, BLACK);
+    glcd.drawpixel(84,57, BLACK);
+    glcd.drawpixel(84,56, BLACK);
+    glcd.drawpixel(84,54, BLACK);
+    glcd.drawpixel(84,53, BLACK);
+    glcd.drawpixel(84,51, BLACK);
+    glcd.drawpixel(84,50, BLACK);
+    glcd.drawpixel(84,48, BLACK);
+    glcd.drawpixel(84,47, BLACK);
+    glcd.drawpixel(84,45, BLACK);
+    glcd.drawpixel(84,44, BLACK);
+    glcd.drawpixel(15,60, BLACK);
+    glcd.drawpixel(84,42, BLACK);
+    glcd.drawpixel(84,41, BLACK);
+    glcd.drawpixel(22,60, BLACK);
+    glcd.drawpixel(84,39, BLACK);
+    glcd.drawpixel(28,60, BLACK);
+    glcd.drawpixel(35,60, BLACK);
+    glcd.drawpixel(42,60, BLACK);
+    glcd.drawpixel(48,60, BLACK);
+    glcd.drawpixel(55,60, BLACK);
+    glcd.drawpixel(62,60, BLACK);
+    glcd.drawpixel(68,60, BLACK);
+    glcd.drawpixel(75,60, BLACK);
+    glcd.drawpixel(82,60, BLACK);
+    glcd.drawpixel(13,60, BLACK);
+    glcd.drawpixel(19,60, BLACK);
+    glcd.drawpixel(26,60, BLACK);
+    glcd.drawpixel(33,60, BLACK);
+
+    glcd.drawstring(10, 1, "EE Basement");
+}
 
 void Display::ClearLine(int line) {
     glcd.fillrect(0, line*8 , 128, 8, 0);
@@ -218,6 +349,8 @@ Display::Display() {
     flushed_ = true;
     
     Menu();
+    
+    
     //display_thread_ = thread(&Display::Menu, this);
 
 }

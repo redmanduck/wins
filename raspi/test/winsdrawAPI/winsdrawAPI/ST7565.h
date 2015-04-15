@@ -74,9 +74,10 @@
 
 class ST7565 {
 public:
+    uint8_t st7565_buffer[1024];
     ST7565(int8_t SID, int8_t SCLK, int8_t A0, int8_t RST, int8_t CS) :sid(SID), sclk(SCLK), a0(A0), rst(RST), cs(CS) {}
     ST7565(int8_t SID, int8_t SCLK, int8_t A0, int8_t RST) :sid(SID), sclk(SCLK), a0(A0), rst(RST), cs(-1) {}
-    ST7565(int8_t JSD) {}
+    ST7565(int8_t JSD);
     
     void st7565_init(void);
     void begin(uint8_t contrast);
@@ -109,7 +110,7 @@ public:
     
     uint8_t * get_st7565_buffer();
     void savebitmap(std::string filename);
-
+    void drawpixel(uint8_t x, uint8_t y, uint8_t color);
 private:
     int8_t sid, sclk, a0, rst, cs;
     void spiwrite(uint8_t c);

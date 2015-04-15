@@ -18,11 +18,11 @@
 #include <stdlib.h>
 
 enum opcode {
-    IMU = 'M',
-    KEYPAD = 'K',
-    HALT = 'H',
-    ULTRASONIC='U',
-    POSITION='P'
+    OP_IMU = 'M',
+    OP_KEYPAD = 'K',
+    OP_HALT = 'H',
+    OP_ULTRASONIC='U',
+    OP_POSITION='P'
 };
 
 int main(){
@@ -78,7 +78,7 @@ int main(){
 
     int i = 0;
     for(i = 0; i<2; i++){
-      bcm2835_spi_transfer(IMU);
+      bcm2835_spi_transfer(OP_IMU);
     }
     for(i = 0; i<NBYTES; i++){
       miso[i]=bcm2835_spi_transfer(mosi[i]);

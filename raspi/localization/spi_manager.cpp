@@ -6,7 +6,6 @@ namespace wins {
 	mutex SPI::buffer_mutex;
 	string SPI::input_buffer;
 
-	uint8_t transmit_buffer[1024];
 
 	void SPI::Init() {
 
@@ -19,6 +18,10 @@ namespace wins {
 		  bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_1024);   //4096); //2048);
 		  bcm2835_spi_setDataMode(BCM2835_SPI_MODE1);
 		  bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
+	}
+
+	void SPI::Transmit(){
+
 	}
 
 	void SPI::ShutDown() {

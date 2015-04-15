@@ -79,9 +79,9 @@ class ST7565 {
 public:
     ST7565(int8_t SID, int8_t SCLK, int8_t A0, int8_t RST, int8_t CS) :sid(SID), sclk(SCLK), a0(A0), rst(RST), cs(CS) {}
     ST7565(int8_t SID, int8_t SCLK, int8_t A0, int8_t RST) :sid(SID), sclk(SCLK), a0(A0), rst(RST), cs(-1) {}
-    ST7565(int8_t JSD) {}
+    ST7565(int8_t JSD);
 
-    static uint8_t st7565_buffer[1024];
+    uint8_t st7565_buffer[1024];
 
     void st7565_init(void);
     void begin(uint8_t contrast);

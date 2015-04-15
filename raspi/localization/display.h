@@ -69,8 +69,10 @@ class Display {
   Page FirstPage();
   Page ShowPage(Page);
   Page CurrentPage();
+  uint8_t buffer_snapshot[1024];
 
   void SaveAsBitmap(string saveas);
+  void Display::UpdateBufferSnapshot();
 
   static Display& GetInstance();
 

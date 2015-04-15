@@ -26,6 +26,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B43DB22A1AD7D106004673CE /* map_norm.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = map_norm.csv; sourceTree = "<group>"; };
 		B45B67771AC626EE00C3A5E0 /* winsdrawAPI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = winsdrawAPI; sourceTree = BUILT_PRODUCTS_DIR; };
 		B45B677A1AC626EE00C3A5E0 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		B47D88871AC6894500E34851 /* bitmap_image.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = bitmap_image.hpp; sourceTree = "<group>"; };
@@ -73,6 +74,7 @@
 				B4FA50951AC656E700FF5326 /* display.cpp */,
 				B4FA50991AC6661F00FF5326 /* IPoint.h */,
 				B4FA50981AC6661F00FF5326 /* IPoint.cpp */,
+				B43DB22A1AD7D106004673CE /* map_norm.csv */,
 			);
 			path = winsdrawAPI;
 			sourceTree = "<group>";

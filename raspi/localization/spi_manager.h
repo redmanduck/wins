@@ -23,14 +23,15 @@ namespace wins {
 
 	class SPI {
 	 private:
-	  static void UpdateInputBuffer();
+	  void UpdateInputBuffer();
+	  void Transmit();
 
 	 public:
-	  static mutex buffer_mutex;
-	  static string input_buffer;
+	  mutex buffer_mutex;
+	  string input_buffer;
 
-	  static void Init();
-	  static void ShutDown();
+	  void Init();
+	  void ShutDown();
 	};
 
 }
