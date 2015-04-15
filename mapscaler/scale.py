@@ -8,13 +8,16 @@ import math
 # usage: ./scale.py map <seg1.csv> <seg2.csv> <seg3.csv> 
 # creates map.csv
 
+if(len(sys.argv) != 3):
+	print "Usage: ./scale.py <segments_file> <output_csv>"
+	sys.exit(1)	
+
 filename = sys.argv[1]
 f =  open(filename, "r")
 pres = json.loads(f.read())
+f.close()
 
-def FCD(C):
-	# fake coordinate world distance
-	# takes cooridor
+def corridor_length(C):
 
 	first = C['points'][0]
 	last = C['points'][len(C['points']) - 1]
@@ -45,13 +48,17 @@ for corridor in pres:
 	
 	pts = pres[corridor]['points']
 
-	current_factor = FCD(pres[corridor])/FCD(pres[dx_corridor])
-	multiplier  = pres[corridor]['norm']/dx
 
-	#print "wanted", multiplier
-	#print "current", current_factor
-	
+	print "------ ", corridor , "------ "
+	print "this corr length ", corridor_length(pres[corridor])
+	print "base corr length ", corridor_length(pres[dx_corridor])
+	current_factor = corridor_length(pres[corridor])/corridor_length(pres[dx_corridor])
+	multiplier = pres[corridor]['norm']/dx
+
+	print "wanted", multiplier
+	print "current", current_factor
 	multiplier = multiplier/current_factor  # effective multiplier
+	print "effective multiplier",  multiplier
 
 	#print "multip", corridor, multiplier
 	for i in range(0,len(pts)):
@@ -62,8 +69,13 @@ for corridor in pres:
 
 		csv.append(pts[i])
 
+	print ">>> ------ (Post scaling)", corridor , "------ "
+	print ">>> new corridor_length ", corridor_length(pres[corridor])
 
 # print as csv
 
+f = open(sys.argv[2], "w")
 for coord in csv:
-	print coord[0], "," , coord[1]
+	g= str(str(coord[0])+  "," + str( coord[1]) + "\n")
+	f.write(g)
+f.close()
