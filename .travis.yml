@@ -1,4 +1,4 @@
 language: cpp
 compiler: 
-	- gcc
+  - gcc
 script: cd raspi/localization && make
