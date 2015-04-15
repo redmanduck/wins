@@ -1,7 +1,7 @@
 #ifndef IMU_H
 #define IMU_H
 
-#include<Eigen/Dense>
+#include <Eigen/Dense>
 
 #include "common_utils.h"
 
@@ -39,10 +39,13 @@ class Imu{
   static vector<double> sensor_variance;
   static vector<double> process_variance;
 
+  static ImuResult imu_buffer_;
+
  public:
   static Eigen::MatrixXd X;      // Current state estimate.
   static Eigen::MatrixXd P;  // Current covariance estimate.
 
+  static void AddReading(vector<uint8_t> pic_data);
   static ImuResult FetchAll();
   static void Init();
   static PointEstimate DoKalman(ImuResult imu_result,

@@ -21,8 +21,6 @@ condition_variable Global::display_event_pending_;
 mutex Global::event_mutex_;
 thread::id Global::mainthread_id_;
 
-auto& spi_ = SPI::GetInstance();
-
 int Global::FilterableDistance = 10;
 int Global::FilterBiasX = 5;
 int Global::FilterBiasY = 5;
@@ -50,15 +48,15 @@ void Global::RunMainLoop() {
 
       nextpage = display.ShowPage(curpage);
     }
-    display.ShowPage(PAGE_SHUT_DOWN);
-    Global::ShutDown();
   } catch(ShutDownException) {}
+  display.ShowPage(PAGE_SHUT_DOWN);
+  Global::ShutDown();
   Global::SetEventFlag(WINS_EVENT_SHUTDOWN_DONE);
 }
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
-  spi_.Init();
+  SPI::StartThread();
   KeypadHandler::StartThread();
   Map::StartNavigationThread();
 }
@@ -117,8 +115,8 @@ void Global::ShutDown() {
   SetEventFlag(WINS_EVENT_SHUTTING_DOWN);
   Global::Destroy();
   KeypadHandler::TerminateThread();
+  SPI::TerminateThread();
   Map::TerminateThread();
-  spi_.ShutDown();
   system(shutdown_command_.c_str());
 }
 

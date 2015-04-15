@@ -144,8 +144,6 @@ Display::Display()
   cursor_ = 0;
   current_line_ = 0;
   Flush();
-
-  memset(buffer_snapshot, 0, 1024);
 }
 
 Page Display::Menu() {
@@ -271,9 +269,11 @@ void Display::SaveAsBitmap(string saveas){
     glcd_.savebitmap(saveas);
 }
 
-void Display::UpdateBufferSnapshot(){
+unique_ptr<uint8_t> Display::GetBufferCopy() {
   lock_guard<mutex> lock(glcd_mutex);
-  memcpy(buffer_snapshot, glcd_.st7565_buffer, 1024);
+  unique_ptr<uint8_t> buffer_copy(new uint8_t[1024]);
+  memcpy(buffer_copy.get(), glcd_.st7565_buffer, 1024);
+  return buffer_copy;
 }
 
 Display& Display::GetInstance() {
