@@ -98,13 +98,13 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
         // Weight of a point is the probability that the collected signal data
         // was taken at that point.
         point_stats.push_back(make_tuple(
-              pow(df, exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
+              pow(pow(10, df), exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
               point, df, sqrt(sum)));
       else
         // Weight of a point is proportional to the number of APs common to
         // that location and inversely proportinal to the M-distance.
-        point_stats.push_back(make_tuple(pow(df, exp1) * pow(sqrt(sum), exp2),
-              point, df, sqrt(sum)));
+        point_stats.push_back(make_tuple(pow(exp(df), exp1) / pow(2 + exp2,
+              sum), point, df, sqrt(sum)));
     }
   }
 
@@ -184,9 +184,9 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
       var_y += pow(pred_y - get<1>(p_stat)->y, 2) * weight;
     }
 
-    estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+    estimates.push_back({ /* x_mean */ pred_x,
                           /* x_var */ var_x,
-                          /* y_mean */ nearbyint(pred_y),
+                          /* y_mean */ pred_y,
                           /* y_var */ var_y});
   }
 
@@ -279,9 +279,9 @@ vector<PointEstimate> WiFiEstimate::MostProbableClubbed(vector<Result>& s,
     return estimates;
   }
 
-  estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+  estimates.push_back({ /* x_mean */ pred_x,
                         /* x_var */ var_x,
-                        /* y_mean */ nearbyint(pred_y),
+                        /* y_mean */ pred_y,
                         /* y_var */ var_y });
   return estimates;
 }
@@ -316,9 +316,9 @@ vector<PointEstimate> WiFiEstimate::MostProbableNotClubbed(vector<Result>& s,
   }
 
   vector<PointEstimate> estimates;
-  estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+  estimates.push_back({ /* x_mean */ pred_x,
                         /* x_var */ var_x,
-                        /* y_mean */ nearbyint(pred_y),
+                        /* y_mean */ pred_y,
                         /* y_var */ var_y });
   return estimates;
 }
@@ -349,7 +349,7 @@ WiFiEstimate::WiFiEstimate(unique_ptr<WifiScan> scanner) {
   scanner_ = move(scanner);
 }
 
-PointEstimate WiFiEstimate::EstimateLocation(int read_count,
+vector<PointEstimate> WiFiEstimate::EstimateLocation(int read_count,
     WiFiVariant v) {
   if (not scanner_) {
     throw runtime_error("No scanner");
@@ -359,9 +359,9 @@ PointEstimate WiFiEstimate::EstimateLocation(int read_count,
     for (int i = 0; i < read_count; ++i) {
       scans.push_back(scanner_->Fetch());
     }
-    return ClosestByMahalanobis(AverageScans(scans), v)[0];
+    return ClosestByMahalanobis(AverageScans(scans), v);
   } else {
-    return ClosestByMahalanobis(scanner_->Fetch(), v)[0];
+    return ClosestByMahalanobis(scanner_->Fetch(), v);
   }
 }
 

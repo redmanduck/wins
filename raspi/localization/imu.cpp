@@ -3,6 +3,10 @@
 
 namespace wins {
 
+using namespace Eigen;
+
+#define HIGH_VARIANCE 10000
+
 MatrixXd Imu::X(SVARS, 1);
 MatrixXd Imu::P(SVARS, SVARS);
 MatrixXd Imu::R(OBSERVATIONS, OBSERVATIONS);
@@ -24,7 +28,10 @@ void Imu::Init() {
   }
   H_t = H.transpose();
 
-  R.setZero();
+  X.setZero();
+  P = HIGH_VARIANCE * MatrixXd::Identity(SVARS, SVARS);
+
+  R = HIGH_VARIANCE * MatrixXd::Identity(OBSERVATIONS, OBSERVATIONS);
 }
 
 ImuResult Imu::FetchAll() {
@@ -34,10 +41,8 @@ ImuResult Imu::FetchAll() {
 PointEstimate Imu::DoKalman(ImuResult imu_result, ImuVariant v) {
   auto delta_t = imu_result.duration / imu_result.readings.size();
 
-  Matrix<double, SVARS, 1> x_sum;
-  Matrix<double, SVARS, SVARS> p_sum;
-  x_sum.setZero();
-  p_sum.setZero();
+  Matrix<double, SVARS, 1> x_sum = X;
+  Matrix<double, SVARS, SVARS> p_sum = P;
 
   auto X_initial = X;
 
@@ -63,11 +68,9 @@ PointEstimate Imu::DoKalman(ImuResult imu_result, ImuVariant v) {
     p_sum += P;
   }
   auto average_state = x_sum.array() *
-      Array<double, SVARS, 1>::Constant(
-      1.0 / imu_result.readings.size());
+      1.0 / (imu_result.readings.size() + 1);
   auto average_error = p_sum.array() *
-      Array<double, SVARS, SVARS>::Constant(
-      1.0 / imu_result.readings.size());
+      1.0 / (imu_result.readings.size() + 1);
 
   if (v == IMU_VARIANT_KALMAN_DISTANCE_AVG) {
     X.block<2,1>(0,0) = average_state.block<2,1>(0,0);

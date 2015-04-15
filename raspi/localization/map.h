@@ -42,7 +42,7 @@ class Map {
   static void BlockUntilNavigating();
   static void InitMap(string filename);
   static void TryConvertJSONMap(string in_filename, string out_filename);
-  static void UpdateLikelyPoints();
+  static void UpdateLikelyPoints(double radius);
   static ProbabilityStat Stats(const Point* p, string mac, int signal);
   static const vector<kdtree::node<Point*>*>& CurrentLikelyPoints();
   static const vector<unique_ptr<Point>>& all_points() {

@@ -2,5 +2,5 @@
 Autonomous indoor navigation robot
 
 
-# Production server
-git clone pi@ece-74-16.dhcp.ecn.purdue.edu
+# Find out Pi's address
+http://www.ecn.ninja/view/berry

@@ -183,6 +183,12 @@ void Test(int argc, char *orig_argv[]) {
     argv[5] = "9";
     learn_helper(argc, argv);
   }
+  else if (string(argv[2]) == "llocs_all") {
+    remove("analysis_summary.csv");
+    for (int i = 20; i < 24; ++i) {
+      learn_helper(argc, argv);
+    }
+  }
   else if (string(argv[2]) == "full") {
     string file_name = "Menu.png";
     std::ofstream stream(file_name.c_str(),std::ios::binary);

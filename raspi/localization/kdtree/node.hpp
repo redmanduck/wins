@@ -71,7 +71,7 @@ namespace kdtree {
          *  @return Initialized node instance.
          */
         template <typename U>
-        node(U *points, int size, int depth = 0) {
+        node(U *points, int size, int depth = 0) : neighbors_(4, NULL) {
             if (size == 1) {
                 this->point = (*points).get();
                 return;
@@ -145,11 +145,13 @@ namespace kdtree {
 
           node<T>* pp = NULL;
           node<T>* p = this->parent;
+          node<T>* c = this;
           if (p != NULL && p->parent != NULL) {
             pp = p->parent;
           }
-          while (pp != NULL && p == pp->left)
+          while (pp != NULL && c == p->left)
           {
+              c = pp;
               p = pp->parent;
               pp = p == NULL ? NULL : p->parent;
           }
@@ -166,6 +168,16 @@ namespace kdtree {
             neighbors_[DIRECTION_DOWN] = successor();
             neighbors_[DIRECTION_LEFT] = predecessor();
             return neighbors_;
+        }
+
+        double max_neighbor_dist() {
+          double max = 0;
+          for (auto neighbor : neighbors()) {
+            if (max < distance(neighbor)) {
+              max = distance(neighbor);
+            }
+          }
+          return max;
         }
 
         ///-----------------------------------------------------------------------

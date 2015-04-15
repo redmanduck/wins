@@ -26,9 +26,7 @@ for d in dirs:
             rank += 1
 out_file = open('best_exps.txt', 'w')
 num_types = len(dirs)
-pdb.set_trace()
 for f in maps:
-    print 'abc'
     for k in maps[f].keys():
         if maps[f][k][5] != num_types:
             del maps[f][k]
