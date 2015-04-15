@@ -1,3 +1,5 @@
+[travis-img]: https://magnum.travis-ci.com/ssabpisa/wins.svg?token=MYyzn1bRtmaJhPMpY76H
+
 # Project WINS
 Autonomous indoor navigation robot
 
