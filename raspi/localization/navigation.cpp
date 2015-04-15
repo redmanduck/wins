@@ -41,6 +41,8 @@ struct PriorityNode {
 kdtree::node<Point*>* Navigation::destination_node_ = nullptr;
 vector<kdtree::node<Point*>*>::reverse_iterator Navigation::current_start_;
 vector<kdtree::node<Point*>*> Navigation::current_route_;
+unordered_set<kdtree::node<Point*>*> Navigation::nearby_route_;
+bool Navigation::navigating_ = false;
 mutex Navigation::route_mutex;
 
 bool Navigation::TrySetDestinationFromCoords(string s) {
@@ -55,6 +57,7 @@ bool Navigation::TrySetDestinationFromCoords(string s) {
 
   if (in_xi == n_xi and in_yi == n_yi) {
     destination_node_ = n;
+    navigating_ = true;
     return true;
   }
   return false;
@@ -64,9 +67,12 @@ void Navigation::ResetDestination() {
   destination_node_ = nullptr;
 }
 
+kdtree::node<Point*>* const Navigation::GetDestination() {
+  return destination_node_;
+}
+
 void Navigation::UpdateRoute() {
-  if (destination_node_ == nullptr) {
-    current_route_.clear();
+  if (not navigating_) {
     return;
   }
 
@@ -74,13 +80,33 @@ void Navigation::UpdateRoute() {
   auto current_node = Location::GetCurrentNode();
 
   // Check if current point is in route cache.
-  if (current_route_.size() > 0) {
+  if (current_route_.size() > 0 and nearby_route_.count(current_node)) {
     auto node_in_path_iter = find(current_start_, current_route_.rend(),
         current_node);
     if (node_in_path_iter != current_route_.rend()) {
       current_start_ = node_in_path_iter;
+    } else {
+      for (auto node_iter = current_route_.rbegin();
+          node_iter != current_route_.rend();
+          node_iter++) {
+        bool found = false;
+        for (auto nearby : Map::NodesInRadius(*node_iter, NEIGHBOR_RADIUS)) {
+          if (nearby == current_node) {
+            current_start_ = node_iter;
+            found = true;
+            break;
+          }
+        }
+        if (found)
+          break;
+      }
+    }
+    if (current_node->distance(destination_node_) < NEIGHBOR_RADIUS) {
+      Global::SetEventFlag(WINS_EVENT_DEST_REACHED);
+      navigating_ = false;
       return;
     }
+    return;
   }
 
   auto target_node = destination_node_;
@@ -139,19 +165,32 @@ void Navigation::UpdateRoute() {
 
   lock_guard<mutex> lock(route_mutex);
   current_route_.clear();
+  nearby_route_.clear();
   for (auto node = target_node; node != current_node; node = came_from[node]) {
     current_route_.push_back(node);
+    for (auto nearby : Map::NodesInRadius(node, NEIGHBOR_RADIUS)) {
+      nearby_route_.insert(nearby);
+    }
   }
   current_route_.push_back(current_node);
+  for (auto nearby : Map::NodesInRadius(current_node, NEIGHBOR_RADIUS)) {
+    nearby_route_.insert(nearby);
+  }
+
   current_start_ = current_route_.rbegin();
+  Global::SetEventFlag(WINS_EVENT_ROUTE_CHANGE);
 }
 
 vector<kdtree::node<Point*>*>::const_reverse_iterator Navigation::route_begin() {
-  return current_start_;
+  return current_route_.rbegin();
 }
 
 vector<kdtree::node<Point*>*>::const_reverse_iterator Navigation::route_end() {
   return current_route_.rend();
+}
+
+vector<kdtree::node<Point*>*>::const_reverse_iterator Navigation::current_begin() {
+  return current_start_;
 }
 
 }

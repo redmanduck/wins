@@ -215,7 +215,11 @@ Page Display::Navigating() {
         continue;
       }
     }
-    if (Global::IsFlagSet(WINS_EVENT_NAV_CHANGE)) {
+    if (Global::IsFlagSet(WINS_EVENT_POS_CHANGE)) {
+      SetCurrentLine(3);
+      PutString("Navigating...");
+    }
+    if (Global::IsFlagSet(WINS_EVENT_ROUTE_CHANGE)) {
       lock_guard<mutex> lock(Navigation::route_mutex);
       SetCurrentLine(3);
       PutString("Navigating...");
