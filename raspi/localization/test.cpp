@@ -12,10 +12,12 @@
 #include "common_utils.h"
 #include "display.h"
 #include "global.h"
+#include "location.h"
 #include "kdtree/kdtree.hpp"
 #include "keypad_handler.h"
 #include "test_helpers.h"
 #include "map.h"
+#include "navigation.h"
 #include "point.h"
 #include "scan_result.h"
 #include "gamma.hpp"
@@ -84,11 +86,13 @@ void Test(int argc, char *orig_argv[]) {
   else if (string(argv[2]) == "sample") {
       vector<unique_ptr<Point>> points;
       points.emplace_back(unique_ptr<Point>(new Point {10, 0, {1,1,1,1},
-        {{"mac1", {100, 90}}, {"mac6", {150, 95}}},
-        {{{"mac11", 60}, {"mac12", 70}},
-         {{"mac11", 65}, {"mac12", 75}}}}));
+        {{"mac11", {100, 90}}, {"mac12", {150, 95}}},
+        {{{"mac11", 60.0}, {"mac12", 70.0}},
+         {{"mac11", 65.0}, {"mac12", 75.0}}}}));
       points.emplace_back(unique_ptr<Point>(new Point { 9, 1, {1,1,1,1},
-        {{"mac2", {110, 91}}, {"mac7", {160, 96}}}}));
+        {{"mac11", {110, 91}}, {"mac12", {160, 96}}},
+        {{{"mac11", 60.0}, {"mac12", 70.0}},
+         {{"mac11", 65.0}, {"mac12", 75.0}}}}));
 
       ofstream os("sample.json");
       cereal::JSONOutputArchive archive(os);
@@ -171,7 +175,6 @@ void Test(int argc, char *orig_argv[]) {
   else if (string(argv[2]) == "learn_good") {
     argc += 1;
     argv.push_back("-");
-    remove("analysis_summary.csv");
     argv[5] = "1";
     learn_helper(argc, argv);
     argv[5] = "3";
@@ -181,34 +184,61 @@ void Test(int argc, char *orig_argv[]) {
     argv[5] = "9";
     learn_helper(argc, argv);
   }
+  else if (string(argv[2]) == "llocs_all") {
+    argc += 1;
+    argv.push_back("-");
+    for (int i = 20; i < 24; ++i) {
+      argv[5] = std::to_string(i);
+      learn_helper(argc, argv);
+    }
+  }
+  else if (string(argv[2]) == "nav") {
+    vector<unique_ptr<Point>> points;
+    for (double i = 0; i < 10; ++i) {
+      for (double j = 0; j < 10; ++j) {
+        points.push_back(unique_ptr<Point>(new Point({i, j})));
+      }
+    }
+    Map::TestInitMap(move(points));
+    Navigation::TrySetDestinationFromCoords("9.0, 9.0");
+    Location::TestSetCurrentNode(Map::NodeNearest(0, 0));
+    Navigation::UpdateRoute();
+    for (auto iter = Navigation::route_begin(); iter != Navigation::route_end();
+        ++iter) {
+      printf("%3.0f %3.0f\n", (*iter)->point->x, (*iter)->point->y);
+    }
+  }
   else if (string(argv[2]) == "full") {
     string file_name = "Menu.png";
     std::ofstream stream(file_name.c_str(),std::ios::binary);
     if (!stream) {
-      std::cout << "bitmap_image::save_image(): Error - Could not open file "  << file_name << " for writing!" << std::endl;
+      std::cout << "bitmap_image::save_image(): Error - Could not open file "
+          << file_name << " for writing!" << std::endl;
       return;
     }
     stream.close();
-    Global::Init();
     thread main_thread = thread(&Global::RunMainLoop);
     auto& display = Display::GetInstance();
     auto& keypad_handler = KeypadHandler::GetInstance();
 
     while(display.CurrentPage() != PAGE_MENU);
+    this_thread::sleep_for(chrono::seconds(1));
 
     // Save main menu.
-    display.SaveAsBitmap("Menu.png");
+    display.SaveAsBitmap("Menu.bmp");
 
     keypad_handler.FakeStringEnter("3");
 
     auto result = Global::BlockForEvent(WINS_EVENT_SHUTDOWN_DONE, 5000);
     if (result == cv_status::timeout) {
-      main_thread.join();
-      cout << "Main terminted cleanly.";
-    } else {
-      cout << "Main did not terminate. Forcing exit...";
+      cout << "Main did not terminate. Forcing exit...\n";
       exit(1);
+    } else {
+      main_thread.join();
+      cout << "Main terminted cleanly.\n";
     }
+  } else if (string(argv[2]) == "imu1") {
+
   }
 }
 

@@ -21,9 +21,12 @@
 
  // some of this code was written by <cstone@pobox.com> originally; it is in the public domain.
  */
-#include <unistd.h>
+#include <memory>
 #include <string>
+#include <unistd.h>
 //#include "glcdfont.c"
+
+#include "bitmap_image.hpp"
 
 namespace wins {
 
@@ -76,7 +79,9 @@ class ST7565 {
 public:
     ST7565(int8_t SID, int8_t SCLK, int8_t A0, int8_t RST, int8_t CS) :sid(SID), sclk(SCLK), a0(A0), rst(RST), cs(CS) {}
     ST7565(int8_t SID, int8_t SCLK, int8_t A0, int8_t RST) :sid(SID), sclk(SCLK), a0(A0), rst(RST), cs(-1) {}
-    ST7565(int8_t JSD) {}
+    ST7565(int8_t JSD);
+
+    uint8_t st7565_buffer[1024];
 
     void st7565_init(void);
     void begin(uint8_t contrast);
@@ -109,6 +114,7 @@ public:
 
     uint8_t * get_st7565_buffer();
     void savebitmap(std::string filename);
+    std::unique_ptr<bitmap_image> getImage();
 
 private:
     int8_t sid, sclk, a0, rst, cs;

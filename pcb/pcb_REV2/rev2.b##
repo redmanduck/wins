@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="6" unitdist="mil" unit="mil" style="lines" multiple="1" display="yes" altdistance="1" altunitdist="mil" altunit="mil"/>
+<grid distance="6" unitdist="mil" unit="mm" style="lines" multiple="1" display="yes" altdistance="1" altunitdist="mil" altunit="mil"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="no" active="no"/>
@@ -132,7 +132,6 @@
 <layer number="219" name="219bmp" color="20" fill="1" visible="no" active="no"/>
 <layer number="220" name="220bmp" color="21" fill="1" visible="no" active="no"/>
 <layer number="221" name="221bmp" color="22" fill="1" visible="no" active="no"/>
-<layer number="222" name="222bmp" color="23" fill="1" visible="no" active="no"/>
 <layer number="223" name="223bmp" color="24" fill="1" visible="no" active="no"/>
 <layer number="224" name="224bmp" color="25" fill="1" visible="no" active="no"/>
 <layer number="225" name="225bmp" color="7" fill="1" visible="yes" active="yes"/>
@@ -2351,8 +2350,8 @@ Please make sure your boards conform to these design rules.
 <element name="C14" library="rcl" package="C1206" value=".1u" x="46.1518" y="4.7752" rot="R270"/>
 <element name="C15" library="rcl" package="C1206" value=".1u" x="37.9476" y="10.8204" rot="R270"/>
 <element name="C16" library="rcl" package="C1206" value=".1u" x="63.754" y="36.322" rot="MR180"/>
-<element name="R3" library="rcl" package="R1206" value="100" x="60.198" y="54.2544"/>
-<element name="R4" library="rcl" package="R1206" value="10k" x="60.198" y="57.3786" rot="R180"/>
+<element name="R3" library="rcl" package="R1206" value="1K" x="60.198" y="54.2544"/>
+<element name="R4" library="rcl" package="R1206" value="4.7K" x="60.198" y="57.3786" rot="R180"/>
 <element name="C17" library="rcl" package="C1206" value=".1u" x="60.2234" y="61.0108" rot="R180"/>
 <element name="C18" library="rcl" package="C1206" value="10u" x="74.3204" y="33.9344" rot="R270"/>
 <element name="R5" library="rcl" package="R1206" value="100" x="53.4924" y="49.3268" rot="R180"/>
@@ -2382,7 +2381,7 @@ Please make sure your boards conform to these design rules.
 <element name="LED3" library="led" package="1206" value="" x="19.2532" y="59.182" rot="R270"/>
 <element name="R11" library="rcl" package="R1206" value="100" x="5.842" y="53.1368" rot="R270"/>
 <element name="R13" library="varistor" package="R-5" value="THERMISTOR-5" x="1.6256" y="52.9844" rot="R90"/>
-<element name="C38" library="rcl" package="C1206" value="4.7u" x="14.9098" y="48.3616" rot="R90"/>
+<element name="C38" library="rcl" package="C1206" value=".1u" x="14.9098" y="48.3616" rot="R90"/>
 <element name="U$4" library="fuelgauge" package="1.27HEADER" value="127HEADER" x="89.916" y="60.0456" rot="R270"/>
 <element name="IC2" library="SparkFun-PowerIC" package="SOT223" value="LM1117-XX" x="22.6314" y="36.8554" rot="R90">
 <attribute name="PROD_ID" value="VREG-08170" x="22.6314" y="36.8554" size="1.778" layer="27" rot="R90" display="off"/>
@@ -2538,7 +2537,6 @@ Please make sure your boards conform to these design rules.
 <contactref element="MAX_C5" pad="2"/>
 <wire x1="23.9244" y1="7.1755" x2="24.9809" y2="7.1755" width="0.4064" layer="1"/>
 <wire x1="24.9809" y1="7.1755" x2="25.146" y2="7.0104" width="0.4064" layer="1"/>
-<wire x1="25.146" y1="7.0104" x2="25.146" y2="6.096" width="0.4064" layer="1"/>
 <wire x1="25.146" y1="6.096" x2="24.9936" y2="5.9436" width="0.4064" layer="1"/>
 <wire x1="24.9936" y1="5.9436" x2="23.9625" y2="5.9436" width="0.4064" layer="1"/>
 <wire x1="23.9625" y1="5.9436" x2="23.9244" y2="5.9055" width="0.4064" layer="1"/>
@@ -2573,6 +2571,7 @@ Please make sure your boards conform to these design rules.
 <wire x1="18.5928" y1="6.5532" x2="17.526" y2="6.5532" width="0.508" layer="1"/>
 <wire x1="17.526" y1="6.5532" x2="17.2212" y2="6.858" width="0.508" layer="1"/>
 <wire x1="17.2212" y1="6.858" x2="18.7452" y2="6.858" width="0.508" layer="1"/>
+<wire x1="25.146" y1="7.0104" x2="25.146" y2="6.096" width="0.4064" layer="1"/>
 </signal>
 <signal name="VDD">
 <contactref element="IC1" pad="30"/>

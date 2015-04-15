@@ -4,10 +4,6 @@ import pdb
 import json
 from collections import OrderedDict
 
-MIN_SIGNAL_COUNT = 4
-MIN_VAR = 25
-MIN_AVG = 20
-
 if len(sys.argv) < 3:
     print "Min 3 args"
     sys.exit(1)
@@ -54,8 +50,6 @@ for fname in sys.argv[2:]:
                 cur_x += scale
             elif parts[0][5] == 'W':
                 cur_x -= scale
-            elif parts[0][5] == '=':
-                continue
             else:
                 pdb.set_trace()
                 raise Exception('Unknown direction')
@@ -63,6 +57,7 @@ for fname in sys.argv[2:]:
             if first:
                 firstInsert(line)
             elif (cur_x, cur_y) not in lines:
+                pdb.set_trace()
                 raise Exception('Unknown position')
         else:
             if first:
@@ -70,6 +65,7 @@ for fname in sys.argv[2:]:
             else:
                 lines[(cur_x, cur_y)].append(line)
     in_file.close
+    first = False
 
 out_file = open(sys.argv[1], 'w')
 for p in lines:

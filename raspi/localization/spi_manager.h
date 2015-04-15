@@ -4,21 +4,37 @@
 #include <mutex>
 
 #include "common_utils.h"
+#include <bcm2835.h>
 
 namespace wins {
 
-class SPI {
- private:
-  static void UpdateInputBuffer();
+	enum opcode {
+	    OP_IMU = 'M',
+	    OP_ACCEL = 'A',
+	    OP_GYRO = 'G',
+	    OP_KEYPAD = 'K',
+	    OP_HALT = 'H',
+	    OP_ULTRASONIC='U',
+	    OP_POSITION='P',
+	    OP_VALID = 'V',
+	    OP_ERROR = 'E',
+	    OP_BAT = 'B'
+	};
 
- public:
-  static mutex buffer_mutex;
-  static string input_buffer;
+	class SPI {
+	 private:
+	  void UpdateInputBuffer();
+	  void Transmit();
 
-  static void Init();
-  static void ShowMenu();
-  static void ShutDown();
-};
+	 public:
+	  mutex buffer_mutex;
+	  string input_buffer;
+	  void Exchange();
+	  void Init();
+	  void ShutDown();
+
+  	  static SPI& GetInstance();
+	};
 
 }
 

@@ -4,6 +4,7 @@
 #include<Eigen/Dense>
 
 #include "common_utils.h"
+#include "fake_wifiscan.h"
 #include "kdtree/node.hpp"
 #include "point.h"
 #include "wifi_estimate.h"
@@ -21,28 +22,31 @@ class Location {
  private:
   static LocationVariant variant_;
 
-  static std::chrono::time_point<std::chrono::steady_clock> last_update_time_;
+  static chrono::steady_clock::time_point tp_epoch_;
+  static chrono::steady_clock::time_point last_update_time_;
 
   static Eigen::MatrixXd prev_X;
-  static Eigen::MatrixXd P;
   static Eigen::MatrixXd A;
   static Eigen::MatrixXd A_t;
-  static Eigen::MatrixXd Q;
   static Eigen::MatrixXd const_R;
 
   static vector<unique_ptr<WiFiEstimate>> wifi_estimators_;
   static kdtree::node<Point*>* current_node_;
   static PointEstimate point_estimate_;
 
- public:
-  static vector<PointEstimate> GetWiFiReadings(int count = 1);
   static void InitialEstimate();
   static void InitKalman();
+  static void DoKalmanUpdate(vector<PointEstimate> wifi_estimates);
+
+ public:
+  static vector<PointEstimate> GetWiFiReadings(int count = 1);
   static void Init();
-  static void DoKalmanUpdate(bool imu_valid, vector<PointEstimate>
-      wifi_estimates, PointEstimate imu_estimate = {});
   static kdtree::node<Point*>* GetCurrentNode();
   static void UpdateEstimate();
+
+  static vector<FakeWifiScan*> TestInit(vector<vector<Result>> setup_points,
+      int num_wifis);
+  static void TestSetCurrentNode(kdtree::node<Point*>* node);
 };
 
 }

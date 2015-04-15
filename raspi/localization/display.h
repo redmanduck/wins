@@ -1,8 +1,13 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
+#ifndef ISOLATED_TEST
 #include "map.h"
+#endif
+
 #include "ST7565.h"
+
+#define RETURN_CHARACTER '#'
 
 namespace wins {
 
@@ -29,7 +34,6 @@ enum Page {
 
 class Display {
  private:
-  ST7565 glcd_;
 
   FontSize font_size_;
   Alignment alignment_;
@@ -37,6 +41,7 @@ class Display {
   int current_line_;
   bool flushed_;
   Page current_page_;
+  mutex glcd_mutex;
 
   void ClearLine(int line);
   void ClearScreen();
@@ -44,7 +49,6 @@ class Display {
   char GetCharAndEcho();
   void PutString(string s, bool clear = false);
   string GetStringAndEcho();
-  void Flush();
   void SetFont(FontSize size, Alignment al, int expected_width = 5);
   void SetCurrentLine(int line);
   void IncrmLine();
@@ -56,12 +60,19 @@ class Display {
   Page Navigating();
   Page Done();
   Page ShutDown();
+
+ protected:
+  ST7565 glcd_;
+  virtual void Flush();
+
  public:
   Page FirstPage();
   Page ShowPage(Page);
   Page CurrentPage();
+  uint8_t buffer_snapshot[1024];
 
   void SaveAsBitmap(string saveas);
+  void UpdateBufferSnapshot();
 
   static Display& GetInstance();
 

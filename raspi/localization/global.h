@@ -10,17 +10,20 @@
 
 namespace wins {
 
+#define TEST 1
+
 using namespace std;
 
 enum WinsEvent {
   WINS_EVENT_NONE               = 00,
-  WINS_EVENT_NAV_CHANGE         = 01,
-  WINS_EVENT_DEST_REACHED       = 02,
-  WINS_EVENT_KEYPRESS           = 04,
-  WINS_EVENT_BATTERY_LOW        = 010,
-  WINS_EVENT_SHUTTING_DOWN      = 020,
-  WINS_EVENT_SHUTDOWN_DONE      = 040,
-  WINS_EVENT_ALL                = 077
+  WINS_EVENT_POS_CHANGE         = 01,
+  WINS_EVENT_ROUTE_CHANGE       = 02,
+  WINS_EVENT_DEST_REACHED       = 04,
+  WINS_EVENT_KEYPRESS           = 010,
+  WINS_EVENT_BATTERY_LOW        = 020,
+  WINS_EVENT_SHUTTING_DOWN      = 040,
+  WINS_EVENT_SHUTDOWN_DONE      = 0100,
+  WINS_EVENT_ALL                = 0777
 };
 
 class Global {
@@ -30,14 +33,20 @@ class Global {
   static mutex event_mutex_;
   static thread::id mainthread_id_;
   static string shutdown_command_;
+  static bool is_test_;
 
  public:
   static int FilterableDistance;
   static int FilterBiasX;
   static int FilterBiasY;
+  static int LocationRFactor;
+  static int LocationQFactor;
+  static int DurationOverride;
   static string MapFile;
   static vector<string> WiFiDevices;
   static int InitWiFiReadings;
+  static int ReadingsPerUpdate;
+  static double Scale;
 
   static void RunMainLoop();
   static void Init();
@@ -48,6 +57,7 @@ class Global {
   static thread::id GetMainThreadId();
   static void ShutDown();
   static void SetTestMode();
+  static bool IsTest();
 };
 
 }

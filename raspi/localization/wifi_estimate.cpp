@@ -15,6 +15,7 @@ namespace wins {
 #define MIN_DF 5
 #define TOP_FEW_GOOD_PROB_THRESH 0.01
 #define TOP_FEW_MIN_PROB_THRESH 0.35
+#define MIN_WEIGHT 1E-37
 
 // anonymous namespace
 namespace {
@@ -70,6 +71,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
   // Mahalanobis distance.
   for (auto& node : current_likely_points) {
     auto point = node->point;
+    //printf("checking likely point: x = %.1f, y = %.1f", point->x, point->y);
     if (debug and distance(point->x, point->y, realx - Global::FilterBiasX,
         realy - Global::FilterBiasY) > Global::FilterableDistance) {
       continue;
@@ -96,15 +98,34 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
         // Weight of a point is the probability that the collected signal data
         // was taken at that point.
         point_stats.push_back(make_tuple(
-              pow(df, exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
+              pow(pow(10, df), exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
               point, df, sqrt(sum)));
       else
         // Weight of a point is proportional to the number of APs common to
         // that location and inversely proportinal to the M-distance.
-        point_stats.push_back(make_tuple(pow(df, exp1) * pow(sqrt(sum), exp2),
-              point, df, sqrt(sum)));
+        point_stats.push_back(make_tuple(pow(exp(df), exp1) / pow(2 + exp2,
+              sum), point, df, sqrt(sum)));
     }
   }
+
+//  DEBUG CODE
+//  char buffer[100];
+//  sprintf(buffer, "\n%7s %7s %7s %7s %7s\n",
+//      "weight", "x", "y", "df", "metric");
+//  cout << buffer;
+//  sort(point_stats.begin(), point_stats.end(),
+//      [](const stat &a, const stat &b) -> bool {
+//          return get<0>(a) > get<0>(b);
+//      });
+//  for (auto&& p_stat : point_stats) {
+//    sprintf(buffer, "%7.2e %7.1f %7.1f %7d %7.2e\n",
+//        get<0>(p_stat),
+//        get<1>(p_stat)->x,
+//        get<1>(p_stat)->y,
+//        get<2>(p_stat),
+//        get<3>(p_stat));
+//    cout << buffer;
+//  }
 
 //  if (v & WIFI_VARIANT_TOP1 or v & WIFI_VARIANT_TOP_FEW) {
 //    sort(point_stats.begin(), point_stats.end(),
@@ -142,6 +163,9 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
     double total_weight = 0;
     for (auto&& p_stat : point_stats) {
       double weight = get<0>(p_stat);
+      if (weight < MIN_WEIGHT) {
+        weight = MIN_WEIGHT;
+      }
       total_weight += weight;
       pred_x += get<1>(p_stat)->x * weight;
       pred_y += get<1>(p_stat)->y * weight;
@@ -152,17 +176,20 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
 
     double var_x = 0;
     double var_y = 0;
-    double total_weight_sq = 0;
+    double total_weight_var = 0;
     for (auto&& p_stat : point_stats) {
-      double weight = get<0>(p_stat) / total_weight;
-      total_weight_sq += weight * weight;
+      double weight = get<2>(p_stat);
+      total_weight_var += weight;
       var_x += pow(pred_x - get<1>(p_stat)->x, 2) * weight;
       var_y += pow(pred_y - get<1>(p_stat)->y, 2) * weight;
     }
 
-    estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+    var_x /= total_weight_var;
+    var_y /= total_weight_var;
+
+    estimates.push_back({ /* x_mean */ pred_x,
                           /* x_var */ var_x,
-                          /* y_mean */ nearbyint(pred_y),
+                          /* y_mean */ pred_y,
                           /* y_var */ var_y});
   }
 
@@ -255,9 +282,9 @@ vector<PointEstimate> WiFiEstimate::MostProbableClubbed(vector<Result>& s,
     return estimates;
   }
 
-  estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+  estimates.push_back({ /* x_mean */ pred_x,
                         /* x_var */ var_x,
-                        /* y_mean */ nearbyint(pred_y),
+                        /* y_mean */ pred_y,
                         /* y_var */ var_y });
   return estimates;
 }
@@ -292,9 +319,9 @@ vector<PointEstimate> WiFiEstimate::MostProbableNotClubbed(vector<Result>& s,
   }
 
   vector<PointEstimate> estimates;
-  estimates.push_back({ /* x_mean */ nearbyint(pred_x),
+  estimates.push_back({ /* x_mean */ pred_x,
                         /* x_var */ var_x,
-                        /* y_mean */ nearbyint(pred_y),
+                        /* y_mean */ pred_y,
                         /* y_var */ var_y });
   return estimates;
 }
@@ -315,7 +342,7 @@ vector<Result> AverageScans(vector<vector<Result>> scans) {
   for (auto& kv : macs) {
     if (kv.second.size() < min_count)
       continue;
-    Result r = { kv.first, (int)mean(kv.second) };
+    Result r = { kv.first, mean(kv.second) };
     averaged.push_back(r);
   }
   return averaged;
@@ -325,8 +352,9 @@ WiFiEstimate::WiFiEstimate(unique_ptr<WifiScan> scanner) {
   scanner_ = move(scanner);
 }
 
-PointEstimate WiFiEstimate::EstimateLocation(int read_count,
-    WiFiVariant v) {
+vector<PointEstimate> WiFiEstimate::EstimateLocation(
+    WiFiVariant v,
+    int read_count) {
   if (not scanner_) {
     throw runtime_error("No scanner");
   }
@@ -335,9 +363,9 @@ PointEstimate WiFiEstimate::EstimateLocation(int read_count,
     for (int i = 0; i < read_count; ++i) {
       scans.push_back(scanner_->Fetch());
     }
-    return ClosestByMahalanobis(AverageScans(scans), v)[0];
+    return ClosestByMahalanobis(AverageScans(scans), v);
   } else {
-    return ClosestByMahalanobis(scanner_->Fetch(), v)[0];
+    return ClosestByMahalanobis(scanner_->Fetch(), v);
   }
 }
 

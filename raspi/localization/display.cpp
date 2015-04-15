@@ -2,18 +2,21 @@
 #include <functional>
 #include <stdexcept>
 
+#ifndef ISOLATED_TEST
 #include "common_utils.h"
+#endif
 #include "display.h"
+
+#ifndef ISOLATED_TEST
 #include "global.h"
 #include "keypad_handler.h"
 #include "navigation.h"
 #include "spi_manager.h"
+#endif
 
 namespace wins {
 
 using namespace std;
-
-char RETURN_CHARACTER = '#';
 
 int MaxLength(FontSize size) {
     if(size == FONT_SIZE_MEDIUM){
@@ -31,15 +34,20 @@ int MaxLines(FontSize size) {
 }
 
 void Display::ClearLine(int line) {
+    lock_guard<mutex> lock(glcd_mutex);
     glcd_.fillrect(0, line*8 , 128, 8, 0);
+    Flush();
 }
 
 void Display::ClearScreen() {
+    lock_guard<mutex> lock(glcd_mutex);
     glcd_.clear();
     SetCurrentLine(1);
+    Flush();
 }
 
 char Display::GetChar() {
+  Flush();
   Global::BlockForEvent(WINS_EVENT_KEYPRESS);
   KeypadHandler& keyhandler = KeypadHandler::GetInstance();
 
@@ -53,12 +61,14 @@ char Display::GetCharAndEcho() {
 }
 
 void Display::PutString(string s, bool clear) {
+  lock_guard<mutex> lock(glcd_mutex);
   if (clear) {
     ClearLine(current_line_);
     cursor_ = 0;
   }
   glcd_.drawstring_P(cursor_, current_line_, s.c_str());
   cursor_ += s.length();
+  Flush();
 }
 
 string Display::GetStringAndEcho() {
@@ -74,7 +84,32 @@ string Display::GetStringAndEcho() {
 }
 
 void Display::Flush() {
-  throw runtime_error("Not Implemented");
+  static int refresh_count = 0;
+  if (Global::IsTest()) {
+    system("clear");
+    cout << "Screen refresh count = " << ++refresh_count << "\n";
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unique_ptr<bitmap_image> image = glcd_.getImage();
+    for (unsigned int y = 0; y < 32; ++y) {
+      for (unsigned int x = 0; x < 128; ++x) {
+        image->get_pixel(x, y*2, r, g, b);
+        bool up = r > 0;
+        image->get_pixel(x, y*2+1, r, g, b);
+        bool down = r > 0;
+        if (up and down)
+          cout << "█";
+        else if (up)
+          cout << "▀";
+        else if (down)
+          cout << "▄";
+        else
+          cout << " ";
+      }
+      cout <<"\n";
+    }
+  }
   flushed_ = true;
 }
 
@@ -108,13 +143,16 @@ Display::Display()
   font_size_ = FONT_SIZE_MEDIUM;
   cursor_ = 0;
   current_line_ = 0;
-  flushed_ = true;
+  Flush();
+
+  memset(buffer_snapshot, 0, 1024);
 }
 
 Page Display::Menu() {
+  this_thread::sleep_for(chrono::seconds(1));
   ClearScreen();
 
-  PutString("1. NAVIGATION");
+  PutString("1. NAVIGATE");
   IncrmLine();
   IncrmLine();
   PutString("2. WHERE AM I?");
@@ -177,7 +215,11 @@ Page Display::Navigating() {
         continue;
       }
     }
-    if (Global::IsFlagSet(WINS_EVENT_NAV_CHANGE)) {
+    if (Global::IsFlagSet(WINS_EVENT_POS_CHANGE)) {
+      SetCurrentLine(3);
+      PutString("Navigating...");
+    }
+    if (Global::IsFlagSet(WINS_EVENT_ROUTE_CHANGE)) {
       lock_guard<mutex> lock(Navigation::route_mutex);
       SetCurrentLine(3);
       PutString("Navigating...");
@@ -227,6 +269,11 @@ Page Display::CurrentPage() {
 
 void Display::SaveAsBitmap(string saveas){
     glcd_.savebitmap(saveas);
+}
+
+void Display::UpdateBufferSnapshot(){
+  lock_guard<mutex> lock(glcd_mutex);
+  memcpy(buffer_snapshot, glcd_.st7565_buffer, 1024);
 }
 
 Display& Display::GetInstance() {

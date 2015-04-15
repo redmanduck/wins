@@ -50,7 +50,6 @@ private:
     void BlockForUpdate(DisplayUpdate type);
     void ClearLine(int line);
     void IncrmLine();
-    void ClearScreen();
     void PutChar(char character);
     char GetChar();
     void PutString(string s, bool clear=false);
@@ -63,7 +62,10 @@ private:
 public:
     void SetUpdateFlag(DisplayUpdate flag);
     void gimmebitmap(string saveas);
-
+    uint8_t * gimme_st7565_buffer();
+    void ClearScreen();
+    void ShowMap(string path_to_map);
+    
     void Menu();
     void WhereAmI();
 //    void DestinationPrompt(NavMode mode);

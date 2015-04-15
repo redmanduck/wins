@@ -9,6 +9,7 @@
 #include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
 #include "global.h"
+#include "imu.h"
 #include "location.h"
 #include "navigation.h"
 #include "map.h"
@@ -33,8 +34,8 @@ inline bool file_exists(const std::string& name) {
 void Map::MainLoop() {
   while(not terminate_) {
     Location::UpdateEstimate();
+    Global::SetEventFlag(WINS_EVENT_POS_CHANGE);
     Navigation::UpdateRoute();
-    Global::SetEventFlag(WINS_EVENT_NAV_CHANGE);
   }
 }
 
@@ -78,6 +79,13 @@ void Map::InitMap(string filename) {
       numeric_limits<double>::max());
 }
 
+void Map::TestInitMap(vector<unique_ptr<Point>>&& all_points) {
+  all_points_ = move(all_points);
+  tree_.reset(new kdtree::kdtree<Point*>(&all_points_));
+  likely_points_ = tree_->radius_nearest(all_points_[0].get(),
+      numeric_limits<double>::max());
+}
+
 void Map::TryConvertJSONMap(string in_filename, string out_filename) {
   ifstream is(in_filename);
   if (not file_exists(in_filename)) {
@@ -91,6 +99,26 @@ void Map::TryConvertJSONMap(string in_filename, string out_filename) {
   cereal::BinaryOutputArchive out_archive(os);
   out_archive(all_points_);
   os.close();
+}
+
+void Map::UpdateLikelyPoints(double radius) {
+  auto current = Location::GetCurrentNode();
+  auto from = current == nullptr ? all_points_[0].get() : current->point;
+  likely_points_ = tree_->radius_nearest(from, radius);
+  //printf("-------\n%3s %3s\n", "X", "Y");
+  //if (current != nullptr) {
+  //  printf("%3f %3f\n", current->point->x, current->point->y);
+  //}
+  //printf("-------\n");
+  //for (auto p : likely_points_) {
+  //  printf("%3f %3f\n", p->point->x, p->point->y);
+  //}
+  //printf("-------\n");
+}
+
+vector<kdtree::node<Point*>*> Map::NodesInRadius(kdtree::node<Point*>* node,
+    const double radius) {
+  return tree_->radius_nearest(node, radius);
 }
 
 ProbabilityStat Map::Stats(const Point* p, string mac, int signal) {
