@@ -184,8 +184,11 @@ void Test(int argc, char *orig_argv[]) {
     learn_helper(argc, argv);
   }
   else if (string(argv[2]) == "llocs_all") {
+    argc += 1;
+    argv.push_back("-");
     remove("analysis_summary.csv");
     for (int i = 20; i < 24; ++i) {
+      argv[5] = std::to_string(i);
       learn_helper(argc, argv);
     }
   }

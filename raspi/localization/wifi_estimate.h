@@ -22,6 +22,7 @@ class WiFiEstimate {
   vector<PointEstimate> ClosestByMahalanobis(
       const vector<Result> &s, WiFiVariant v,
       double realx = -1, double realy = -1,
+      //double exp1 = 10, double exp2 = 0, bool debug = false);
       double exp1 = 5, double exp2 = 3, bool debug = false);
   // PointEstimate ClosestByMahalanobisVarWeighted(vector<Result> s);
   // PointEstimate MahalanobisTriangulated(vector<Result> s);
@@ -33,8 +34,7 @@ class WiFiEstimate {
       double exp1 = 1, double exp2 = 1, bool debug = false);
   WiFiEstimate(unique_ptr<WifiScan> scanner);
   WiFiEstimate() {}
-  vector<PointEstimate> EstimateLocation(int read_count = 1,
-      WiFiVariant v = WIFI_VARIANT_CHI_SQ);
+  vector<PointEstimate> EstimateLocation(WiFiVariant v, int read_count = 1);
 };
 
 }

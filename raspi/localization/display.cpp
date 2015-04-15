@@ -34,11 +34,13 @@ int MaxLines(FontSize size) {
 }
 
 void Display::ClearLine(int line) {
+    lock_guard<mutex> lock(glcd_mutex);
     glcd_.fillrect(0, line*8 , 128, 8, 0);
     Flush();
 }
 
 void Display::ClearScreen() {
+    lock_guard<mutex> lock(glcd_mutex);
     glcd_.clear();
     SetCurrentLine(1);
     Flush();
@@ -59,6 +61,7 @@ char Display::GetCharAndEcho() {
 }
 
 void Display::PutString(string s, bool clear) {
+  lock_guard<mutex> lock(glcd_mutex);
   if (clear) {
     ClearLine(current_line_);
     cursor_ = 0;

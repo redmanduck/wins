@@ -41,6 +41,7 @@ class Display {
   int current_line_;
   bool flushed_;
   Page current_page_;
+  mutex glcd_mutex;
 
   void ClearLine(int line);
   void ClearScreen();

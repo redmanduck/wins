@@ -176,13 +176,16 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
 
     double var_x = 0;
     double var_y = 0;
-    double total_weight_sq = 0;
+    double total_weight_var = 0;
     for (auto&& p_stat : point_stats) {
-      double weight = get<0>(p_stat) / total_weight;
-      total_weight_sq += weight * weight;
+      double weight = get<2>(p_stat);
+      total_weight_var += weight;
       var_x += pow(pred_x - get<1>(p_stat)->x, 2) * weight;
       var_y += pow(pred_y - get<1>(p_stat)->y, 2) * weight;
     }
+
+    var_x /= total_weight_var;
+    var_y /= total_weight_var;
 
     estimates.push_back({ /* x_mean */ pred_x,
                           /* x_var */ var_x,
@@ -349,8 +352,9 @@ WiFiEstimate::WiFiEstimate(unique_ptr<WifiScan> scanner) {
   scanner_ = move(scanner);
 }
 
-vector<PointEstimate> WiFiEstimate::EstimateLocation(int read_count,
-    WiFiVariant v) {
+vector<PointEstimate> WiFiEstimate::EstimateLocation(
+    WiFiVariant v,
+    int read_count) {
   if (not scanner_) {
     throw runtime_error("No scanner");
   }

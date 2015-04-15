@@ -16,7 +16,7 @@ namespace wins {
 using namespace std;
 
 #define HIGH_VARIANCE 10000
-#define MAX_DIST 10
+#define MAX_DIST 8
 
 Eigen::MatrixXd Location::prev_X;
 Eigen::MatrixXd Location::A;
@@ -39,7 +39,7 @@ vector<PointEstimate> Location::GetWiFiReadings(int count) {
   vector<future<vector<PointEstimate>>> handles;
   for (auto& estimator : wifi_estimators_) {
     auto handle = async(launch::async, &WiFiEstimate::EstimateLocation,
-          estimator.get(), count, WIFI_VARIANT_CHI_SQ);
+          estimator.get(), WIFI_VARIANT_CHI_SQ, count);
     handles.push_back(move(handle));
   }
   for (auto& result : handles) {

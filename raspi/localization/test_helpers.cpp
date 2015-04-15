@@ -58,13 +58,14 @@ namespace {
           continue;
         }
         unknown_count = 0;
-        char buffer[100];
-        sprintf(buffer, "%5.0f %5.0f %5.0f %5.0f\n", point->x, point->y,
-            estimates[0].x_mean, estimates[0].y_mean);
-        //cout << buffer;
-        distances.push_back(sqrt(
+        double distance = sqrt(
             pow(point->x - estimates[0].x_mean, 2) +
-            pow(point->y - estimates[0].y_mean, 2)));
+            pow(point->y - estimates[0].y_mean, 2));
+        char buffer[100];
+        sprintf(buffer, "%5.3f, %5.3f, %5.3f\n", distance,
+            estimates[0].x_var, estimates[0].y_var);
+        cout << buffer;
+        distances.push_back(distance);
         x_vars.push_back(estimates[0].x_var);
         y_vars.push_back(estimates[0].y_var);
       }
@@ -216,7 +217,7 @@ void learn_helper(int argc, vector<string> argv) {
 
   function<void(vector<unique_ptr<Point>>&, DebugParams)> analysis_func;
   int offset = 0;
-  int no_range = false;
+  auto override_range = make_tuple(false, 0.0, 0.0);
 
   using namespace std::placeholders;
   switch(stoi(argv[5])) {
@@ -248,14 +249,30 @@ void learn_helper(int argc, vector<string> argv) {
         MostProbableClubbedAnalysis, _1, _2, true); break;
     case 11: analysis_func = bind(
         MostProbableNotClubbedAnalysis, _1, _2, true); break;
+    case 12: analysis_func = bind(
+        MahalanobisAnalysis, _1, _2, true,
+        (WiFiVariant)(WIFI_VARIANT_CHI_SQ));
+        override_range = make_tuple(true, 5, 3); break;
     case 20: analysis_func = bind(
-        LocationAnalysis, _1, _2, 1, 1); no_range = true; break;
+        LocationAnalysis, _1, _2, 1, 1); break;
     case 21: analysis_func = bind(
-        LocationAnalysis, _1, _2, 1, 2); no_range = true; break;
+        LocationAnalysis, _1, _2, 1, 2); break;
     case 22: analysis_func = bind(
-        LocationAnalysis, _1, _2, 2, 1); no_range = true; break;
+        LocationAnalysis, _1, _2, 2, 1); break;
     case 23: analysis_func = bind(
-        LocationAnalysis, _1, _2, 2, 2); no_range = true; break;
+        LocationAnalysis, _1, _2, 2, 2); break;
+    case 24: analysis_func = bind(
+        LocationAnalysis, _1, _2, 1, 1);
+        override_range = make_tuple(true, 5, 1); break;
+    case 25: analysis_func = bind(
+        LocationAnalysis, _1, _2, 1, 2);
+        override_range = make_tuple(true, 5, 1); break;
+    case 26: analysis_func = bind(
+        LocationAnalysis, _1, _2, 2, 1);
+        override_range = make_tuple(true, 5, 1); break;
+    case 28: analysis_func = bind(
+        LocationAnalysis, _1, _2, 2, 2);
+        override_range = make_tuple(true, 5, 1); break;
     default: cout << "Unknown learn type\n"; exit(1);
   }
 
@@ -267,7 +284,7 @@ void learn_helper(int argc, vector<string> argv) {
   double s;
   double mvx;
   double mvy;
-  if (not no_range) {
+  if (not get<0>(override_range)) {
     for (double exp1 = 1; exp1 <= 10; exp1 += 1) {
       for (double exp2 = -5 + offset; exp2 <= 5 + offset; exp2 += 1) {
         analysis_func(test_points, {exp1, exp2, m, s, mvx, mvy});
@@ -283,9 +300,11 @@ void learn_helper(int argc, vector<string> argv) {
             return (get<0>(a) + get<1>(a)) < (get<0>(b) + get<1>(b));
         });
   } else {
-    analysis_func(test_points, {5, 1, m, s, mvx, mvy});
+    analysis_func(test_points, {
+        get<1>(override_range), get<2>(override_range), m, s, mvx, mvy });
     if (not std::isnan(m)) {
-      results.push_back(make_tuple(m, s, mvx, mvy, 5, 1));
+      results.push_back(make_tuple(m, s, mvx, mvy, get<1>(override_range),
+          get<2>(override_range)));
       printf("%7.2f %7.2f %7.2f %7.2f\n",
           m, s, mvx, mvy);
     }
