@@ -10,4 +10,10 @@ install:
   - sudo apt-get install -qq gcc-4.8 g++-4.8 
 # We want to compile with g++ 4.8 when rather than the default g++
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
+  - wget http://67.192.60.197/mikem/bcm2835/bcm2835-1.5.tar.gz
+  - tar xvfz bcm2835-1.5.tar.gz
+  - cd bcm2835*
+  - ./configure
+  - make
+  - sudo make install
 script: cd raspi/localization && make
