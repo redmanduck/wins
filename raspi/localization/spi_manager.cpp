@@ -21,8 +21,14 @@ namespace wins {
 	}
 
 	void SPI::Transmit(){
-
+			
 	}
+
+	SPI& SPI::GetInstance() {
+  		static SPI spi;
+  	  	return spi;
+	}
+
 
 	void SPI::ShutDown() {
 	  // WINSTODO: Pic handshake

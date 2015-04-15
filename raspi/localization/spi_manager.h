@@ -18,7 +18,7 @@ namespace wins {
 	    OP_POSITION='P',
 	    OP_VALID = 'V',
 	    OP_ERROR = 'E',
-		OP_BAT = 'B'
+	    OP_BAT = 'B'
 	};
 
 	class SPI {
@@ -32,6 +32,8 @@ namespace wins {
 
 	  void Init();
 	  void ShutDown();
+
+  	  static SPI& GetInstance();
 	};
 
 }
