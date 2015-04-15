@@ -206,7 +206,7 @@ void Test(int argc, char *orig_argv[]) {
     //for (auto iter = Navigation::route_begin(); iter != Navigation::route_end();
     //    ++iter) {
     //  printf("%3.0f %3.0f\n", (*iter)->point->x, (*iter)->point->y);
-    }
+    //}
   }
   else if (string(argv[2]) == "full") {
     string file_name = "Menu.png";
