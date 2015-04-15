@@ -269,7 +269,7 @@ void Display::SaveAsBitmap(string saveas){
 
 void Display::UpdateBufferSnapshot(){
   lock_guard<mutex> lock(glcd_mutex);
-  memcpy(buffer_snapshot, glcd.st7565_buffer, 1024);
+  memcpy(buffer_snapshot, glcd_.st7565_buffer, 1024);
 }
 
 Display& Display::GetInstance() {

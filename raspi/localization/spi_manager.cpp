@@ -3,8 +3,8 @@
 
 namespace wins {
 
-	mutex SPI::buffer_mutex;
-	string SPI::input_buffer;
+	//mutex SPI::buffer_mutex;
+	//string SPI::input_buffer;
 
 
 	void SPI::Init() {

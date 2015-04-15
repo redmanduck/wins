@@ -72,7 +72,7 @@ class Display {
   uint8_t buffer_snapshot[1024];
 
   void SaveAsBitmap(string saveas);
-  void Display::UpdateBufferSnapshot();
+  void UpdateBufferSnapshot();
 
   static Display& GetInstance();
 
