@@ -1,135 +1,51 @@
-/*********************************************************************
- *
- * LCD Driver for PIC24.
- *
- *********************************************************************
- * FileName:        lcdPmp.h
- * Dependencies:    
- * Processor:       PIC24
- * Compiler:       	MPLAB C30
- * Linker:          MPLAB LINK30
- * Company:         Microchip Technology Incorporated
- *
- * Software License Agreement
- *
- * The software supplied herewith by Microchip Technology Incorporated
- * (the "Company") is intended and supplied to you, the Company's
- * customer, for use solely and exclusively with products manufactured
- * by the Company. 
- *
- * The software is owned by the Company and/or its supplier, and is 
- * protected under applicable copyright laws. All rights are reserved. 
- * Any use in violation of the foregoing restrictions may subject the 
- * user to criminal sanctions under applicable laws, as well as to 
- * civil liability for the breach of the terms and conditions of this 
- * license.
- *
- * THIS SOFTWARE IS PROVIDED IN AN "AS IS" CONDITION. NO WARRANTIES, 
- * WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT NOT LIMITED 
- * TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
- * PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE COMPANY SHALL NOT, 
- * IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL OR 
- * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
- *
- *
- * A simple LCD driver for LCDs interface through the PMP
- * 
- *
- *
- * Author           Date        Comment
- *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Albert Z.		02/05/08	draft
- ********************************************************************/
+#ifndef LCDPMP_H
+#define	LCDPMP_H
 
-// Display line length.
-// number of characters displayed in a line
-#define LCD_DISPLAY_LEN 	16	
-	
-// number of lines displayed on the LCD
-#define LCD_DISPLAY_LINE	2		
+#define CMD_SET_DISP_START_LINE  0x40
+#define CMD_SET_PAGE  0xB0
 
-#define LCD_LINE1			0		// first line
-#define LCD_LINE2			1		// second line
+#define CMD_SET_COLUMN_UPPER  0x10
+#define CMD_SET_COLUMN_LOWER  0x00
 
-#define LCD_I				0		// instruction
-#define LCD_D				1		// data
+#define CMD_SET_ADC_NORMAL  0xA0
+#define CMD_SET_ADC_REVERSE 0xA1
 
-#define LCD_Busy			0x80	// LCD is busy
-#define LCD_Free			0		// LCD is free
+#define CMD_SET_DISP_NORMAL 0xA6
+#define CMD_SET_DISP_REVERSE 0xA7
 
-// clear display
-#define LCD_ClearDisplay	0x01	
-// move cursor back to 00h position
-#define LCD_ReturnHome		0x02	
-// assign cursor as increase mode but screen not shift
-#define LCD_CursorIncNS		0x06	
-// assign cursor as decrease mode but screen not shift
-#define LCD_CursorDecNS		0x04	
-// assign cursor as increase mode and screen shift
-#define LCD_CursorIncS		0x07	
-// assign cursor as decrease mode adn screen shift
-#define LCD_CursorDecS		0x05	
-// Display on, Cursor on, Blinking of Cursor off
-#define LCD_DonConBoff		0x0e	
-// Display on, Cursor on, Blinking of Cursor on
-#define LCD_DonConBon		0x0f	
-// Display on, Cursor off, Blinking of Cursor off
-#define LCD_DonCoffBoff		0x0c	
-// Display off, Cursor off, Blinking of Cursor off
-#define LCD_DoffCoffBoff	0x08	
-// Cursor shift enabled, shift right
-#define LCD_CursorShiftL	0x1c	
-// Cursor shift enabled, shift left
-#define LCD_CursorShiftR	0x18	
-// Cursor shift disabled
-#define LCD_CursorNonShift	0x10	
-// 4-bit data length
-#define LCD_DataLength4		0x20	
-// 8-bit data length
-#define LCD_DataLength8		0x3C	
-// set 4-bit CGRAM address
-#define LCD_CGRAM(_cgramAddr)	(((_cgramAddr)&0x0f)|0x40)		
-// set 7-bit DDRAM address, line 1
-#define LCD_DDRAM1(_ddramAddr)	(((_ddramAddr)&0x0f)|0x80)		
-// set 7-bit DDRAM address, line 2
-#define LCD_DDRAM2(_ddramAddr)	(((_ddramAddr)&0x0f)|0xc0)		
+#define CMD_SET_ALLPTS_NORMAL 0xA4
+#define CMD_SET_ALLPTS_ON  0xA5
+#define CMD_SET_BIAS_9 0xA2
+#define CMD_SET_BIAS_7 0xA3
 
+#define CMD_RMW  0xE0
+#define CMD_RMW_CLEAR 0xEE
+#define CMD_INTERNAL_RESET  0xE2
+#define CMD_SET_COM_NORMAL  0xC0
+#define CMD_SET_COM_REVERSE  0xC8
+#define CMD_SET_POWER_CONTROL  0x28
+#define CMD_SET_RESISTOR_RATIO  0x20
+#define CMD_SET_VOLUME_FIRST  0x81
+#define CMD_SET_VOLUME_SECOND  0
+#define CMD_SET_STATIC_OFF  0xAC
+#define CMD_SET_STATIC_ON  0xAD
+#define CMD_SET_STATIC_REG  0x0
+#define CMD_SET_BOOSTER_FIRST  0xF8
+#define CMD_SET_BOOSTER_234  0
+#define CMD_SET_BOOSTER_5  1
+#define CMD_SET_BOOSTER_6  3
+#define CMD_NOP  0xE3
+#define CMD_TEST  0xF0
 
+#define SPI_SS_TRIS      TRISBbits.TRISB2
+#define SPI_SS_PORT      PORTBbits.RB2
 
-/*********************************************************************
- * Function: LCDProcessEvents
- *
- * Preconditions: None.
- *
- * Overview: 
- * This is a state mashine to issue commands and data to LCD. Must be
- * called periodically to make LCD message processing.
- *
- * Input: None.
- *
- * Output: None.
- *
- ********************************************************************/
+void SPI2Init(void);
+unsigned short writeSPI2( unsigned short data );
 void LCDProcessEvents(void);
-
-/*********************************************************************
- * Function: LCDInit
- *
- * Preconditions: None.
- *
- * Overview: This is a LCD intialising routine which should be called
- * before show the characters on LCD.
- *
- * Input: None.
- *
- * Output: None.
- *
- ********************************************************************/
 void LCDInit(void);
+void LCD_comm(unsigned char c);
+void LCD_data(unsigned char c);
 
-
-void LCDclear(void);
-unsigned char LCDbusy(void);
-void LCDwrite(unsigned char , unsigned char );
-void LCDwriteLine(unsigned char , unsigned char * );
+#endif
 

@@ -298,11 +298,11 @@ __CONFIG1         0x0157fe          0x2
 .comment
  *(.comment)
 
-.debug_info       0x000000       0x1483
+.debug_info       0x000000       0x14a4
  *(.debug_info)
- .debug_info      0x000000        0xd0a build/default/production/lcdPmp.o
- .debug_info      0x000d0a        0x538 build/default/production/PMP.o
- .debug_info      0x001242        0x241 build/default/production/traps.o
+ .debug_info      0x000000        0xd15 build/default/production/lcdPmp.o
+ .debug_info      0x000d15        0x543 build/default/production/PMP.o
+ .debug_info      0x001258        0x24c build/default/production/traps.o
  *(.gnu.linkonce.wi.*)
 
 .debug_abbrev     0x000000        0x30f

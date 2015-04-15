@@ -1,3 +1,6 @@
 build/default/production/main.o:  \
 main.c  \
-lcdPmp.h 
+lcdPmp.h  \
+shared.h  \
+imu.h  \
+ fuel_gauge.h 
