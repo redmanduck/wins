@@ -5,4 +5,4 @@ Autonomous indoor navigation robot
 # Find out Pi's address
 http://www.ecn.ninja/view/berry
 
-[![Package](https://dl.dropboxusercontent.com/u/41564792/pi.png)]()
+[![Package](https://dl.dropboxusercontent.com/u/41564792/pi.png)](https://dl.dropboxusercontent.com/u/41564792/pi.png)
