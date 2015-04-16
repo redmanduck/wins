@@ -12,7 +12,7 @@
 	<canvas id="myCanvas" width="512" height="456" style="background-repeat: no-repeat;background-image: url(img/eeg.jpg); background-size: 100% ;border-style:solid;border-width: 1px"></canvas>
 	<p>
 		<textarea id="mapcsv" placeholder="WMS" style="width:250px;height:100px"></textarea><br>
-		<button onclick="loadmap()">Load from CSV</button>
+		<!-- <button onclick="loadmap()">Load from CSV</button> -->
 		<button onclick="runscript()">Execute Sequence</button>
 	</p>
 	<script>
@@ -29,10 +29,15 @@
 		}
 		path.strokeColor = 'blue';
 		path.fullySelected = true;
+
+		var color_reg = 'blue';
 		function drawPoint(x,y){
 			console.log("drawing " + x + "," +  y)
-			path.add(new Point(x, y));
-			path.view.update();
+			// path.add(new Point(x, y));
+			// path.view.update();
+			var myCircle = new Path.Circle(new Point(x,y), 2);
+			myCircle.fillColor = color_reg;
+			
 		}
 
 		var points = [];
@@ -69,8 +74,11 @@
 				initialOffsetY = y;
 			},
 			'scl': function(a1,a2){
-				var magX = Number(a1);
-				var magY = Number(a2);
+				magX = Number(a1);
+				magY = Number(a2);
+			},
+			'col': function(a1){
+				color_reg = a1;
 			}
 		}
 
@@ -91,6 +99,7 @@
 				var arg2 = command[2];
 				if(execute[op]) execute[op](arg1,arg2);
 			}
+			// paper.view.update()
 		}
 
 	</script>
