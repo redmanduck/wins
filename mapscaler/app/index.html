@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="js/paper-full.js"></script>
+<!-- Define inlined PaperScript associate it with myCanvas -->
+<script type="text/paperscript" canvas="myCanvas">
+	
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" width="512" height="456" style="background-repeat: no-repeat;background-image: url(img/eeg.jpg); background-size: 100% ;border-style:solid;border-width: 1px"></canvas>
+	<p>
+		<textarea id="mapcsv" placeholder="WMS" style="width:250px;height:100px"></textarea><br>
+		<button onclick="loadmap()">Load from CSV</button>
+		<button onclick="runscript()">Execute Sequence</button>
+	</p>
+	<script>
+		paper.install(window);
+		var canvas = document.getElementById('myCanvas');
+		paper.setup(canvas);
+
+		var magX = 16;
+		var magY = 10;
+		var path = new Path();
+
+		function newPath(){
+			path = new Path();
+		}
+		path.strokeColor = 'blue';
+		path.fullySelected = true;
+		function drawPoint(x,y){
+			console.log("drawing " + x + "," +  y)
+			path.add(new Point(x, y));
+			path.view.update();
+		}
+
+		var points = [];
+		function loadmap(){
+			var initialOffsetX = Number(document.getElementById('iox').value)
+			var initialOffsetY = Number(document.getElementById('ioy').value)
+			console.log("loading with offset "  + initialOffsetX + ", " + initialOffsetY);
+			var mapelem = document.getElementById('mapcsv').value;
+			var ptlist = mapelem.split('\n');
+			for(i in ptlist){
+				var j = ptlist[i].split(',');
+				ptlist[i] = {
+					"x": Number(j[0]),
+					"y": Number(j[1])
+				}
+				drawPoint(ptlist[i].x *magX + initialOffsetX, ptlist[i].y *magY + initialOffsetY)
+
+			}
+
+			points = ptlist;
+		}
+		var initialOffsetX, initialOffsetY;
+		var execute = {
+			'drw': function(a1,a2){
+				var x = Number(a1);
+				var y = Number(a2);
+
+				drawPoint(x *magX + initialOffsetX, y *magY + initialOffsetY)
+			},
+			'off': function(a1,a2){
+				var x = Number(a1);
+				var y = Number(a2);
+				initialOffsetX = x;
+				initialOffsetY = y;
+			},
+			'scl': function(a1,a2){
+				var magX = Number(a1);
+				var magY = Number(a2);
+			}
+		}
+
+		function runscript(){
+			initialOffsetX = 10;
+			initialOffsetY = 10;
+
+			var textscript = document.getElementById('mapcsv').value;
+			var commands = textscript.split('\n');
+			for(var i in commands){
+				if(commands[i][0] == "#"){
+					continue;
+				} 
+
+				var command  = commands[i].split(" ");
+				var op = command[0];
+				var arg1 = command[1];
+				var arg2 = command[2];
+				if(execute[op]) execute[op](arg1,arg2);
+			}
+		}
+
+	</script>
+</body>
+</html>
