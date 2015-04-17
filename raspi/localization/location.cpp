@@ -83,9 +83,9 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   if (wifi_estimates.size() == 0) {
     FILE_LOG(logERROR) << "No WIFI Estimates.";
     cout << "No WIFI Estimates.";
-#ifdef TEST
+
+    // Sleep for a while and retry.
     this_thread::sleep_for(chrono::seconds(1));
-#endif
     return;
   }
 

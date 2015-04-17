@@ -9,6 +9,7 @@
 
 #ifndef ISOLATED_TEST
 #include "global.h"
+#include "imu.h"
 #include "keypad_handler.h"
 #include "navigation.h"
 #include "spi_manager.h"
@@ -146,17 +147,68 @@ Display::Display()
   Flush();
 }
 
-Page Display::Menu() {
+Page Display::Splash() {
   this_thread::sleep_for(chrono::seconds(1));
+  return PAGE_CALIBRATE_PROMPT;
+}
+
+Page Display::CalibratePrompt() {
   ClearScreen();
 
-  PutString("1. NAVIGATE");
+  SetCurrentLine(3);
+  PutString("Calibrate Required");
   IncrmLine();
+  PutString("Start now? (Press 1)");
+  while (true) {
+    char option = GetChar();
+    if (option == '1') {
+      return PAGE_CALBRATING;
+    } else {
+      return PAGE_NOCALIBRATE_WARN;
+    }
+  }
+}
+
+Page Display::NoCalibrateWarn() {
+  ClearScreen();
+
+  SetCurrentLine(2);
+  PutString("Not calibrating will");
   IncrmLine();
-  PutString("2. WHERE AM I?");
+  PutString("reduce accuracy");
   IncrmLine();
+  PutString("Start calibrating");
   IncrmLine();
-  PutString("3. SHUT DOWN");
+  PutString("now? (1 to begin)");
+  while (true) {
+    char option = GetChar();
+    if (option == '1') {
+      return PAGE_CALBRATING;
+    } else {
+      return PAGE_MENU;
+    }
+  }
+}
+
+Page Display::Calibrating() {
+  ClearScreen();
+
+  SetCurrentLine(3);
+  PutString("Calibrating...");
+  Imu::Calibrate();
+  return PAGE_MENU;
+}
+
+Page Display::Menu() {
+  ClearScreen();
+
+  PutString("1. Navigate");
+  IncrmLine();
+  PutString("2. Where am I?");
+  IncrmLine();
+  PutString("3. Calibrate");
+  IncrmLine();
+  PutString("4. Shut Down");
   IncrmLine();
   IncrmLine();
   current_page_ = PAGE_MENU;
@@ -167,8 +219,9 @@ Page Display::Menu() {
       case '1':
       case '2':
           return PAGE_NAVIGATING;
-      case '3': return PAGE_SHUT_DOWN;
-      default : PutString("Enter 1, 2 or 3", true);
+      case '3': return PAGE_CALBRATING;
+      case '4': return PAGE_SHUT_DOWN;
+      default : PutString("Enter 1, 2, 3 or 4", true);
     }
   }
 }
@@ -247,11 +300,15 @@ Page Display::ShutDown() {
 }
 
 Page Display::FirstPage() {
-  return PAGE_MENU;
+  return PAGE_SPLASH;
 }
 
 Page Display::ShowPage(Page p) {
   switch (p) {
+    case PAGE_SPLASH:               return Splash();
+    case PAGE_CALIBRATE_PROMPT:     return CalibratePrompt();
+    case PAGE_NOCALIBRATE_WARN:     return NoCalibrateWarn();
+    case PAGE_CALBRATING:           return Calibrating();
     case PAGE_MENU:                 return Menu();
     case PAGE_NAVIGATING:           return Navigating();
     case PAGE_DESTINATION_PROMPT:   return DestinationPrompt();
