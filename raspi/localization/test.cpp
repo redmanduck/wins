@@ -209,7 +209,7 @@ void Test(int argc, char *orig_argv[]) {
     }
   }
   else if (string(argv[2]) == "full") {
-    string file_name = "Menu.png";
+    string file_name = "Menu.bmp";
     std::ofstream stream(file_name.c_str(),std::ios::binary);
     if (!stream) {
       std::cout << "bitmap_image::save_image(): Error - Could not open file "
@@ -217,20 +217,31 @@ void Test(int argc, char *orig_argv[]) {
       return;
     }
     stream.close();
+    assert(argc == 4);
+    Global::MapFile = string(argv[3]);
     thread main_thread = thread(&Global::RunMainLoop);
     auto& display = Display::GetInstance();
     auto& keypad_handler = KeypadHandler::GetInstance();
 
-    while(display.CurrentPage() != PAGE_MENU);
-    this_thread::sleep_for(chrono::seconds(1));
+    //while(display.CurrentPage() != PAGE_MENU);
+    //this_thread::sleep_for(chrono::seconds(1));
 
     // Save main menu.
-    display.SaveAsBitmap("Menu.bmp");
+    //display.SaveAsBitmap("Menu.bmp");
 
-    keypad_handler.FakeStringEnter("3");
+    while (true) {
+      string line;
+      getline(cin, line);
+      if (line.size() == 0) {
+         continue;
+      } else if (line[0] == 'q') {
+        break;
+      }
+      keypad_handler.FakeStringEnter(line);
+    }
 
     auto result = Global::BlockForEvent(WINS_EVENT_SHUTDOWN_DONE, 5000);
-    if (result == cv_status::timeout) {
+    if (result.status == cv_status::timeout) {
       cout << "Main did not terminate. Forcing exit...\n";
       exit(1);
     } else {

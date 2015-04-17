@@ -30,7 +30,7 @@ int Global::DurationOverride = -1;
 vector<string> Global::WiFiDevices({ "wlan0" });
 int Global::InitWiFiReadings = 3;
 int Global::ReadingsPerUpdate = 1;
-double Global::Scale = (1/1.45);
+double Global::Scale = (1/1.1);
 string Global::shutdown_command_ = "sudo shutdown -hP now";
 bool Global::is_test_ = false;
 
@@ -52,6 +52,7 @@ void Global::RunMainLoop() {
   display.ShowPage(PAGE_SHUT_DOWN);
   Global::ShutDown();
   Global::SetEventFlag(WINS_EVENT_SHUTDOWN_DONE);
+  exit(0);
 }
 
 void Global::Init() {
@@ -74,12 +75,13 @@ bool Global::IsFlagSet(WinsEvent flag) {
   return event_flags_ & flag;
 }
 
-cv_status Global::BlockForEvent(WinsEvent type, int millis) {
+BlockResult Global::BlockForEvent(WinsEvent type, int millis) {
   if (event_flags_ & type) {
-    if (type != WINS_EVENT_SHUTTING_DOWN) {
+    WinsEvent flags = event_flags_;
+    if (not IsFlagSet(WINS_EVENT_SHUTTING_DOWN)) {
       event_flags_ = (WinsEvent)(event_flags_ & ~type);
     }
-    return cv_status::no_timeout;
+    return { cv_status::no_timeout, flags };
   }
 
   auto until = chrono::system_clock::now() + chrono::milliseconds(millis);
@@ -98,13 +100,14 @@ cv_status Global::BlockForEvent(WinsEvent type, int millis) {
     }
 
     if (result == cv_status::timeout) {
-      return result;
+      return { result, event_flags_ };
     }
   }
-  if (type != WINS_EVENT_SHUTTING_DOWN) {
+  WinsEvent flags = event_flags_;
+  if (not IsFlagSet(WINS_EVENT_SHUTTING_DOWN)) {
     event_flags_ = (WinsEvent)(event_flags_ & ~type);
   }
-  return cv_status::no_timeout;
+  return { cv_status::no_timeout, flags };
 }
 
 thread::id Global::GetMainThreadId() {

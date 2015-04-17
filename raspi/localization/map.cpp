@@ -32,10 +32,13 @@ inline bool file_exists(const std::string& name) {
 }
 
 void Map::MainLoop() {
+  Map::InitMap(Global::MapFile);
   while(not terminate_) {
     Location::UpdateEstimate();
-    Global::SetEventFlag(WINS_EVENT_POS_CHANGE);
     Navigation::UpdateRoute();
+
+    // Mark point after any route changes.
+    Global::SetEventFlag(WINS_EVENT_POS_CHANGE);
   }
 }
 
