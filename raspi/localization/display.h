@@ -69,10 +69,9 @@ class Display {
   Page FirstPage();
   Page ShowPage(Page);
   Page CurrentPage();
-  uint8_t buffer_snapshot[1024];
 
   void SaveAsBitmap(string saveas);
-  void UpdateBufferSnapshot();
+  unique_ptr<uint8_t> GetBufferCopy();
 
   static Display& GetInstance();
 

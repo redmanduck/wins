@@ -8,33 +8,41 @@
 
 namespace wins {
 
-	enum opcode {
-	    OP_IMU = 'M',
-	    OP_ACCEL = 'A',
-	    OP_GYRO = 'G',
-	    OP_KEYPAD = 'K',
-	    OP_HALT = 'H',
-	    OP_ULTRASONIC='U',
-	    OP_POSITION='P',
-	    OP_VALID = 'V',
-	    OP_ERROR = 'E',
-	    OP_BAT = 'B'
-	};
+enum opcode {
+    OP_IMU,
+    OP_ACCEL,
+    OP_GYRO,
+    OP_KEYPAD,
+    OP_HALT,
+    OP_ULTRASONIC,
+    OP_POSITION,
+    OP_VALID,
+    OP_ERROR,
+    OP_BAT,
+    OP_BUSY,
+    OP_START,
+    OP_SHUTDOWN
+};
 
-	class SPI {
-	 private:
-	  void UpdateInputBuffer();
-	  void Transmit();
+class SPI {
+ private:
+  static atomic_bool terminate_;
+  static thread spi_thread_;
+  int next_packet_;
+  unique_ptr<uint8_t> lcd_buffer_;
 
-	 public:
-	  mutex buffer_mutex;
-	  string input_buffer;
-	  void Exchange();
-	  void Init();
-	  void ShutDown();
+  uint8_t Exchange(uint8_t send_byte);
+  void MainLoop();
+  SPI();
 
-  	  static SPI& GetInstance();
-	};
+  SPI(SPI const&) = delete;
+  void operator=(SPI const&) = delete;
+
+ public:
+  static SPI& GetInstance();
+  static void StartThread();
+  static void TerminateThread();
+};
 
 }
 

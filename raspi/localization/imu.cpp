@@ -34,6 +34,10 @@ void Imu::Init() {
   R = HIGH_VARIANCE * MatrixXd::Identity(OBSERVATIONS, OBSERVATIONS);
 }
 
+void Imu::AddReading(vector<uint8_t> pic_data) {
+  throw runtime_error("Not Implemented");
+}
+
 ImuResult Imu::FetchAll() {
   return ImuResult();
 }
