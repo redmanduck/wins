@@ -1,0 +1,3 @@
+I2C with IMU		~ 560us
+SPI with LCD		~ 6.5ms
+SPI with RPi		~ 7ms
