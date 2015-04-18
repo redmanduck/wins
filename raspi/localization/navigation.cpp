@@ -12,7 +12,7 @@ namespace wins {
 using namespace std;
 
 #define MULTIPLIER 10
-#define NEIGHBOR_RADIUS 3
+#define NEIGHBOR_RADIUS 2.5
 
 namespace {
   std::vector<std::string> &split(const std::string &s,
@@ -47,8 +47,17 @@ mutex Navigation::route_mutex;
 
 bool Navigation::TrySetDestinationFromCoords(string s) {
   vector<string> coords = split(s, ',');
-  double in_xd = stod(coords[0]);
-  double in_yd = stod(coords[1]);
+  if (coords.size() < 2) {
+    return false;
+  }
+  double in_xd;
+  double in_yd;
+  try {
+    in_xd = stod(coords[0]);
+    in_yd = stod(coords[1]);
+  } catch(...) {
+    return false;
+  }
   kdtree::node<Point*>* n = Map::NodeNearest(stod(coords[0]), stod(coords[1]));
   int in_xi = (int)(in_xd * MULTIPLIER);
   int in_yi = (int)(in_yd * MULTIPLIER);
@@ -78,12 +87,18 @@ void Navigation::UpdateRoute() {
 
   // Current node on map.
   auto current_node = Location::GetCurrentNode();
+  if (current_node == NULL) {
+    lock_guard<mutex> lock(route_mutex);
+    current_start_ = current_route_.rend();
+    return;
+  }
 
   // Check if current point is in route cache.
   if (current_route_.size() > 0 and nearby_route_.count(current_node)) {
     auto node_in_path_iter = find(current_start_, current_route_.rend(),
         current_node);
     if (node_in_path_iter != current_route_.rend()) {
+      lock_guard<mutex> lock(route_mutex);
       current_start_ = node_in_path_iter;
     } else {
       for (auto node_iter = current_route_.rbegin();
@@ -92,6 +107,7 @@ void Navigation::UpdateRoute() {
         bool found = false;
         for (auto nearby : Map::NodesInRadius(*node_iter, NEIGHBOR_RADIUS)) {
           if (nearby == current_node) {
+            lock_guard<mutex> lock(route_mutex);
             current_start_ = node_iter;
             found = true;
             break;

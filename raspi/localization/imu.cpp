@@ -1,3 +1,5 @@
+#include <thread>
+
 #include "imu.h"
 #include "kalman.h"
 
@@ -6,6 +8,22 @@ namespace wins {
 using namespace Eigen;
 
 #define HIGH_VARIANCE 10000
+#define ACC_PRECISION 0
+#define GYRO_PRECISION 0
+
+namespace {
+  void ParseIMU(vector<uint8_t> pic_data, Vector3d& acc,
+      Quaternion<double>& quat) {
+    acc(0) = ACC_PRECISION * pic_data[0] * 256.0 + pic_data[1];
+    acc(1) = ACC_PRECISION * pic_data[2] * 256.0 + pic_data[3];
+    acc(2) = ACC_PRECISION * pic_data[4] * 256.0 + pic_data[5];
+    quat.w() = GYRO_PRECISION * pic_data[6] * 256.0 + pic_data[7];
+    quat.x() = GYRO_PRECISION * pic_data[8] * 256.0 + pic_data[9];
+    quat.y() = GYRO_PRECISION * pic_data[10] * 256.0 + pic_data[11];
+    quat.z() = GYRO_PRECISION * pic_data[12] * 256.0 + pic_data[13];
+    quat.normalize();
+  }
+}
 
 MatrixXd Imu::X(SVARS, 1);
 MatrixXd Imu::P(SVARS, SVARS);
@@ -18,6 +36,11 @@ vector<double> Imu::current_state;
 vector<double> Imu::current_variance;
 vector<double> Imu::sensor_variance;
 vector<double> Imu::process_variance;
+
+ImuResult Imu::imu_buffer_;
+mutex Imu::imu_buffer_mutex_;
+atomic_bool Imu::calibrated_(false);
+Quaternion<double> Imu::north_quat_inverse_ = Quaternion<double>::Identity();
 
 void Imu::Init() {
   // Observation matrix.
@@ -35,14 +58,47 @@ void Imu::Init() {
 }
 
 void Imu::AddReading(vector<uint8_t> pic_data) {
-  throw runtime_error("Not Implemented");
+  Vector3d raw_acc;
+  Quaternion<double> quat;
+  ParseIMU(pic_data, raw_acc, quat);
+
+  // Rotate acceleration vector to the default orientation of the gyro first
+  // (YPR all zeroes), and then rotate it north orientation.
+  Matrix3d rot_matrix = (quat * north_quat_inverse_).toRotationMatrix();
+  Vector3d acc = rot_matrix * raw_acc;
+
+  lock_guard<mutex> lock(imu_buffer_mutex_);
+  imu_buffer_.readings.push_back({ acc(0), acc(1), acc(2),
+      quat.w(), quat.x(), quat.y(), quat.z() });
 }
 
-ImuResult Imu::FetchAll() {
-  return ImuResult();
+void Imu::Calibrate() {
+  calibrated_ = false;
+
+  // Collect imu readings for 1 sec.
+  this_thread::sleep_for(chrono::seconds(1));
+
+  // Average IMU readings.
+  Vector4d vals = Vector4d::Zero();
+  lock_guard<mutex> lock(imu_buffer_mutex_);
+  for (auto r : imu_buffer_.readings) {
+    vals(0) += r[3];
+    vals(1) += r[4];
+    vals(2) += r[5];
+    vals(3) += r[6];
+  }
+  vals /= imu_buffer_.readings.size();
+
+  // Set the average value as the quat representing north orentation.
+  north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
+      .inverse();
+
+  // Clear IMU buffer and mark as calibrated.
+  imu_buffer_.readings.clear();
+  calibrated_ = true;
 }
 
-PointEstimate Imu::DoKalman(ImuResult imu_result, ImuVariant v) {
+PointEstimate Imu::DoKalman(const ImuResult& imu_result, ImuVariant v) {
   auto delta_t = imu_result.duration / imu_result.readings.size();
 
   Matrix<double, SVARS, 1> x_sum = X;
@@ -94,8 +150,20 @@ PointEstimate Imu::DoKalman(ImuResult imu_result, ImuVariant v) {
 }
 
 PointEstimate Imu::EstimateLocation(ImuVariant v) {
-  auto imu_result = FetchAll();
-  return DoKalman(imu_result, v);
+  // If not calibrated don't use IMU.
+  if (not calibrated_) {
+    return { X(0,0), P(0,0), X(1,0), P(1,1) };
+  }
+
+  ImuResult results;
+
+  // Create deep copy of imu_buffer_.
+  {
+    lock_guard<mutex> lock(imu_buffer_mutex_);
+    results = imu_buffer_;
+    imu_buffer_.readings.clear();
+  }
+  return DoKalman(results, v);
 }
 /*
 PointEstimate Imu::EstimateLocation1(PointEstimate current) {

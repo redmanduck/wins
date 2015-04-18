@@ -212,6 +212,7 @@ int main (void)
 	OpenI2C1( I2C_ON, I2C_BRG );
 
         Setup_MPU6050();
+        LDByteReadI2C(MPU6050_ADDRESS,MPU6050_RA_PWR_MGMT_1 , &Data, 1);
 	while (1) {
             LATAbits.LATA0 = 0;
             LATAbits.LATA6 = 0;

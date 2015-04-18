@@ -25,10 +25,14 @@ enum Alignment {
 };
 
 enum Page {
-  PAGE_SHUT_DOWN,
+  PAGE_SPLASH,
+  PAGE_CALIBRATE_PROMPT,
+  PAGE_NOCALIBRATE_WARN,
+  PAGE_CALBRATING,
   PAGE_MENU,
   PAGE_DESTINATION_PROMPT,
   PAGE_NAVIGATING,
+  PAGE_SHUT_DOWN,
   PAGE_DONE
 };
 
@@ -55,6 +59,10 @@ class Display {
 
   Display();
 
+  Page Splash();
+  Page CalibratePrompt();
+  Page NoCalibrateWarn();
+  Page Calibrating();
   Page Menu();
   Page DestinationPrompt();
   Page Navigating();

@@ -160,9 +160,16 @@ void KeypadHandler::TerminateThread() {
 }
 
 char KeypadHandler::GetChar() {
-  // Acquire lock to read buffer till end of method.
-  lock_guard<mutex> lock(buffer_mutex_);
+  while (true) {
+    {
+      lock_guard<mutex> lock(buffer_mutex_);
+      if (buffer_.size() > 0)
+        break;
+    }
+    Global::BlockForEvent(WINS_EVENT_KEYPRESS);
+  }
 
+  lock_guard<mutex> lock(buffer_mutex_);
   // Read the buffer and mark as read.
   char input_char = buffer_[0];
   buffer_.erase(0, 1);

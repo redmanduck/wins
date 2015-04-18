@@ -1,3 +1,4 @@
 build/default/production/lcdPmp.o:  \
 lcdPmp.c  \
-lcdPmp.h 
+lcdPmp.h  \
+shared.h 

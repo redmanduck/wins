@@ -9,28 +9,44 @@
 
 #ifndef ISOLATED_TEST
 #include "global.h"
+#include "imu.h"
 #include "keypad_handler.h"
+#include "location.h"
 #include "navigation.h"
 #include "spi_manager.h"
 #endif
 
 namespace wins {
 
+#define FLUSH_TO_SCREEN 1
+
 using namespace std;
 
+namespace {
+
 int MaxLength(FontSize size) {
-    if(size == FONT_SIZE_MEDIUM){
-        return (int)(128/6);
-    }
-    throw runtime_error("Not Supported");
+  if(size == FONT_SIZE_MEDIUM){
+    return (int)(128/6);
+  }
+  throw runtime_error("Not Supported");
 }
 
 int MaxLines(FontSize size) {
-    if(size == FONT_SIZE_MEDIUM){
-         return 8;
-    }
-    throw runtime_error("Not Supported");
-    return 0;
+  if(size == FONT_SIZE_MEDIUM){
+     return 8;
+  }
+  throw runtime_error("Not Supported");
+}
+
+int FontWidth(FontSize size) {
+  if(size == FONT_SIZE_MEDIUM){
+    return 6;
+  }
+  throw runtime_error("Not Supported");
+}
+
+int route_change_count = 0;
+
 }
 
 void Display::ClearLine(int line) {
@@ -48,7 +64,6 @@ void Display::ClearScreen() {
 
 char Display::GetChar() {
   Flush();
-  Global::BlockForEvent(WINS_EVENT_KEYPRESS);
   KeypadHandler& keyhandler = KeypadHandler::GetInstance();
 
   return keyhandler.GetChar();
@@ -61,13 +76,13 @@ char Display::GetCharAndEcho() {
 }
 
 void Display::PutString(string s, bool clear) {
-  lock_guard<mutex> lock(glcd_mutex);
   if (clear) {
     ClearLine(current_line_);
     cursor_ = 0;
   }
+  lock_guard<mutex> lock(glcd_mutex);
   glcd_.drawstring_P(cursor_, current_line_, s.c_str());
-  cursor_ += s.length();
+  cursor_ += s.length() * FontWidth(FONT_SIZE_MEDIUM);
   Flush();
 }
 
@@ -75,9 +90,11 @@ string Display::GetStringAndEcho() {
   int char_count = 0;
   string buffer;
   char last_character;
-  while (char_count < MaxLength(FONT_SIZE_MEDIUM) or
-      last_character == RETURN_CHARACTER) {
-    last_character = GetChar();
+  while (char_count < MaxLength(FONT_SIZE_MEDIUM)) {
+    last_character = GetCharAndEcho();
+    if (last_character == RETURN_CHARACTER) {
+      break;
+    }
     buffer += last_character;
   }
   return buffer;
@@ -85,6 +102,7 @@ string Display::GetStringAndEcho() {
 
 void Display::Flush() {
   static int refresh_count = 0;
+#ifdef FLUSH_TO_SCREEN
   if (Global::IsTest()) {
     system("clear");
     cout << "Screen refresh count = " << ++refresh_count << "\n";
@@ -110,6 +128,7 @@ void Display::Flush() {
       cout <<"\n";
     }
   }
+#endif
   flushed_ = true;
 }
 
@@ -146,17 +165,72 @@ Display::Display()
   Flush();
 }
 
-Page Display::Menu() {
+Page Display::Splash() {
+  Flush();
   this_thread::sleep_for(chrono::seconds(1));
+  return PAGE_CALIBRATE_PROMPT;
+}
+
+Page Display::CalibratePrompt() {
   ClearScreen();
 
-  PutString("1. NAVIGATE");
+  SetCurrentLine(3);
+  PutString("Calibrate Required");
   IncrmLine();
+  PutString("Start now? (Press 1)");
+  current_page_ = PAGE_CALIBRATE_PROMPT;
+  while (true) {
+    char option = GetChar();
+    if (option == '1') {
+      return PAGE_CALBRATING;
+    } else {
+      return PAGE_NOCALIBRATE_WARN;
+    }
+  }
+}
+
+Page Display::NoCalibrateWarn() {
+  ClearScreen();
+
+  SetCurrentLine(2);
+  PutString("Not calibrating will");
   IncrmLine();
-  PutString("2. WHERE AM I?");
+  PutString("reduce accuracy");
   IncrmLine();
+  PutString("Start calibrating");
   IncrmLine();
-  PutString("3. SHUT DOWN");
+  PutString("now? (1 to begin)");
+  current_page_ = PAGE_NOCALIBRATE_WARN;
+  while (true) {
+    char option = GetChar();
+    if (option == '1') {
+      return PAGE_CALBRATING;
+    } else {
+      return PAGE_MENU;
+    }
+  }
+}
+
+Page Display::Calibrating() {
+  ClearScreen();
+
+  SetCurrentLine(3);
+  PutString("Calibrating...");
+  current_page_ = PAGE_CALBRATING;
+  Imu::Calibrate();
+  return PAGE_MENU;
+}
+
+Page Display::Menu() {
+  ClearScreen();
+
+  PutString("1. Navigate");
+  IncrmLine();
+  PutString("2. Where am I?");
+  IncrmLine();
+  PutString("3. Calibrate");
+  IncrmLine();
+  PutString("4. Shut Down");
   IncrmLine();
   IncrmLine();
   current_page_ = PAGE_MENU;
@@ -164,20 +238,20 @@ Page Display::Menu() {
   while (true) {
     char option = GetChar();
     switch (option) {
-      case '1':
-      case '2':
-          return PAGE_NAVIGATING;
-      case '3': return PAGE_SHUT_DOWN;
-      default : PutString("Enter 1, 2 or 3", true);
+      case '1': return PAGE_DESTINATION_PROMPT;
+      case '2': return PAGE_NAVIGATING;
+      case '3': return PAGE_CALBRATING;
+      case '4': return PAGE_SHUT_DOWN;
+      default : PutString("Enter 1, 2, 3 or 4", true);
     }
   }
 }
 
 Page Display::DestinationPrompt() {
   SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
+  ClearScreen();
 
   while (true) {
-    ClearScreen();
 
     SetCurrentLine(2);
     PutString("Enter destination:", true);
@@ -197,8 +271,9 @@ Page Display::Navigating() {
   ClearScreen();
   current_page_ = PAGE_NAVIGATING;
   while(true) {
-    Global::BlockForEvent(WINS_EVENT_ALL);
-    if (Global::IsFlagSet(WINS_EVENT_KEYPRESS)) {
+    auto result = Global::BlockForEvent(WINS_EVENT_ALL);
+    auto events = result.events;
+    if (events & WINS_EVENT_KEYPRESS) {
       SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
       SetCurrentLine(2);
       PutString("What's up?", true);
@@ -213,19 +288,34 @@ Page Display::Navigating() {
         continue;
       }
     }
-    if (Global::IsFlagSet(WINS_EVENT_POS_CHANGE)) {
+    if (events & WINS_EVENT_POS_CHANGE) {
       SetCurrentLine(3);
-      PutString("Navigating...");
+      auto node = Location::GetCurrentNode();
+      if (node != nullptr) {
+        auto point = node->point;
+        PutString("At (" + to_string(point->x) + ", " +
+            to_string(point->y) + ")");
+        auto node = Navigation::current_begin();
+        if (node != Navigation::route_end()) {
+          auto point = (*next(node))->point;
+          IncrmLine();
+          PutString("Go to (" + to_string(point->x) + ", " +
+              to_string(point->y) + ")");
+        }
+      } else {
+        PutString("Location Unknown");
+      }
     }
-    if (Global::IsFlagSet(WINS_EVENT_ROUTE_CHANGE)) {
+    if (events & WINS_EVENT_ROUTE_CHANGE) {
       lock_guard<mutex> lock(Navigation::route_mutex);
-      SetCurrentLine(3);
-      PutString("Navigating...");
+      SetCurrentLine(5);
+      PutString("Route changed " + to_string(++route_change_count));
     }
-    if (Global::IsFlagSet(WINS_EVENT_DEST_REACHED)) {
+    if (events & WINS_EVENT_DEST_REACHED) {
       Navigation::ResetDestination();
       return PAGE_DONE;
     }
+    Flush();
   }
 }
 
@@ -247,11 +337,15 @@ Page Display::ShutDown() {
 }
 
 Page Display::FirstPage() {
-  return PAGE_MENU;
+  return PAGE_SPLASH;
 }
 
 Page Display::ShowPage(Page p) {
   switch (p) {
+    case PAGE_SPLASH:               return Splash();
+    case PAGE_CALIBRATE_PROMPT:     return CalibratePrompt();
+    case PAGE_NOCALIBRATE_WARN:     return NoCalibrateWarn();
+    case PAGE_CALBRATING:           return Calibrating();
     case PAGE_MENU:                 return Menu();
     case PAGE_NAVIGATING:           return Navigating();
     case PAGE_DESTINATION_PROMPT:   return DestinationPrompt();

@@ -21,6 +21,8 @@ enum LocationVariant {
 class Location {
  private:
   static LocationVariant variant_;
+  static int unknown_count_;
+  static double max_distance_;
 
   static chrono::steady_clock::time_point tp_epoch_;
   static chrono::steady_clock::time_point last_update_time_;
@@ -31,7 +33,7 @@ class Location {
   static Eigen::MatrixXd const_R;
 
   static vector<unique_ptr<WiFiEstimate>> wifi_estimators_;
-  static kdtree::node<Point*>* current_node_;
+  static atomic<kdtree::node<Point*>*> current_node_;
   static PointEstimate point_estimate_;
 
   static void InitialEstimate();

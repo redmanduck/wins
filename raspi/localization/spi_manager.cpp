@@ -18,7 +18,9 @@ thread SPI::spi_thread_;
 
 // SPI Transfer.
 uint8_t SPI::Exchange(uint8_t send_byte) {
-  throw runtime_error("Not Implemented");
+  if (not init_success_) {
+    return OP_BUSY;
+  }
 }
 
 // The Kenzhebalin Protocol.
@@ -78,7 +80,10 @@ void SPI::MainLoop() {
 SPI::SPI() {
   terminate_ = false;
   if (!bcm2835_init()) {
-    throw runtime_error("Unable to init bcm2835!");
+    FILE_LOG(logERROR) << "Unable to init bcm2835!";
+    cout << "Unable to init bcm2835!";
+    init_success_ = false;
+    return;
   }
   bcm2835_spi_begin();
   bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, 0);
@@ -86,6 +91,7 @@ SPI::SPI() {
   bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_1024);   //4096); //2048);
   bcm2835_spi_setDataMode(BCM2835_SPI_MODE1);
   bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
+  init_success_ = true;
 }
 
 SPI& SPI::GetInstance() {

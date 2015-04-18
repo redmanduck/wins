@@ -1,7 +1,7 @@
-#define WINSD_VER "monitor_1.0"
-#define NBYTES 6
-#define NSECONDS 3
+#define WINSD_VER "monitor_2.0"
 #define BUF_SIZE 1200
+#define CHUNK_SIZE 1200
+#define TIME_BETWEEN_TRANSFER 10000
 #include <time.h>
 
 #include <bcm2835.h>
@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <sys/time.h>
+
+#include "animation.h"
 
 enum opcode {
     IMU = 'M',
@@ -44,7 +46,9 @@ int main(){
 	for(var = 0; var < BUF_SIZE; var++){
 		imu_buf[var]=0x00;
 	}
-	char lcd_buf[BUF_SIZE] = {
+	//char lcd_buf[BUF_SIZE] = {
+		char * lcd_buf = getBitmap();
+		/*
 		0x00, 0x00,0x00, 0x00, 
 		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -110,7 +114,7 @@ int main(){
 		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 		0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,};
-  
+  */
   char RX = '0';
   char TX = '0';
   int i = 0;
@@ -176,18 +180,24 @@ int main(){
  //  start =clock();
 		int j = 0;
    //for(j=0;j<100;j++){
-		// printf("Bat: %d%% %f Data: ", bat1, (bat1+(float)bat2/256));
-		for(i=0;i<12;i++){
+		printf("%d:Bat: %d%% %f Data: ", data_p, bat1, (bat1+(float)bat2/256));
+		for(i=0;i<CHUNK_SIZE;i++){
 			TX=lcd_buf[data_p+i];
 	    RX = bcm2835_spi_transfer(TX);
 			imu_buf[data_p+i]=RX;
-	    //printf("%x ", RX);	
+	    printf("%x ", RX);	
     }
-		//printf("\n");
+		int x = (imu_buf[data_p+0]<<8) | imu_buf[data_p+1];
+		int y = (imu_buf[data_p+2]<<8) | imu_buf[data_p+3];
+		int z = (imu_buf[data_p+4]<<8) | imu_buf[data_p+5];
+		int gx = (imu_buf[data_p+6]<<8) | imu_buf[data_p+7];
+		int gy = (imu_buf[data_p+8]<<8) | imu_buf[data_p+9];
+		int gz = (imu_buf[data_p+10]<<8) | imu_buf[data_p+11];
+		printf("\nax:%d y:%d z:%d. gx:%d y:%d z:%d\n",x,y,z,gx,gy,gz);
 	 //}
 		RX = bcm2835_spi_transfer(TX);
 		if(RX == VALID){
-			data_p+=12;
+			data_p+=CHUNK_SIZE;
 		}
    // end = clock();
 
@@ -198,11 +208,12 @@ int main(){
  //   ct++;
  //   printf("\n");
 		//if(packets%100==0)
-	    //usleep(200000);
-  }
+	    usleep(TIME_BETWEEN_TRANSFER);
+		}
 		printf("PACKET %d transfered\n", packets);
 		packets++;
 		//update LCD buffer
+		/*
 		unsigned int p = 0;
 		unsigned int c = 0;
 		for(p = 0; p < 8; p++){
@@ -210,6 +221,8 @@ int main(){
 				lcd_buf[p*128+c] += 1;
 			}
 		}
+		*/
+		lcd_buf = getBitmap();
 		usleep(200000);
 	}
 	float diffsec = (float)(clock() - total)/CLOCKS_PER_SEC;
