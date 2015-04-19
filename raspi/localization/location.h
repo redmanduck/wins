@@ -38,7 +38,7 @@ class Location {
 
   static void InitialEstimate();
   static void InitKalman();
-  static void DoKalmanUpdate(vector<PointEstimate> wifi_estimates);
+  static bool DoKalmanUpdate(vector<PointEstimate> wifi_estimates);
 
  public:
   static vector<PointEstimate> GetWiFiReadings(int count = 1);

@@ -17,24 +17,26 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdexcept>
+
 #include "log.h"
 #include "wifiscan.h"
 
 namespace wins {
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-    std::stringstream ss(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
+    //std::stringstream ss(s);
+    //std::string item;
+    //while (std::getline(ss, item, delim)) {
+    //    elems.push_back(item);
+    //}
     return elems;
 }
 
 
 std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
-    split(s, delim, elems);
+    //split(s, delim, elems);
     return elems;
 }
 
@@ -110,9 +112,9 @@ struct duck_scan * WifiScan::iw_process_scanning_token(
       }
     case IWEVCUSTOM:
       /* How can we deal with those sanely ? Jean II */
-			if((event->u.data.pointer) && (event->u.data.length))
-				memcpy(wscan->extra, event->u.data.pointer, event->u.data.length);
-			wscan->extra[event->u.data.length] = '\0';
+			//if((event->u.data.pointer) && (event->u.data.length))
+			//	memcpy(wscan->extra, event->u.data.pointer, event->u.data.length);
+			wscan->extra[0] = '\0';
     default:
       break;
   } /* switch(event->cmd) */
@@ -308,10 +310,10 @@ int WifiScan::scan_channels(duck_scan_head * context)
       }
     } while (ret > 0);
 
-    std::cout << interface_ << ": scan completed" << std::endl;
+    //std::cout << interface_ << ": scan completed" << std::endl;
   }
   else
-    std::cout << interface_ << ": no scan results" << std::endl;
+    //std::cout << interface_ << ": no scan results" << std::endl;
 
   free(buffer);
   return 0;
@@ -360,7 +362,7 @@ vector<Result> WifiScan::Fetch()
   vector<Result> results;
 
   if (geteuid() != 0)
-    std::cout << "uid: " << geteuid();
+    //std::cout << "uid: " << geteuid();
 
   if (scan_channels(&scan_context) < 0)
     throw WIFISCAN_ERROR_IN_IW_SCAN;
@@ -398,16 +400,27 @@ vector<Result> WifiScan::Fetch()
     }
     std::string SSID = std::string(address);
 
-		std::cout << "SSID: " << SSID << "\n";
-		std::vector<std::string> x = split(i->extra, ':');
-		std::vector<std::string> y = split(x[1], 'm');
+		//std::cout << "SSID: " << SSID << "\n";
 		int ttl = 0;
-		ttl = std::stoi(y[0],nullptr,0);
-		std::cout << "Last beacon(ms): " << ttl << "\n";
+		std::vector<std::string> x;
+		try {
+			x = split(i->extra, ':');
+			if (x.size() == 0)
+				throw std::runtime_error("x");
+			std::vector<std::string> y = split(x[1], 'm');
+			if (y.size() > 0) {
+				ttl = std::stoi(y[0],nullptr,0);
+			} else {
+				throw std::runtime_error("y");
+			}
+		} catch(...) {
+			cout << "Could not convert: " << x[0] << "\n";
+		}
+		//std::cout << "Last beacon(ms): " << ttl << "\n";
 
 		if(ttl > BEACON_TTL){
 			//kill it
-			std::cout << "Killing result !" << "\n";
+			//std::cout << "Killing result !" << "\n";
 			continue;
 		}
     results.push_back({ string(address), dBm });

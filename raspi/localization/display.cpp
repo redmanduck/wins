@@ -104,7 +104,7 @@ void Display::Flush() {
   static int refresh_count = 0;
 #ifdef FLUSH_TO_SCREEN
   if (Global::IsTest()) {
-    system("clear");
+    //system("clear");
     cout << "Screen refresh count = " << ++refresh_count << "\n";
     unsigned char r;
     unsigned char g;
@@ -293,14 +293,14 @@ Page Display::Navigating() {
       auto node = Location::GetCurrentNode();
       if (node != nullptr) {
         auto point = node->point;
-        PutString("At (" + to_string(point->x) + ", " +
-            to_string(point->y) + ")");
+        PutString("At (" + to_string((int)point->x) + ", " +
+            to_string((int)point->y) + ")");
         auto node = Navigation::current_begin();
         if (node != Navigation::route_end()) {
           auto point = (*next(node))->point;
           IncrmLine();
-          PutString("Go to (" + to_string(point->x) + ", " +
-              to_string(point->y) + ")");
+          PutString("Go to (" + to_string((int)point->x) + ", " +
+              to_string((int)point->y) + ")");
         }
       } else {
         PutString("Location Unknown");

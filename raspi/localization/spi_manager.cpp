@@ -21,6 +21,8 @@ uint8_t SPI::Exchange(uint8_t send_byte) {
   if (not init_success_) {
     return OP_BUSY;
   }
+	// For now until fixed.
+	return OP_BUSY;
 }
 
 // The Kenzhebalin Protocol.

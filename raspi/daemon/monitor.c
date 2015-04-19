@@ -1,7 +1,8 @@
 #define WINSD_VER "monitor_2.0"
 #define BUF_SIZE 1200
 #define CHUNK_SIZE 1200
-#define TIME_BETWEEN_TRANSFER 10000
+#define TIME_BETWEEN_CHUNK 0
+#define TIME_BETWEEN_BUF 14000
 #include <time.h>
 
 #include <bcm2835.h>
@@ -37,7 +38,7 @@ int main(){
   bcm2835_spi_begin();
   bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, 0);
   bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS1, 0);
-  bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_1024);   //4096); //2048);
+  bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_2048);   //4096); //2048);
   bcm2835_spi_setDataMode(BCM2835_SPI_MODE1);
   bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
 
@@ -194,7 +195,6 @@ int main(){
 		int gy = (imu_buf[data_p+8]<<8) | imu_buf[data_p+9];
 		int gz = (imu_buf[data_p+10]<<8) | imu_buf[data_p+11];
 		printf("\nax:%d y:%d z:%d. gx:%d y:%d z:%d\n",x,y,z,gx,gy,gz);
-	 //}
 		RX = bcm2835_spi_transfer(TX);
 		if(RX == VALID){
 			data_p+=CHUNK_SIZE;
@@ -208,22 +208,12 @@ int main(){
  //   ct++;
  //   printf("\n");
 		//if(packets%100==0)
-	    usleep(TIME_BETWEEN_TRANSFER);
+	    usleep(TIME_BETWEEN_CHUNK);
 		}
 		printf("PACKET %d transfered\n", packets);
 		packets++;
-		//update LCD buffer
-		/*
-		unsigned int p = 0;
-		unsigned int c = 0;
-		for(p = 0; p < 8; p++){
-			for(c = 0; c < 128; c++){
-				lcd_buf[p*128+c] += 1;
-			}
-		}
-		*/
 		lcd_buf = getBitmap();
-		usleep(200000);
+		usleep(TIME_BETWEEN_BUF);
 	}
 	float diffsec = (float)(clock() - total)/CLOCKS_PER_SEC;
   printf("\nERR %d|| total time = %f\n", op_err,diffsec);

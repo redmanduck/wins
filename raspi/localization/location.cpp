@@ -17,6 +17,7 @@ using namespace std;
 
 #define HIGH_VARIANCE 10000
 #define NORMAL_MAX_DIST 6
+#define MAX_MAX_DIST 500
 #define MAX_UNKNOWN_COUNT 20
 
 namespace {
@@ -86,7 +87,7 @@ void Location::Init() {
   InitialEstimate();
 }
 
-void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
+bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   int msecs;
 
   if (wifi_estimates.size() == 0) {
@@ -99,8 +100,12 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
 
     // Sleep for a while and retry.
     this_thread::sleep_for(chrono::seconds(1));
-    return;
+    return false;
   }
+	// TEST
+  current_node_ = Map::NodeNearest(wifi_estimates[0].x_mean, wifi_estimates[0].y_mean);
+	return true;
+
   unknown_count_ = 0;
 
   chrono::steady_clock::time_point new_update_time =
@@ -160,6 +165,7 @@ void Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   prev_X = X;
 
   current_node_ = Map::NodeNearest(X(0,0), X(1,0));
+	return true;
 }
 
 kdtree::node<Point*>* Location::GetCurrentNode() {
@@ -170,12 +176,13 @@ void Location::UpdateEstimate() {
   auto wifi_estimates = GetWiFiReadings(Global::ReadingsPerUpdate);
   Imu::EstimateLocation();
   Map::UpdateLikelyPoints(max_distance_ * Global::Scale);
-  DoKalmanUpdate(wifi_estimates);
-  if (wifi_estimates.size() == 0) {
-    max_distance_ *= 2;
-  } else if (close_enough(max_distance_, NORMAL_MAX_DIST)) {
-    max_distance_ /= 2;
+  ;
+  if (not DoKalmanUpdate(wifi_estimates) and max_distance_ <= MAX_MAX_DIST) {
+    max_distance_ *= 1.5;
+  } else if (not close_enough(max_distance_, NORMAL_MAX_DIST)) {
+    max_distance_ /= 1.5;
   }
+	//cout <<"max dist = " << max_distance_ << "\n";
 }
 
 vector<FakeWifiScan*> Location::TestInit(vector<vector<Result>> setup_points,

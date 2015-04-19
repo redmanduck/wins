@@ -79,15 +79,18 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
     double sum = 0;
     int df = 0;
     for (auto& mac : s) {
-      auto stats = Map::Stats(point, mac.name, mac.signal);
+			string name = mac.name;
+			transform(name.begin(), name.end(), name.begin(), ::tolower);
+      auto stats = Map::Stats(point, name, mac.signal);
       if (stats.mean() < 0) {
+				//cout << name << " never seen before\n";
         continue;
       }
       sum += pow(stats.dist_mean(), 2);
       df += 1;
     }
     if (df < MIN_DF) {
-      //cout << "df low!!!";
+      //cout << "--------------------------df low!!!\n";
       continue;
     }
 
@@ -152,6 +155,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
 //    }
   vector<PointEstimate> estimates;
   if (point_stats.size() == 0) {
+		cout << "-------------------Algorithm found no estimaes!!!\n";
     return estimates;
   }
 

@@ -33,6 +33,7 @@ inline bool file_exists(const std::string& name) {
 
 void Map::MainLoop() {
   Map::InitMap(Global::MapFile);
+	Location::Init();
   while(not terminate_) {
     Location::UpdateEstimate();
     Navigation::UpdateRoute();
