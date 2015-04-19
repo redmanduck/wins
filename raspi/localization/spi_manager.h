@@ -29,6 +29,7 @@ class SPI {
   static atomic_bool terminate_;
   static thread spi_thread_;
   int next_packet_;
+  bool init_success_;
   unique_ptr<uint8_t> lcd_buffer_;
 
   uint8_t Exchange(uint8_t send_byte);

@@ -17,15 +17,33 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdexcept>
+
 #include "log.h"
 #include "wifiscan.h"
 
 namespace wins {
 
-struct wireless_scan * WifiScan::iw_process_scanning_token(
-    struct iw_event * event, struct wireless_scan * wscan)
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
+}
+
+struct duck_scan * WifiScan::iw_process_scanning_token(
+    struct iw_event * event, struct duck_scan * wscan)
 {
-  struct wireless_scan * oldwscan;
+  struct duck_scan * oldwscan = NULL;
 
   /* Now, let's decode the event */
   switch (event->cmd)
@@ -33,7 +51,7 @@ struct wireless_scan * WifiScan::iw_process_scanning_token(
     case SIOCGIWAP:
       /* New cell description. Allocate new cell descriptor, zero it. */
       oldwscan = wscan;
-      wscan = (struct wireless_scan *)malloc(sizeof(struct wireless_scan));
+      wscan = (struct duck_scan *)malloc(sizeof(struct duck_scan));
       if (wscan == NULL)
         return (wscan);
       /* Link at the end of the list */
@@ -41,7 +59,7 @@ struct wireless_scan * WifiScan::iw_process_scanning_token(
         oldwscan->next = wscan;
 
       /* Reset it */
-      bzero(wscan, sizeof(struct wireless_scan));
+      bzero(wscan, sizeof(struct duck_scan));
 
       /* Save cell identifier */
       wscan->has_ap_addr = 1;
@@ -94,6 +112,9 @@ struct wireless_scan * WifiScan::iw_process_scanning_token(
       }
     case IWEVCUSTOM:
       /* How can we deal with those sanely ? Jean II */
+			if((event->u.data.pointer) && (event->u.data.length))
+				memcpy(wscan->extra, event->u.data.pointer, event->u.data.length);
+			wscan->extra[0] = '\0';
     default:
       break;
   } /* switch(event->cmd) */
@@ -101,7 +122,7 @@ struct wireless_scan * WifiScan::iw_process_scanning_token(
   return (wscan);
 }
 
-int WifiScan::scan_channels(wireless_scan_head * context)
+int WifiScan::scan_channels(duck_scan_head * context)
 {
   struct iwreq wrq;
   struct iw_scan_req scanopt; // Options for 'set'.
@@ -113,6 +134,7 @@ int WifiScan::scan_channels(wireless_scan_head * context)
   struct timeval tv; // Select timeout.
   int timeout = 15000000; // 15 s.
 
+  context->result = NULL;
   /* Get and check range stuff.
    * I would like to update this function to a class method, so that this range
    * info can be a private variable and must not be constantly checked.
@@ -259,8 +281,8 @@ int WifiScan::scan_channels(wireless_scan_head * context)
   {
     struct iw_event iwe;
     struct stream_descr stream;
-    struct wireless_scan * wscan = NULL;
-    // struct iwscan_state state = { /*.ap_num =*/1, /*.val_index =*/0};
+    struct duck_scan * wscan = NULL;
+    //struct iwscan_state state = { /*.ap_num =*/1, /*.val_index =*/0};
     int ret;
 
     iw_init_event_stream(&stream, (char *)buffer, wrq.u.data.length);
@@ -274,7 +296,7 @@ int WifiScan::scan_channels(wireless_scan_head * context)
       ret = iw_extract_event_stream(&stream, &iwe, range.we_version_compiled);
       if (ret > 0)
       {
-        /* Convert to wireless_scan struct */
+        /* Convert to duck_scan struct */
         wscan = iw_process_scanning_token(&iwe, wscan);
         /* Check problems. */
         if (wscan == NULL)
@@ -289,10 +311,10 @@ int WifiScan::scan_channels(wireless_scan_head * context)
       }
     } while (ret > 0);
 
-    std::cout << interface_ << ": scan completed" << std::endl;
+    //std::cout << interface_ << ": scan completed" << std::endl;
   }
   else
-    std::cout << interface_ << ": no scan results" << std::endl;
+    //std::cout << interface_ << ": no scan results" << std::endl;
 
   free(buffer);
   return 0;
@@ -337,15 +359,18 @@ WifiScan::~WifiScan()
 
 vector<Result> WifiScan::Fetch()
 {
-  wireless_scan_head scan_context;
+  duck_scan_head scan_context;
+  scan_context.result = NULL;
   vector<Result> results;
 
   if (geteuid() != 0)
     std::cout << "uid: " << geteuid();
 
-  if (scan_channels(&scan_context) < 0)
-    throw WIFISCAN_ERROR_IN_IW_SCAN;
-  if (scan_context.result == 0){
+  if (scan_channels(&scan_context) < 0) {
+    //throw WIFISCAN_ERROR_IN_IW_SCAN;
+    return results;
+  }
+  if (scan_context.result == NULL){
     // return -1;
     return results;
   }
@@ -353,7 +378,7 @@ vector<Result> WifiScan::Fetch()
 
   /* Loop over result, build fingerprint. */
 
-  for (wireless_scan *i = scan_context.result; i != 0; i = i->next)
+  for (duck_scan *i = scan_context.result; i != NULL; i = i->next)
   {
     /* Retrieve device address. */
     char address[128];
@@ -366,7 +391,7 @@ vector<Result> WifiScan::Fetch()
              (unsigned char)i->ap_addr.sa_data[5]);
 
     /* Retrieve RSSI */
-    int dBm;
+    double dBm;
     if (i->stats.qual.updated & IW_QUAL_DBM)
     {
       dBm = i->stats.qual.level;
@@ -377,8 +402,32 @@ vector<Result> WifiScan::Fetch()
     {
       dBm = (i->stats.qual.level / 2.0) - 110.0;
     }
+    std::string SSID = std::string(address);
 
-    results.push_back({ string(address), (double)dBm });
+		//std::cout << "SSID: " << SSID << "\n";
+		int ttl = 0;
+		std::vector<std::string> x;
+		try {
+			x = split(i->extra, ':');
+			if (x.size() == 0)
+				throw std::runtime_error("x");
+			std::vector<std::string> y = split(x[1], 'm');
+			if (y.size() > 0) {
+				ttl = std::stoi(y[0],nullptr,0);
+			} else {
+				throw std::runtime_error("y");
+			}
+		} catch(...) {
+			cout << "Could not convert: " << "\n";
+		}
+		//std::cout << "Last beacon(ms): " << ttl << "\n";
+
+		if(ttl > BEACON_TTL){
+			//kill it
+			//std::cout << "Killing result !" << "\n";
+			continue;
+		}
+    results.push_back({ string(address), dBm });
   }
   return results;
 }

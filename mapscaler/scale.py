@@ -53,13 +53,14 @@ for corridor in pres:
 	print "this corr length ", corridor_length(pres[corridor])
 	print "base corr length ", corridor_length(pres[dx_corridor])
 	current_factor = corridor_length(pres[corridor])/corridor_length(pres[dx_corridor])
-	multiplier = pres[corridor]['norm']/dx
+	multiplier = float(pres[corridor]['norm'])/dx
 
 	print "wanted", multiplier
 	print "current", current_factor
 	multiplier = multiplier/current_factor  # effective multiplier
 	print "effective multiplier",  multiplier
 
+	csv.append("#" + corridor);
 	#print "multip", corridor, multiplier
 	for i in range(0,len(pts)):
 		if(pts[0][0] - pts[1][0] == 0):
@@ -76,6 +77,8 @@ for corridor in pres:
 
 f = open(sys.argv[2], "w")
 for coord in csv:
-	g= str(str(coord[0])+  "," + str( coord[1]) + "\n")
+	g = str(coord) + "\n";
+	if(coord[0] != "#"):
+		g= str("drw " + str(coord[0])+  " " + str( coord[1]) + "\n")
 	f.write(g)
 f.close()

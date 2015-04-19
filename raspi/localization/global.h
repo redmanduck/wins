@@ -26,6 +26,11 @@ enum WinsEvent {
   WINS_EVENT_ALL                = 0777
 };
 
+struct BlockResult {
+  cv_status status;
+  WinsEvent events;
+};
+
 class Global {
  private:
   static WinsEvent event_flags_;
@@ -53,7 +58,7 @@ class Global {
   static void Destroy();
   static void SetEventFlag(WinsEvent flag);
   static bool IsFlagSet(WinsEvent flag);
-  static cv_status BlockForEvent(WinsEvent type, int millis = -1);
+  static BlockResult BlockForEvent(WinsEvent type, int millis = -1);
   static thread::id GetMainThreadId();
   static void ShutDown();
   static void SetTestMode();

@@ -40,15 +40,18 @@ class Imu{
   static vector<double> process_variance;
 
   static ImuResult imu_buffer_;
+  static mutex imu_buffer_mutex_;
+  static atomic_bool calibrated_;
+  static Eigen::Quaternion<double> north_quat_inverse_;
 
  public:
   static Eigen::MatrixXd X;      // Current state estimate.
   static Eigen::MatrixXd P;  // Current covariance estimate.
 
   static void AddReading(vector<uint8_t> pic_data);
-  static ImuResult FetchAll();
+  static void Calibrate();
   static void Init();
-  static PointEstimate DoKalman(ImuResult imu_result,
+  static PointEstimate DoKalman(const ImuResult& imu_result,
       ImuVariant v = IMU_VARIANT_KALMAN_VANILLA);
   static PointEstimate EstimateLocation(
       ImuVariant v = IMU_VARIANT_KALMAN_VANILLA);
