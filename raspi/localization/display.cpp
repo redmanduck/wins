@@ -232,6 +232,8 @@ Page Display::Menu() {
   IncrmLine();
   PutString("4. Shut Down");
   IncrmLine();
+  PutString("5. Map floor");
+  IncrmLine();
   IncrmLine();
   current_page_ = PAGE_MENU;
 
@@ -242,7 +244,8 @@ Page Display::Menu() {
       case '2': return PAGE_NAVIGATING;
       case '3': return PAGE_CALBRATING;
       case '4': return PAGE_SHUT_DOWN;
-      default : PutString("Enter 1, 2, 3 or 4", true);
+      case '5': return PAGE_MAP_START;
+      default : PutString("Enter a number in 1-5", true);
     }
   }
 }
@@ -334,6 +337,35 @@ Page Display::ShutDown() {
   PutString("Shutting Down");
   current_page_ = PAGE_SHUT_DOWN;
   return PAGE_SHUT_DOWN;
+}
+
+Page Display::MapScan() {
+  wile(true) {
+    ClearScreen();
+    SetCurrentLine(2);
+    PutString("1: Add current");
+    IncrmLine();
+    PutString("location to map");
+    IncrmLine();
+    PutString("2: Quit mapping");
+    current_page_ = PAGE_MAP_START;
+    char option = GetChar();
+    if (option == '2') {
+      return PAGE_MENU;
+    }
+
+    ClearScreen();
+    SetCurrentLine(3);
+    PutString("Name of location");
+    string name = GetStringAndEcho();
+
+    ClearScreen();
+    SetCurrentLine(3);
+    PutString("Mapping...");
+    IncrmLine();
+    PutString("Please stay still");
+    Map::MapCurrentLocation(name);
+  }
 }
 
 Page Display::FirstPage() {
