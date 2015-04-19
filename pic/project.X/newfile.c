@@ -47,30 +47,32 @@ int main(void) {
 
     //Enable channel
     OpenI2C1(I2C_ON, I2C_BRG);
-    //Setup_MPU6050();
-    //LDByteWriteI2C(MPU6050_ADDRESS, MPU6050_RA_PWR_MGMT_1, 0x00);
+    Setup_MPU6050();
+    LDByteWriteI2C(MPU6050_ADDRESS, MPU6050_RA_PWR_MGMT_1, 0x00);
     SPI1Init();
     SPI2Init();
     LCDinit();
-    LCDProcessEvents();
 
-    //_05ms = false;
-    //TimerInit();
+    _05ms = false;
+    TimerInit();
     unsigned int _1s = 0;
-    unsigned char fifocount[2];
+
 
     while (1) {
+        if(_1s == 2000){
+            _1s = 0;
+
+
+            // Update LCD
+
+        }
+        if(_05ms){
+            _1s += 1;
+            _05ms = false;
+        }
         if(updatescreen){
             LCDProcessEvents();
-            LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_FIFO_COUNTH, &fifocount[0], 2);
-            if((((unsigned int)fifocount[0])<<8)|fifocount[1]==1024){
-                //need to reset
-            }
-            else if((((unsigned int)fifocount[0])<<8)|fifocount[1]>=42){
-                LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_FIFO_R_W, &rpiData[data_p], 42);
-            }
             // sampling IMU for data
-            /*
             LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_ACCEL_XOUT_H, &rpiData.imu[accel_p], 6);
             LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_GYRO_XOUT_H, &rpiData.imu[gyro_p], 6);
             accel_p+=12;
@@ -79,7 +81,6 @@ int main(void) {
                 accel_p=0;
             if (gyro_p>=BUF_SIZE)
                 gyro_p=6;
-             */
             // END SAMPLING
             updatescreen = false;
         }

@@ -13,6 +13,65 @@
 
 #include "animation.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <string.h>
+#include <math.h>
+#include "I2Cdev.h"
+#include "MPU6050_6Axis_MotionApps20.h"
+
+// class default I2C address is 0x68
+// specific I2C addresses may be passed as a parameter here
+// AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
+// AD0 high = 0x69
+MPU6050 mpu(0x69);
+// uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
+// quaternion components in a [w, x, y, z] format (not best for parsing
+// on a remote host such as Processing or something though)
+#define OUTPUT_READABLE_QUATERNION
+
+void setup() {
+    // initialize device
+    printf("Initializing I2C devices...\n");
+    mpu.initialize();
+
+    // verify connection
+    printf("Testing device connections...\n");
+    printf(mpu.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
+
+    // load and configure the DMP
+    printf("Initializing DMP...\n");
+    devStatus = mpu.dmpInitialize();
+    
+    // make sure it worked (returns 0 if so)
+    if (devStatus == 0) {
+        // turn on the DMP, now that it's ready
+        printf("Enabling DMP...\n");
+        mpu.setDMPEnabled(true);
+
+        // enable Arduino interrupt detection
+        //Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+        //attachInterrupt(0, dmpDataReady, RISING);
+        mpuIntStatus = mpu.getIntStatus();
+
+        // set our DMP Ready flag so the main loop() function knows it's okay to use it
+        printf("DMP ready!\n");
+        dmpReady = true;
+
+        // get expected DMP packet size for later comparison
+        packetSize = mpu.dmpGetFIFOPacketSize();
+    } else {
+        // ERROR!
+        // 1 = initial memory load failed
+        // 2 = DMP configuration updates failed
+        // (if it's going to break, usually the code will be 1)
+        printf("DMP Initialization failed (code %d)\n", devStatus);
+    }
+}
+
+
 enum opcode {
     IMU = 'M',
     ACCEL = 'A',
@@ -23,15 +82,15 @@ enum opcode {
     POSITION='P',
     VALID = 'V',
     ERROR = 'E',
-		BAT = 'B',
+	BAT = 'B',
 };
 
 int main(){
 
 
   if (!bcm2835_init()) {
-		//printf("oops, could not init bcm2835\n");
-		return 1;
+	//printf("oops, could not init bcm2835\n");
+	return 1;
   }
 
   //printf("Starting..\n");
