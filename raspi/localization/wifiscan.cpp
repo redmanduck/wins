@@ -25,25 +25,25 @@
 namespace wins {
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-    //std::stringstream ss(s);
-    //std::string item;
-    //while (std::getline(ss, item, delim)) {
-    //    elems.push_back(item);
-    //}
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
     return elems;
 }
 
 
 std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
-    //split(s, delim, elems);
+    split(s, delim, elems);
     return elems;
 }
 
 struct duck_scan * WifiScan::iw_process_scanning_token(
     struct iw_event * event, struct duck_scan * wscan)
 {
-  struct duck_scan * oldwscan;
+  struct duck_scan * oldwscan = NULL;
 
   /* Now, let's decode the event */
   switch (event->cmd)
@@ -112,8 +112,8 @@ struct duck_scan * WifiScan::iw_process_scanning_token(
       }
     case IWEVCUSTOM:
       /* How can we deal with those sanely ? Jean II */
-			//if((event->u.data.pointer) && (event->u.data.length))
-			//	memcpy(wscan->extra, event->u.data.pointer, event->u.data.length);
+			if((event->u.data.pointer) && (event->u.data.length))
+				memcpy(wscan->extra, event->u.data.pointer, event->u.data.length);
 			wscan->extra[0] = '\0';
     default:
       break;
@@ -134,6 +134,7 @@ int WifiScan::scan_channels(duck_scan_head * context)
   struct timeval tv; // Select timeout.
   int timeout = 15000000; // 15 s.
 
+  context->result = NULL;
   /* Get and check range stuff.
    * I would like to update this function to a class method, so that this range
    * info can be a private variable and must not be constantly checked.
@@ -359,6 +360,7 @@ WifiScan::~WifiScan()
 vector<Result> WifiScan::Fetch()
 {
   duck_scan_head scan_context;
+  scan_context.result = NULL;
   vector<Result> results;
 
   if (geteuid() != 0)
@@ -368,7 +370,7 @@ vector<Result> WifiScan::Fetch()
     //throw WIFISCAN_ERROR_IN_IW_SCAN;
     return results;
   }
-  if (scan_context.result == 0){
+  if (scan_context.result == NULL){
     // return -1;
     return results;
   }
@@ -376,7 +378,7 @@ vector<Result> WifiScan::Fetch()
 
   /* Loop over result, build fingerprint. */
 
-  for (duck_scan *i = scan_context.result; i != 0; i = i->next)
+  for (duck_scan *i = scan_context.result; i != NULL; i = i->next)
   {
     /* Retrieve device address. */
     char address[128];
@@ -416,7 +418,7 @@ vector<Result> WifiScan::Fetch()
 				throw std::runtime_error("y");
 			}
 		} catch(...) {
-			cout << "Could not convert: " << x[0] << "\n";
+			cout << "Could not convert: " << "\n";
 		}
 		//std::cout << "Last beacon(ms): " << ttl << "\n";
 
