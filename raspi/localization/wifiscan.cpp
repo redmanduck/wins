@@ -364,7 +364,7 @@ vector<Result> WifiScan::Fetch()
   vector<Result> results;
 
   if (geteuid() != 0)
-    //std::cout << "uid: " << geteuid();
+    std::cout << "uid: " << geteuid();
 
   if (scan_channels(&scan_context) < 0) {
     //throw WIFISCAN_ERROR_IN_IW_SCAN;

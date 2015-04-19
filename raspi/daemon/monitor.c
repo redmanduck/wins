@@ -1,6 +1,6 @@
 #define WINSD_VER "monitor_2.0"
-#define BUF_SIZE 1200
-#define CHUNK_SIZE 1200
+#define BUF_SIZE 1024
+#define CHUNK_SIZE 1024
 #define TIME_BETWEEN_CHUNK 0
 #define TIME_BETWEEN_BUF 14000
 #include <time.h>
@@ -145,14 +145,14 @@ int main(){
     RX = bcm2835_spi_transfer(TX);
 		bat1 = RX;
     RX = bcm2835_spi_transfer(TX);
-		bat2 = RX;
-		// battery status is stored in bat1 and bat2
-		data_p=0;
+	bat2 = RX;
+	// battery status is stored in bat1 and bat2
+	data_p=0;
 
 	//trasnferring 1024 bytes of data: 12 at a time
   while(data_p < BUF_SIZE){
     TX = ACCEL;
-		//printf("%d\n", packets);
+//printf("%d\n", packets);
     RX = bcm2835_spi_transfer(TX);
     //printf("%d. \n", ct);
     //clock_t start, end;
@@ -160,34 +160,34 @@ int main(){
     RX = bcm2835_spi_transfer(TX);
     while(RX != ACCEL){
         op_err++;
-				usleep(10000);
-				RX = bcm2835_spi_transfer(TX);
-				printf("| tx:%x rx:%x(%c) |", TX, RX, RX);
-				if(op_err%10==0)
-					printf("\n");
-//				fprintf(stderr,"%x(%c)|", RX, RX);
-    }
+	usleep(10000);
+	RX = bcm2835_spi_transfer(TX);
+	printf("| tx:%x rx:%x(%c) |", TX, RX, RX);
+	if(op_err%10==0)
+	printf("\n");
+	//	fprintf(stderr,"%x(%c)|", RX, RX);
+	}
 /*
-   if(op_err > 0) {
-      fprintf(stderr, "ct=%d \t errors:%d\n", ct, op_err);
-      end = clock();
-      float diffsec = (float)(end - start)/CLOCKS_PER_SEC;
-      fprintf(stderr," ---- error time %.6f sec\n", diffsec);
-      fprintf(stderr, "---------------------------");
-   }
-   printf("%x(%c) ", RX, RX);
+	if(op_err > 0) {
+		fprintf(stderr, "ct=%d \t errors:%d\n", ct, op_err);
+		end = clock();
+		float diffsec = (float)(end - start)/CLOCKS_PER_SEC;
+		fprintf(stderr," ---- error time %.6f sec\n", diffsec);
+      		fprintf(stderr, "---------------------------");
+   	}
+	printf("%x(%c) ", RX, RX);
 */   
- //  gettimeofday(&tval_before, NULL);
- //  start =clock();
-		int j = 0;
-   //for(j=0;j<100;j++){
-		printf("%d:Bat: %d%% %f Data: ", data_p, bat1, (bat1+(float)bat2/256));
-		for(i=0;i<CHUNK_SIZE;i++){
-			TX=lcd_buf[data_p+i];
-	    RX = bcm2835_spi_transfer(TX);
-			imu_buf[data_p+i]=RX;
-	    printf("%x ", RX);	
-    }
+	//  gettimeofday(&tval_before, NULL);
+	//  start =clock();
+	int j = 0;
+	//for(j=0;j<100;j++){
+	printf("%d:Bat: %d%% %f Data: ", data_p, bat1, (bat1+(float)bat2/256));
+	for(i=0;i<CHUNK_SIZE;i++){
+		TX=lcd_buf[data_p+i];
+		RX = bcm2835_spi_transfer(TX);
+		imu_buf[data_p+i]=RX;
+		printf("%x ", RX);	
+	}
 		int x = (imu_buf[data_p+0]<<8) | imu_buf[data_p+1];
 		int y = (imu_buf[data_p+2]<<8) | imu_buf[data_p+3];
 		int z = (imu_buf[data_p+4]<<8) | imu_buf[data_p+5];
