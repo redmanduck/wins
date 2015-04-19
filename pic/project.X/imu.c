@@ -1,6 +1,5 @@
-#include <i2c.h>
 #include "imu.h"
-
+// IMU.c
 void LDByteWriteI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char data) {
     StartI2C1(); //Send the Start Bit
     IdleI2C1(); //Wait to complete
@@ -21,9 +20,7 @@ void LDByteReadI2C(unsigned char SlaveAddress, unsigned char reg, unsigned char 
     IdleI2C1(); //Wait to complete
     MasterWriteI2C1(reg);
     IdleI2C1();
-    StopI2C1();
-    IdleI2C1();
-    StartI2C1(); //Send the Start Bit
+    RestartI2C1(); //Send the Start Bit
     IdleI2C1(); //Wait to complete
     MasterWriteI2C1(SlaveAddress | 0x01); //transmit read command
     IdleI2C1(); //Wait to complete

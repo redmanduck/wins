@@ -1,5 +1,12 @@
 #ifndef IMU_H
 #define	IMU_H
+#include <i2c.h>
+
+// calculate baud rate of I2C
+#define Fosc	(8000000) 	// crystal
+#define Fcy		(Fosc*4/2)	// w.PLL (Instruction Per Second)
+#define Fsck	500000		// 400kHz I2C   changed for clarity !!!
+#define I2C_BRG	((Fcy/2/Fsck)-1)    // !!!
 
 // IMU registers
 #define MPU6050_ADDRESS 0b11010010 // Address with end write bit

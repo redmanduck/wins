@@ -45,17 +45,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=lcdPmp.c traps.c main.c ST7565.c imu.c fuel_gauge.c
+SOURCEFILES_QUOTED_IF_SPACED=imu.c lcd.c newfile.c rpi.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/lcdPmp.o ${OBJECTDIR}/traps.o ${OBJECTDIR}/main.o ${OBJECTDIR}/ST7565.o ${OBJECTDIR}/imu.o ${OBJECTDIR}/fuel_gauge.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/lcdPmp.o.d ${OBJECTDIR}/traps.o.d ${OBJECTDIR}/main.o.d ${OBJECTDIR}/ST7565.o.d ${OBJECTDIR}/imu.o.d ${OBJECTDIR}/fuel_gauge.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/imu.o ${OBJECTDIR}/lcd.o ${OBJECTDIR}/newfile.o ${OBJECTDIR}/rpi.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/imu.o.d ${OBJECTDIR}/lcd.o.d ${OBJECTDIR}/newfile.o.d ${OBJECTDIR}/rpi.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/lcdPmp.o ${OBJECTDIR}/traps.o ${OBJECTDIR}/main.o ${OBJECTDIR}/ST7565.o ${OBJECTDIR}/imu.o ${OBJECTDIR}/fuel_gauge.o
+OBJECTFILES=${OBJECTDIR}/imu.o ${OBJECTDIR}/lcd.o ${OBJECTDIR}/newfile.o ${OBJECTDIR}/rpi.o
 
 # Source Files
-SOURCEFILES=lcdPmp.c traps.c main.c ST7565.c imu.c fuel_gauge.c
+SOURCEFILES=imu.c lcd.c newfile.c rpi.c
 
 
 CFLAGS=
@@ -82,34 +82,6 @@ MP_LINKER_FILE_OPTION=,--script=p24FJ128GA010.gld
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: compile
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/lcdPmp.o: lcdPmp.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/lcdPmp.o.d 
-	@${RM} ${OBJECTDIR}/lcdPmp.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  lcdPmp.c  -o ${OBJECTDIR}/lcdPmp.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/lcdPmp.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/lcdPmp.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
-	
-${OBJECTDIR}/traps.o: traps.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/traps.o.d 
-	@${RM} ${OBJECTDIR}/traps.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  traps.c  -o ${OBJECTDIR}/traps.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/traps.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/traps.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
-	
-${OBJECTDIR}/main.o: main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/main.o.d 
-	@${RM} ${OBJECTDIR}/main.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  main.c  -o ${OBJECTDIR}/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/main.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/main.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
-	
-${OBJECTDIR}/ST7565.o: ST7565.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/ST7565.o.d 
-	@${RM} ${OBJECTDIR}/ST7565.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ST7565.c  -o ${OBJECTDIR}/ST7565.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/ST7565.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/ST7565.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
-	
 ${OBJECTDIR}/imu.o: imu.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/imu.o.d 
@@ -117,42 +89,28 @@ ${OBJECTDIR}/imu.o: imu.c  nbproject/Makefile-${CND_CONF}.mk
 	${MP_CC} $(MP_EXTRA_CC_PRE)  imu.c  -o ${OBJECTDIR}/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/imu.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/imu.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/fuel_gauge.o: fuel_gauge.c  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/lcd.o: lcd.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/fuel_gauge.o.d 
-	@${RM} ${OBJECTDIR}/fuel_gauge.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  fuel_gauge.c  -o ${OBJECTDIR}/fuel_gauge.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/fuel_gauge.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/fuel_gauge.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
+	@${RM} ${OBJECTDIR}/lcd.o.d 
+	@${RM} ${OBJECTDIR}/lcd.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  lcd.c  -o ${OBJECTDIR}/lcd.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/lcd.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/lcd.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/newfile.o: newfile.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} ${OBJECTDIR}/newfile.o.d 
+	@${RM} ${OBJECTDIR}/newfile.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  newfile.c  -o ${OBJECTDIR}/newfile.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/newfile.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/newfile.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/rpi.o: rpi.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} ${OBJECTDIR}/rpi.o.d 
+	@${RM} ${OBJECTDIR}/rpi.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  rpi.c  -o ${OBJECTDIR}/rpi.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/rpi.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_ICD3=1    -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/rpi.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
 	
 else
-${OBJECTDIR}/lcdPmp.o: lcdPmp.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/lcdPmp.o.d 
-	@${RM} ${OBJECTDIR}/lcdPmp.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  lcdPmp.c  -o ${OBJECTDIR}/lcdPmp.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/lcdPmp.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/lcdPmp.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
-	
-${OBJECTDIR}/traps.o: traps.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/traps.o.d 
-	@${RM} ${OBJECTDIR}/traps.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  traps.c  -o ${OBJECTDIR}/traps.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/traps.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/traps.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
-	
-${OBJECTDIR}/main.o: main.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/main.o.d 
-	@${RM} ${OBJECTDIR}/main.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  main.c  -o ${OBJECTDIR}/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/main.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/main.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
-	
-${OBJECTDIR}/ST7565.o: ST7565.c  nbproject/Makefile-${CND_CONF}.mk
-	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/ST7565.o.d 
-	@${RM} ${OBJECTDIR}/ST7565.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  ST7565.c  -o ${OBJECTDIR}/ST7565.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/ST7565.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/ST7565.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
-	
 ${OBJECTDIR}/imu.o: imu.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/imu.o.d 
@@ -160,12 +118,26 @@ ${OBJECTDIR}/imu.o: imu.c  nbproject/Makefile-${CND_CONF}.mk
 	${MP_CC} $(MP_EXTRA_CC_PRE)  imu.c  -o ${OBJECTDIR}/imu.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/imu.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
 	@${FIXDEPS} "${OBJECTDIR}/imu.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
 	
-${OBJECTDIR}/fuel_gauge.o: fuel_gauge.c  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/lcd.o: lcd.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} ${OBJECTDIR}/fuel_gauge.o.d 
-	@${RM} ${OBJECTDIR}/fuel_gauge.o 
-	${MP_CC} $(MP_EXTRA_CC_PRE)  fuel_gauge.c  -o ${OBJECTDIR}/fuel_gauge.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/fuel_gauge.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
-	@${FIXDEPS} "${OBJECTDIR}/fuel_gauge.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
+	@${RM} ${OBJECTDIR}/lcd.o.d 
+	@${RM} ${OBJECTDIR}/lcd.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  lcd.c  -o ${OBJECTDIR}/lcd.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/lcd.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/lcd.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/newfile.o: newfile.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} ${OBJECTDIR}/newfile.o.d 
+	@${RM} ${OBJECTDIR}/newfile.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  newfile.c  -o ${OBJECTDIR}/newfile.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/newfile.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/newfile.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
+	
+${OBJECTDIR}/rpi.o: rpi.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} ${OBJECTDIR}/rpi.o.d 
+	@${RM} ${OBJECTDIR}/rpi.o 
+	${MP_CC} $(MP_EXTRA_CC_PRE)  rpi.c  -o ${OBJECTDIR}/rpi.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MMD -MF "${OBJECTDIR}/rpi.o.d"        -g -omf=elf -O0 -msmart-io=1 -Wall -msfr-warn=off
+	@${FIXDEPS} "${OBJECTDIR}/rpi.o.d" $(SILENT)  -rsi ${MP_CC_DIR}../ 
 	
 endif
 

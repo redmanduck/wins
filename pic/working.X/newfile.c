@@ -32,7 +32,7 @@ unsigned int data_p = 0; //index of buffer that will be transmitted next to the 
 unsigned char bat1 = 0;
 unsigned char bat2 = 0;
 bool _05ms;
-
+bool updatescreen = false;
 unsigned long _temp32;
 
 int main(void) {
@@ -52,13 +52,15 @@ int main(void) {
     SPI1Init();
     SPI2Init();
     LCDinit();
+    LCDProcessEvents();
 
-    _05ms = false;
-    TimerInit();
+    //_05ms = false;
+    //TimerInit();
     unsigned int _1s = 0;
 
 
     while (1) {
+        /*
         if(_1s == 2000){
             _1s = 0;
 
@@ -68,6 +70,9 @@ int main(void) {
         }
         if(_05ms){
             _1s += 1;
+            _05ms = false;
+        }*/
+        if(updatescreen){
             LCDProcessEvents();
             // sampling IMU for data
             LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_ACCEL_XOUT_H, &rpiData.imu[accel_p], 6);
@@ -79,7 +84,7 @@ int main(void) {
             if (gyro_p>=BUF_SIZE)
                 gyro_p=6;
             // END SAMPLING
-            _05ms = false;
+            updatescreen = false;
         }
         __builtin_btg((unsigned int *) &LATA, 6);
     }
@@ -144,6 +149,7 @@ void __attribute__((__interrupt__, auto_psv)) _SPI1Interrupt(void) {
     }
     SPI1BUF = 0x5A;
     IFS0bits.SPI1IF = 0;
+    updatescreen = true;
 }
 
 void LCDProcessEvents()
