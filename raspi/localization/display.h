@@ -33,7 +33,8 @@ enum Page {
   PAGE_DESTINATION_PROMPT,
   PAGE_NAVIGATING,
   PAGE_SHUT_DOWN,
-  PAGE_DONE
+  PAGE_DONE,
+  PAGE_MAP_SCAN
 };
 
 class Display {
@@ -68,6 +69,7 @@ class Display {
   Page Navigating();
   Page Done();
   Page ShutDown();
+  Page MapScan();
 
  protected:
   ST7565 glcd_;

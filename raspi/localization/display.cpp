@@ -244,7 +244,7 @@ Page Display::Menu() {
       case '2': return PAGE_NAVIGATING;
       case '3': return PAGE_CALBRATING;
       case '4': return PAGE_SHUT_DOWN;
-      case '5': return PAGE_MAP_START;
+      case '5': return PAGE_MAP_SCAN;
       default : PutString("Enter a number in 1-5", true);
     }
   }
@@ -340,7 +340,7 @@ Page Display::ShutDown() {
 }
 
 Page Display::MapScan() {
-  wile(true) {
+  while(true) {
     ClearScreen();
     SetCurrentLine(2);
     PutString("1: Add current");
@@ -348,7 +348,7 @@ Page Display::MapScan() {
     PutString("location to map");
     IncrmLine();
     PutString("2: Quit mapping");
-    current_page_ = PAGE_MAP_START;
+    current_page_ = PAGE_MAP_SCAN;
     char option = GetChar();
     if (option == '2') {
       return PAGE_MENU;
@@ -364,7 +364,7 @@ Page Display::MapScan() {
     PutString("Mapping...");
     IncrmLine();
     PutString("Please stay still");
-    Map::MapCurrentLocation(name);
+    //Map::MapCurrentLocation(name);
   }
 }
 
