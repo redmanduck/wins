@@ -57,22 +57,6 @@ struct Result;
 #define SCAN_CHANNELS_FAILED_TO_READ -4
 #define SCAN_CHANNELS_PROBLEMS_PROCESSING -5
 
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-    std::stringstream ss(s);
-    std::string item;
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
-}
-
-
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    split(s, delim, elems);
-    return elems;
-}
-
 
 /**
  * @brief The wifi_scan main class.
@@ -123,7 +107,7 @@ typedef struct WinData
   int		has_stats;
   iwparam	maxbitrate;		/* Max bit rate in bps */
   int		has_maxbitrate;
-	char extra[IW_CUSTOM_MAX+1]; 
+	char extra[IW_CUSTOM_MAX+1];
 } WinData;
 
 class WifiScan
