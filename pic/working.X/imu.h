@@ -8,6 +8,7 @@
 #define Fsck	500000		// 400kHz I2C   changed for clarity !!!
 #define I2C_BRG	((Fcy/2/Fsck)-1)    // !!!
 
+#define DMP_PACKET_SIZE 42
 // IMU registers
 #define MPU6050_ADDRESS 0b11010010 // Address with end write bit
 #define MPU6050_RA_XG_OFFS_TC 0x00 //[7] PWR_MODE, [6:1] XG_OFFS_TC, [0] OTP_BNK_VLD

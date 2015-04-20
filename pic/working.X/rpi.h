@@ -7,7 +7,7 @@ typedef int bool;
 #define false 0
 #define USE_AND_OR	// To enable AND_OR mask setting for I2C.
 #define BUF_SIZE 1024
-#define CHUNK_SIZE 1024
+#define CHUNK_SIZE 256
 #define SPI_SS_TRIS      TRISBbits.TRISB2
 #define SPI_SS_PORT      PORTBbits.RB2
 

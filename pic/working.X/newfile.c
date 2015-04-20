@@ -21,6 +21,7 @@ enum opcode {
     POSITION = 'P',
     VALID = 'V',
     ERROR = 'E',
+    FIFO = 'F',
     BAT = 'B',
 };
 
@@ -32,7 +33,8 @@ unsigned int data_p = 0; //index of buffer that will be transmitted next to the 
 unsigned char bat1 = 0;
 unsigned char bat2 = 0;
 bool _05ms;
-bool updatescreen = false;
+bool updateScreen = false;
+bool getFifo = false;
 unsigned long _temp32;
 
 int main(void) {
@@ -56,32 +58,31 @@ int main(void) {
 
     //_05ms = false;
     //TimerInit();
-    unsigned int _1s = 0;
     unsigned char fifocount[2];
 
     while (1) {
-        if(updatescreen){
+        if (updateScreen) {
             LCDProcessEvents();
+            updateScreen = false;
+        }
+        if (getFifo) {
             LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_FIFO_COUNTH, &fifocount[0], 2);
-            if((((unsigned int)fifocount[0])<<8)|fifocount[1]==1024){
+            if (((((unsigned int) fifocount[0]) << 8) | fifocount[1]) == 1024) {
                 //need to reset
+                unsigned char temp = 0;
+                LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_USER_CTRL, &temp, 1);
+                LDByteWriteI2C(MPU6050_ADDRESS, MPU6050_RA_USER_CTRL, 0b00000100 | temp);
+                /*
+                int i = 0;
+                for(i = data_p; i < data_p+CHUNK_SIZE; i++){
+                    rpiData.imu[i] = 0;
+                }*/
+                __builtin_btg((unsigned int *) &LATA, 0);
+            } else if (((((unsigned int) fifocount[0]) << 8) | fifocount[1]) >= 42) {
+                LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_FIFO_R_W, &rpiData.imu[data_p], DMP_PACKET_SIZE);
+                __builtin_btg((unsigned int *) &LATA, 4);
             }
-            else if((((unsigned int)fifocount[0])<<8)|fifocount[1]>=42){
-                LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_FIFO_R_W, &rpiData[data_p], 42);
-            }
-            // sampling IMU for data
-            /*
-            LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_ACCEL_XOUT_H, &rpiData.imu[accel_p], 6);
-            LDByteReadI2C(MPU6050_ADDRESS, MPU6050_RA_GYRO_XOUT_H, &rpiData.imu[gyro_p], 6);
-            accel_p+=12;
-            gyro_p+=12;
-            if (accel_p>=BUF_SIZE)
-                accel_p=0;
-            if (gyro_p>=BUF_SIZE)
-                gyro_p=6;
-             */
-            // END SAMPLING
-            updatescreen = false;
+            getFifo = false;
         }
         __builtin_btg((unsigned int *) &LATA, 6);
     }
@@ -97,39 +98,39 @@ void __attribute__((__interrupt__, auto_psv)) _T1Interrupt(void) {
 
 void __attribute__((__interrupt__, auto_psv)) _SPI1Interrupt(void) {
     unsigned char ack = 0;
+    unsigned char opcode = 0;
     unsigned int i = 0;
     while (!SPI1STATbits.SPIRBF); //wait for ack from pi?
-    ack = SPI1BUF;
+    opcode = SPI1BUF;
     // need to send some data back for acknowledgment
-    if (ack == ACCEL) {
+    if (opcode == ACCEL) {
         // acknowledgment from pic to pi
         SPI1BUF = ACCEL;
         while (!SPI1STATbits.SPIRBF); //wait for ack from pi?
         // will be the acknowledge from the pi
         i = SPI1BUF; //read second byte
         ack = VALID; // set ack as D
-        // send first byte of data
-        // each time read a byte and compare it with the last sent byte
         for (i = 0; i < CHUNK_SIZE; i++) {
             SPI1BUF = rpiData.imu[data_p + i];
             while (!SPI1STATbits.SPIRBF);
             rpiData.lcd[data_p + i] = SPI1BUF;
         }
         data_p += CHUNK_SIZE;
-        if (data_p >= BUF_SIZE){
+        if (data_p >= BUF_SIZE) {
             data_p = 0;
             gyro_p = 6;
             accel_p = 0;
-        }
-        else{
+            updateScreen = true;
+        } else {
             accel_p = data_p;
-            gyro_p = data_p+6;
+            gyro_p = data_p + 6;
         }
         // send done byte
         SPI1BUF = ack;
         while (!SPI1STATbits.SPIRBF);
         i = SPI1BUF;
-    } else if (ack == BAT) {
+        getFifo = true;
+    } else if (opcode == BAT) {
         SPI1BUF = BAT;
         while (!SPI1STATbits.SPIRBF);
         ack = SPI1BUF;
@@ -146,19 +147,18 @@ void __attribute__((__interrupt__, auto_psv)) _SPI1Interrupt(void) {
     }
     SPI1BUF = 0x5A;
     IFS0bits.SPI1IF = 0;
-    updatescreen = true;
+    
 }
 
-void LCDProcessEvents()
-{
+void LCDProcessEvents() {
     unsigned char p, c;
-    for(p = 0; p < 8; p++){
-	LCD_comm(CMD_SET_PAGE | p);
+    for (p = 0; p < 8; p++) {
+        LCD_comm(CMD_SET_PAGE | p);
         LCD_comm(CMD_SET_COLUMN_LOWER | 0x00);
         LCD_comm(CMD_SET_COLUMN_UPPER | 0x00);
-        for(c = 0; c < 128; c++){
+        for (c = 0; c < 128; c++) {
             LCD_comm(CMD_RMW);
-            LCD_data(rpiData.lcd[(128*p)+c]);
+            LCD_data(rpiData.lcd[(128 * p) + c]);
         }
     }
 }

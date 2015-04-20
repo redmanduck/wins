@@ -45,17 +45,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=lcdPmp.c main.c
+SOURCEFILES_QUOTED_IF_SPACED=lcdPmp.c main.c newmain.cpp
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/lcdPmp.o ${OBJECTDIR}/main.o
-POSSIBLE_DEPFILES=${OBJECTDIR}/lcdPmp.o.d ${OBJECTDIR}/main.o.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/lcdPmp.o ${OBJECTDIR}/main.o ${OBJECTDIR}/newmain.o
+POSSIBLE_DEPFILES=${OBJECTDIR}/lcdPmp.o.d ${OBJECTDIR}/main.o.d ${OBJECTDIR}/newmain.o.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/lcdPmp.o ${OBJECTDIR}/main.o
+OBJECTFILES=${OBJECTDIR}/lcdPmp.o ${OBJECTDIR}/main.o ${OBJECTDIR}/newmain.o
 
 # Source Files
-SOURCEFILES=lcdPmp.c main.c
+SOURCEFILES=lcdPmp.c main.c newmain.cpp
 
 
 CFLAGS=
