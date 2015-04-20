@@ -1,8 +1,8 @@
 #define WINSD_VER "monitor_2.0"
 #define BUF_SIZE 1024
-#define CHUNK_SIZE 1024
-#define TIME_BETWEEN_CHUNK 0
-#define TIME_BETWEEN_BUF 14000
+#define CHUNK_SIZE 256
+#define TIME_BETWEEN_CHUNK 5000
+#define TIME_BETWEEN_BUF 10000
 #include <time.h>
 
 #include <bcm2835.h>
@@ -31,6 +31,16 @@ MPU6050 mpu(0x69);
 // quaternion components in a [w, x, y, z] format (not best for parsing
 // on a remote host such as Processing or something though)
 #define OUTPUT_READABLE_QUATERNION
+unsigned char devStatus;
+unsigned char mpuIntStatus;
+unsigned int packetSize;
+bool dmpReady = false;
+
+Quaternion q;
+VectorInt16 aa;
+VectorInt16 aaReal;
+VectorFloat gravity;
+float ypr[3];
 
 void setup() {
     // initialize device
@@ -88,19 +98,19 @@ int main() {
 	// Setup IMU to get DMP data
     setup();
     usleep(100000);
-	
+
     if (!bcm2835_init()) {
         return 1;
     }
     bcm2835_spi_begin();
     bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, 0);
     bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS1, 0);
-    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_2048); //4096); //2048);
+    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_256); //4096); //2048);
     bcm2835_spi_setDataMode(BCM2835_SPI_MODE1);
     bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
 
     int var = 0;
-    char imu_buf[BUF_SIZE];
+    uint8_t imu_buf[BUF_SIZE];
     for (var = 0; var < BUF_SIZE; var++) {
         imu_buf[var] = 0x00;
     }
@@ -117,8 +127,8 @@ int main() {
     unsigned char bat2 = 0;
     int data_p = 0;
     printf("Begin\n");
-    while (packets < 265) {
-		clock_t total = clock();
+    while (1) {
+		    clock_t total = clock();
         // Establishing communication for getting battery data
         TX = BAT;
         RX = bcm2835_spi_transfer(TX);
@@ -151,13 +161,19 @@ int main() {
                 if (op_err % 10 == 0)
                     printf("\n");
             }
-            printf("%d:Bat: %d%% %f Data: ", data_p, bat1, (bat1 + (float) bat2 / 256));
+            //printf("%d:Bat: %d%% %f Data: ", data_p, bat1, (bat1 + (float) bat2 / 256));
             for (i = 0; i < CHUNK_SIZE; i++) {
                 TX = lcd_buf[data_p + i];
                 RX = bcm2835_spi_transfer(TX);
                 imu_buf[data_p + i] = RX;
-                printf("%x ", RX);
+                //printf("%x ", RX);
             }
+            mpu.dmpGetQuaternion(&q, &imu_buf[data_p]);
+            mpu.dmpGetGravity(&gravity, &q);
+            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+            if(packets%10==5)
+              printf("ypr  %7.2f %7.2f %7.2f   \n", ypr[0] * 180 / M_PI, ypr[1] * 180 / M_PI, ypr[2] * 180 / M_PI);
+            /*
             int x = (imu_buf[data_p + 0] << 8) | imu_buf[data_p + 1];
             int y = (imu_buf[data_p + 2] << 8) | imu_buf[data_p + 3];
             int z = (imu_buf[data_p + 4] << 8) | imu_buf[data_p + 5];
@@ -165,12 +181,13 @@ int main() {
             int gy = (imu_buf[data_p + 8] << 8) | imu_buf[data_p + 9];
             int gz = (imu_buf[data_p + 10] << 8) | imu_buf[data_p + 11];
             printf("\nax:%d y:%d z:%d. gx:%d y:%d z:%d\n", x, y, z, gx, gy, gz);
+            */
             RX = bcm2835_spi_transfer(TX);
             if (RX == VALID) {
                 data_p += CHUNK_SIZE;
             }
-			float diffsec = (float) (clock() - total) / CLOCKS_PER_SEC;
-			printf("\nERR %d|| total time = %f\n", op_err, diffsec);
+            //float diffsec = (float) (clock() - total) / CLOCKS_PER_SEC;
+            //printf("\nERR %d|| total time = %f\n", op_err, diffsec);
 
 
             //  gettimeofday(&tval_after, NULL);
@@ -181,13 +198,11 @@ int main() {
             //if(packets%100==0)
             usleep(TIME_BETWEEN_CHUNK);
         }
-        printf("PACKET %d successfully transferred\n", packets);
+ //       printf("PACKET %d successfully transferred\n", packets);
         packets++;
         lcd_buf = getBitmap();
         usleep(TIME_BETWEEN_BUF);
     }
-    float diffsec = (float) (clock() - total) / CLOCKS_PER_SEC;
-    printf("\nERR %d|| total time = %f\n", op_err, diffsec);
 
     bcm2835_spi_end();
     bcm2835_close();

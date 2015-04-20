@@ -318,7 +318,6 @@ Page Display::Navigating() {
       Navigation::ResetDestination();
       return PAGE_DONE;
     }
-    Flush();
   }
 }
 

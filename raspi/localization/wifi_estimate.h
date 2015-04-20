@@ -20,16 +20,16 @@ class WiFiEstimate {
   unique_ptr<WifiScan> scanner_;
 
   vector<PointEstimate> ClosestByMahalanobis(
-      const vector<Result> &s, WiFiVariant v,
+      vector<Result> s, WiFiVariant v,
       double realx = -1, double realy = -1,
-      //double exp1 = 10, double exp2 = 0, bool debug = false);
-      double exp1 = 5, double exp2 = 3, bool debug = false);
+      double exp1 = 10, double exp2 = 0, bool debug = false);
+      //double exp1 = 5, double exp2 = 3, bool debug = false);
   // PointEstimate ClosestByMahalanobisVarWeighted(vector<Result> s);
   // PointEstimate MahalanobisTriangulated(vector<Result> s);
-  vector<PointEstimate> MostProbableClubbed(vector<Result>& s,
+  vector<PointEstimate> MostProbableClubbed(vector<Result> s,
       double realx = -1, double realy = -1,
       double exp1 = 2.0, double exp2 = 0.0, bool debug = false);
-  vector<PointEstimate> MostProbableNotClubbed(vector<Result>& s,
+  vector<PointEstimate> MostProbableNotClubbed(vector<Result> s,
       double realx = -1, double realy = -1,
       double exp1 = 1, double exp2 = 1, bool debug = false);
   WiFiEstimate(unique_ptr<WifiScan> scanner);

@@ -16,7 +16,7 @@ namespace wins {
 using namespace std;
 
 #define HIGH_VARIANCE 10000
-#define NORMAL_MAX_DIST 6
+#define NORMAL_MAX_DIST 20
 #define MAX_MAX_DIST 500
 #define MAX_UNKNOWN_COUNT 20
 
@@ -49,7 +49,7 @@ vector<PointEstimate> Location::GetWiFiReadings(int count) {
   vector<future<vector<PointEstimate>>> handles;
   for (auto& estimator : wifi_estimators_) {
     auto handle = async(launch::async, &WiFiEstimate::EstimateLocation,
-          estimator.get(), WIFI_VARIANT_CHI_SQ, count);
+          estimator.get(), WIFI_VARIANT_NONE, count);
     handles.push_back(move(handle));
   }
   for (auto& result : handles) {
@@ -84,6 +84,7 @@ void Location::Init() {
         new WiFiEstimate(unique_ptr<WifiScan>(
         new WifiScan(default_channels, device)))));
   }
+  Map::UpdateLikelyPoints(numeric_limits<double>::max());
   InitialEstimate();
 }
 
@@ -102,9 +103,6 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
     this_thread::sleep_for(chrono::seconds(1));
     return false;
   }
-	// TEST
-  current_node_ = Map::NodeNearest(wifi_estimates[0].x_mean, wifi_estimates[0].y_mean);
-	return true;
 
   unknown_count_ = 0;
 
@@ -158,12 +156,13 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   }
   Imu::X.block<2,1>(0,0) = X;
   Imu::P.block<2,2>(0,0) = P;
-  //Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+  Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
   //cout << P.format(CleanFmt) << "\n\n";
 
   last_update_time_ = new_update_time;
   prev_X = X;
 
+  cout << "L x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   current_node_ = Map::NodeNearest(X(0,0), X(1,0));
 	return true;
 }

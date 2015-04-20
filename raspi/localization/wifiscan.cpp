@@ -114,7 +114,7 @@ struct duck_scan * WifiScan::iw_process_scanning_token(
       /* How can we deal with those sanely ? Jean II */
 			if((event->u.data.pointer) && (event->u.data.length))
 				memcpy(wscan->extra, event->u.data.pointer, event->u.data.length);
-			wscan->extra[0] = '\0';
+			wscan->extra[event->u.data.length] = '\0';
     default:
       break;
   } /* switch(event->cmd) */

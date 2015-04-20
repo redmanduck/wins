@@ -59,19 +59,19 @@ namespace {
 
 } // anonymous namespace
 
-vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s,
+vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(vector<Result> s,
     WiFiVariant v, double realx, double realy, double exp1, double exp2,
     bool debug) {
-  using stat = tuple<double, Point*, int, double>;
+  using stat = tuple<double, Point*, double, double>;
 
   auto& current_likely_points = Map::CurrentLikelyPoints();
   vector<stat> point_stats;
 
   // Determine the probability of being at each of the possible points from
   // Mahalanobis distance.
+  //cout << "likely points = " << current_likely_points.size() << "\n";
   for (auto& node : current_likely_points) {
     auto point = node->point;
-    //printf("checking likely point: x = %.1f, y = %.1f", point->x, point->y);
     if (debug and distance(point->x, point->y, realx - Global::FilterBiasX,
         realy - Global::FilterBiasY) > Global::FilterableDistance) {
       continue;
@@ -102,33 +102,33 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
         // was taken at that point.
         point_stats.push_back(make_tuple(
               pow(pow(10, df), exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
-              point, df, sqrt(sum)));
+              point, df, pchisq(sum, df)));
       else
         // Weight of a point is proportional to the number of APs common to
         // that location and inversely proportinal to the M-distance.
-        point_stats.push_back(make_tuple(pow(exp(df), exp1) / pow(2 + exp2,
-              sum), point, df, sqrt(sum)));
+        point_stats.push_back(make_tuple(pow(df, exp1) / pow(sum, exp2),
+              point, pow(df, exp1), pow(sum, exp2)));
     }
   }
 
-//  DEBUG CODE
-//  char buffer[100];
-//  sprintf(buffer, "\n%7s %7s %7s %7s %7s\n",
-//      "weight", "x", "y", "df", "metric");
-//  cout << buffer;
-//  sort(point_stats.begin(), point_stats.end(),
-//      [](const stat &a, const stat &b) -> bool {
-//          return get<0>(a) > get<0>(b);
-//      });
-//  for (auto&& p_stat : point_stats) {
-//    sprintf(buffer, "%7.2e %7.1f %7.1f %7d %7.2e\n",
-//        get<0>(p_stat),
-//        get<1>(p_stat)->x,
-//        get<1>(p_stat)->y,
-//        get<2>(p_stat),
-//        get<3>(p_stat));
-//    cout << buffer;
-//  }
+  //DEBUG CODE
+  //char buffer[100];
+  //sprintf(buffer, "\n%7s %7s %7s %7s %7s\n",
+  //    "weight", "x", "y", "df", "metric");
+  //cout << buffer;
+  //sort(point_stats.begin(), point_stats.end(),
+  //    [](const stat &a, const stat &b) -> bool {
+  //        return get<0>(a) > get<0>(b);
+  //    });
+  //for (auto&& p_stat : point_stats) {
+  //  sprintf(buffer, "%7.2e %7.1f %7.1f %7.2e %7.2e\n",
+  //      get<0>(p_stat),
+  //      get<1>(p_stat)->x,
+  //      get<1>(p_stat)->y,
+  //      get<2>(p_stat),
+  //      get<3>(p_stat));
+  //  cout << buffer;
+  //}
 
 //  if (v & WIFI_VARIANT_TOP1 or v & WIFI_VARIANT_TOP_FEW) {
 //    sort(point_stats.begin(), point_stats.end(),
@@ -210,7 +210,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(const vector<Result>& s
   return estimates;
 }
 
-vector<PointEstimate> WiFiEstimate::MostProbableClubbed(vector<Result>& s,
+vector<PointEstimate> WiFiEstimate::MostProbableClubbed(vector<Result> s,
     double realx, double realy, double exp1, double exp2, bool debug) {
   auto point_stats = ComputePointStats(s, realx, realy, debug);
 
@@ -293,7 +293,7 @@ vector<PointEstimate> WiFiEstimate::MostProbableClubbed(vector<Result>& s,
   return estimates;
 }
 
-vector<PointEstimate> WiFiEstimate::MostProbableNotClubbed(vector<Result>& s,
+vector<PointEstimate> WiFiEstimate::MostProbableNotClubbed(vector<Result> s,
     double realx, double realy, double exp1, double exp2, bool debug) {
   auto point_stats = ComputePointStats(s, realx, realy, debug);
 
@@ -363,13 +363,22 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
     throw runtime_error("No scanner");
   }
   if (read_count > 1) {
+    //cout << "AVERAGING...\n";
     vector<vector<Result>> scans;
     for (int i = 0; i < read_count; ++i) {
       scans.push_back(scanner_->Fetch());
     }
     return ClosestByMahalanobis(AverageScans(scans), v);
   } else {
-    return ClosestByMahalanobis(scanner_->Fetch(), v);
+    //cout << "Fetching fresh\n";
+    vector<Result> results = scanner_->Fetch();
+    //cout << "size = " << results.size() << "\n";
+    auto wifi_estimates = ClosestByMahalanobis(results, v);
+    if (wifi_estimates.size() > 0) {
+      cout << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
+          wifi_estimates[0].y_mean << "\n";
+    }
+    return wifi_estimates;
   }
 }
 

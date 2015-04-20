@@ -44,7 +44,7 @@ struct Result;
 */
 //#include <wifi_scan/Fingerprint.h>
 
-#define BEACON_TTL 1500
+#define BEACON_TTL 2000
 
 #define WIFISCAN_ERROR_OPENING_IOCTL_SOCKET -1
 #define WIFISCAN_ERROR_IN_IW_SCAN -2
