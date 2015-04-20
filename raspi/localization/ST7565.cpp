@@ -25,6 +25,7 @@
 //#include <Wire.h>
 //#include <avr/pgmspace.h>
 //#include <util/delay.h>
+#include <iostream>
 #include <cassert>
 #include <stdlib.h>
 #include <stdio.h>
@@ -363,13 +364,15 @@ std::unique_ptr<bitmap_image> ST7565::getImage(){
 
      for (unsigned int x = 0; x < 128; ++x)
      {
+       std::cout << "x = " << x << "\n";
          for (unsigned int y = 0; y < 8; ++y)
          {
+           std::cout << "y = " << y << "\n";
              for(int j=0; j < 8;j++){
                  if((st7565_buffer[x + (y * 128)] & (0x01 << j)) == 0){
                      continue;
                  }
-                 image->set_pixel(x,y*8+ (8-j),255,255,255);
+                 image->set_pixel(x,y*8+ j,255,255,255);
              }
          }
      }
@@ -416,7 +419,11 @@ void ST7565::drawstring_P(uint8_t x, uint8_t line, const char *str) {
 
 void  ST7565::drawchar(uint8_t x, uint8_t line, char c) {
     for (uint8_t i = 0; i<5; i++ ) {
-        st7565_buffer[x + (line * 128) ] = font[(c * 5) + i];
+        uint8_t b = font[(c * 5) + i];
+        // Equation to reverse a byte :/
+        b = ((b * 0x0802LU & 0x22110LU) | (b * 0x8020LU & 0x88440LU)) *
+            0x10101LU >> 16;
+        st7565_buffer[x + (line * 128) ] = b;
         x++;
     }
 
@@ -834,7 +841,7 @@ void ST7565::clear(void) {
 
 
 ST7565::ST7565(int8_t JSD){
-    memset(st7565_buffer, 0, 1024);
+    //memset(st7565_buffer, 0, 1024);
 }
 
 
