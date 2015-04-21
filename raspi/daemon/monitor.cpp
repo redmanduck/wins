@@ -129,7 +129,9 @@ int main() {
     printf("Begin\n");
     while (1) {
 		    clock_t total = clock();
+
         // Establishing communication for getting battery data
+        /*
         TX = BAT;
         RX = bcm2835_spi_transfer(TX);
         RX = bcm2835_spi_transfer(TX);
@@ -145,6 +147,7 @@ int main() {
         bat1 = RX;
         RX = bcm2835_spi_transfer(TX);
         bat2 = RX;
+        */
         // battery status is stored in bat1 and bat2
         data_p = 0;
 
@@ -168,11 +171,6 @@ int main() {
                 imu_buf[data_p + i] = RX;
                 //printf("%x ", RX);
             }
-            mpu.dmpGetQuaternion(&q, &imu_buf[data_p]);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            if(packets%10==5)
-              printf("ypr  %7.2f %7.2f %7.2f   \n", ypr[0] * 180 / M_PI, ypr[1] * 180 / M_PI, ypr[2] * 180 / M_PI);
             /*
             int x = (imu_buf[data_p + 0] << 8) | imu_buf[data_p + 1];
             int y = (imu_buf[data_p + 2] << 8) | imu_buf[data_p + 3];
@@ -182,14 +180,23 @@ int main() {
             int gz = (imu_buf[data_p + 10] << 8) | imu_buf[data_p + 11];
             printf("\nax:%d y:%d z:%d. gx:%d y:%d z:%d\n", x, y, z, gx, gy, gz);
             */
+            TX = VALID;
             RX = bcm2835_spi_transfer(TX);
             if (RX == VALID) {
                 data_p += CHUNK_SIZE;
             }
-            //float diffsec = (float) (clock() - total) / CLOCKS_PER_SEC;
-            //printf("\nERR %d|| total time = %f\n", op_err, diffsec);
+            else{
+              printf("Invalid\n");
+            }
+            float diffsec = (float) (clock() - total) / CLOCKS_PER_SEC;
+            printf("\nERR %d|| total time = %f\n", op_err, diffsec);
 
 
+            mpu.dmpGetQuaternion(&q, &imu_buf[data_p-CHUNK_SIZE]);
+            mpu.dmpGetGravity(&gravity, &q);
+            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+            if(packets%10==5)
+              printf("ypr  %7.2f %7.2f %7.2f   \n", ypr[0] * 180 / M_PI, ypr[1] * 180 / M_PI, ypr[2] * 180 / M_PI);
             //  gettimeofday(&tval_after, NULL);
             //   timersub(&tval_after, &tval_before, &tval_result);
             //   printf(" ---- transfer time %ld.%06ld sec", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
@@ -200,8 +207,8 @@ int main() {
         }
  //       printf("PACKET %d successfully transferred\n", packets);
         packets++;
-        lcd_buf = getBitmap();
         usleep(TIME_BETWEEN_BUF);
+        lcd_buf = getBitmap();
     }
 
     bcm2835_spi_end();
