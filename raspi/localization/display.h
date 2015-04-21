@@ -58,6 +58,16 @@ class Display {
   void SetCurrentLine(int line);
   void IncrmLine();
 
+  
+  Point ToScreenCoordinate(Point sidean_coord);
+  Point ToSideanCoordinate(Point screen_coord);
+
+  /* All map functions use screen cooridinate
+   * */
+  void MapLoadBackground(); //load map background
+  void MapUpdateIndicator(Point screen_coord, int rad);
+  void MapMoveFocusArea(Point nw_corner);
+
   Display();
 
   Page Splash();

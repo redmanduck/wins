@@ -108,6 +108,7 @@ void Display::Flush() {
     cout << "Screen refresh count = " << ++refresh_count << "\n";
     unsigned char r;
     unsigned char g;
+
     unsigned char b;
     unique_ptr<bitmap_image> image = glcd_.getImage();
     for (unsigned int y = 0; y < 32; ++y) {
