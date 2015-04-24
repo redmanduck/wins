@@ -122,6 +122,7 @@ void Global::ShutDown() {
   KeypadHandler::TerminateThread();
   SPI::TerminateThread();
   Map::TerminateThread();
+  system("sudo kill -9 $(pgrep -f winsd)");
   system(shutdown_command_.c_str());
 }
 

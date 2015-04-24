@@ -268,6 +268,8 @@ Page Display::DestinationPrompt() {
     }
     SetCurrentLine(1);
     PutString("Invalid location", true);
+    this_thread::sleep_for(chrono::seconds(1));
+    return PAGE_MENU;
   }
   return PAGE_NAVIGATING;
 }
