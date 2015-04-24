@@ -20,7 +20,7 @@ namespace wins {
 #define R4 RPI_BPLUS_GPIO_J8_12
 
 thread KeypadHandler::keypad_thread_;
-bool terminate_ = false;
+atomic_bool terminate_(false);
 
 void sighandler(int sig)
 {
@@ -85,9 +85,9 @@ void KeypadHandler::MainLoop() {
   int state = 0, old_state = -1, new_state = 0;
   if(!init_gpio()) {
     FILE_LOG(logERROR) << "GPIO Failed to Initialize!\n";
-		while(not terminate_);
+		while(not terminate_.load());
   } else {
-		while(not terminate_){
+		while(not terminate_.load()){
 			for(int i = 0; i < 4; i++){
 				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4)));
 				bcm2835_gpio_write(Wn, HIGH);

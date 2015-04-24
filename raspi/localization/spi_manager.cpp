@@ -50,13 +50,14 @@ unsigned int packetSize;
 bool dmpReady = false;
 
 Quaternion q;
+Quaternion qWorld;
 VectorInt16 aa;
 VectorInt16 aaReal;
 VectorInt16 aaWorld;
 VectorFloat gravity;
 float ypr[3];
 
-void setup() {
+bool setup() {
     // initialize device
     printf("Initializing I2C devices...\n");
     mpu.initialize();
@@ -86,12 +87,14 @@ void setup() {
 
         // get expected DMP packet size for later comparison
         packetSize = mpu.dmpGetFIFOPacketSize();
+        return true;
     } else {
         // ERROR!
         // 1 = initial memory load failed
         // 2 = DMP configuration updates failed
         // (if it's going to break, usually the code will be 1)
         printf("DMP Initialization failed (code %d)\n", devStatus);
+        return false;
     }
 }
 
@@ -109,7 +112,25 @@ uint8_t SPI::Exchange(uint8_t send_byte) {
 
 // The Kenzhebalin Protocol.
 void SPI::MainLoop() {
-    while(not terminate_) {
+    bool dmp_success = setup();
+    usleep(100000);
+    if (!dmp_success or !bcm2835_init()) {
+      FILE_LOG(logERROR) << "Unable to init SPI!";
+      cout << "Unable to init SPI!";
+      while(not terminate_.load());
+      return;
+    }
+    bcm2835_spi_begin();
+    bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, 0);
+    bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS1, 0);
+    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_256); //4096); //2048);
+    bcm2835_spi_setDataMode(BCM2835_SPI_MODE1);
+    bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
+    for (int var = 0; var < BUF_SIZE; var++) {
+        imu_buf[var] = 0x00;
+    }
+    init_success_ = true;
+    while(not terminate_.load()) {
 		    clock_t total = clock();
 
         // Establishing communication for getting battery data
@@ -173,13 +194,17 @@ void SPI::MainLoop() {
 
 
             mpu.dmpGetQuaternion(&q, &imu_buf[data_p-CHUNK_SIZE]);
+            q = Quaternion(Imu::RelativeToNorth(q.w, q.x, q.y, q.z));
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
             mpu.dmpGetAccel(&aa, &imu_buf[data_p-CHUNK_SIZE]);
             mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
             mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-            Imu::AddReading(aaWorld.x * MS_2_PER_UNIT,
-                aaWorld.y * MS_2_PER_UNIT);
+            Imu::AddReading(
+                aaWorld.x * MS_2_PER_UNIT,
+                aaWorld.y * MS_2_PER_UNIT,
+                aaWorld.z * MS_2_PER_UNIT,
+                q.w, q.x, q.y, q.z);
 
             if(packets%10==5){
               printf("ypr  %7.2f %7.2f %7.2f - %7.2f %7.2f %7.2f  ",
@@ -203,29 +228,13 @@ void SPI::MainLoop() {
         auto& display = Display::GetInstance();
         lcd_buffer_ = display.GetBufferCopy();
     }
+    bcm2835_spi_end();
+    bcm2835_close();
 }
 
 SPI::SPI() {
   terminate_ = false;
 
-  setup();
-  usleep(100000);
-  if (!bcm2835_init()) {
-    FILE_LOG(logERROR) << "Unable to init bcm2835!";
-    cout << "Unable to init bcm2835!";
-    init_success_ = false;
-    return;
-  }
-  bcm2835_spi_begin();
-  bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, 0);
-  bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS1, 0);
-  bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_256); //4096); //2048);
-  bcm2835_spi_setDataMode(BCM2835_SPI_MODE1);
-  bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
-  for (int var = 0; var < BUF_SIZE; var++) {
-      imu_buf[var] = 0x00;
-  }
-  init_success_ = true;
 }
 
 SPI& SPI::GetInstance() {
@@ -242,8 +251,6 @@ void SPI::StartThread() {
 void SPI::TerminateThread() {
   terminate_ = true;
   spi_thread_.join();
-  bcm2835_spi_end();
-  bcm2835_close();
 }
 
 }

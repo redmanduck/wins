@@ -364,10 +364,10 @@ std::unique_ptr<bitmap_image> ST7565::getImage(){
 
      for (unsigned int x = 0; x < 128; ++x)
      {
-       std::cout << "x = " << x << "\n";
+       // std::cout << "x = " << x << "\n";
          for (unsigned int y = 0; y < 8; ++y)
          {
-           std::cout << "y = " << y << "\n";
+           // std::cout << "y = " << y << "\n";
              for(int j=0; j < 8;j++){
                  if((st7565_buffer[x + (y * 128)] & (0x01 << j)) == 0){
                      continue;

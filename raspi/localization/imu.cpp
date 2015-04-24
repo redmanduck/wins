@@ -57,7 +57,8 @@ void Imu::Init() {
   R = HIGH_VARIANCE * MatrixXd::Identity(OBSERVATIONS, OBSERVATIONS);
 }
 
-void Imu::AddReading(double x, double y) {
+void Imu::AddReading(double ax, double ay, double az,
+    double qw, double qx, double qy, double qz) {
 //  Vector3d raw_acc;
 //  Quaternion<double> quat;
 //  ParseIMU(pic_data, raw_acc, quat);
@@ -68,33 +69,39 @@ void Imu::AddReading(double x, double y) {
 //  Vector3d acc = rot_matrix * raw_acc;
 //
   lock_guard<mutex> lock(imu_buffer_mutex_);
-  imu_buffer_.readings.push_back({ x, y });
+  imu_buffer_.readings.push_back({ ax, ay, az, qw, qx, qy, qz });
 }
 
 void Imu::Calibrate() {
-  //calibrated_ = false;
+  calibrated_ = false;
 
-  //// Collect imu readings for 1 sec.
-  //this_thread::sleep_for(chrono::seconds(1));
+  // Collect imu readings for 1 sec.
+  this_thread::sleep_for(chrono::seconds(1));
 
-  //// Average IMU readings.
-  //Vector4d vals = Vector4d::Zero();
-  //lock_guard<mutex> lock(imu_buffer_mutex_);
-  //for (auto r : imu_buffer_.readings) {
-  //  vals(0) += r[3];
-  //  vals(1) += r[4];
-  //  vals(2) += r[5];
-  //  vals(3) += r[6];
-  //}
-  //vals /= imu_buffer_.readings.size();
+  // Average IMU readings.
+  Vector4d vals = Vector4d::Zero();
+  lock_guard<mutex> lock(imu_buffer_mutex_);
+  for (auto r : imu_buffer_.readings) {
+    vals(0) += r[3];
+    vals(1) += r[4];
+    vals(2) += r[5];
+    vals(3) += r[6];
+  }
+  vals /= imu_buffer_.readings.size();
 
-  //// Set the average value as the quat representing north orentation.
-  //north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
-  //    .inverse();
+  // Set the average value as the quat representing north orentation.
+  north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
+      .inverse();
 
-  //// Clear IMU buffer and mark as calibrated.
-  //imu_buffer_.readings.clear();
+  // Clear IMU buffer and mark as calibrated.
+  imu_buffer_.readings.clear();
   calibrated_ = true;
+}
+
+vector<double> Imu::RelativeToNorth(double w, double x, double y, double z) {
+  Quaternion<double> q(w, x, y, z);
+  Quaternion<double> qn = north_quat_inverse_ * q;
+  return { qn.w(), qn.x(), qn.y(), qn.z() };
 }
 
 PointEstimate Imu::DoKalman(const ImuResult& imu_result, ImuVariant v) {
