@@ -7,7 +7,21 @@
 
 inline std::string NowTime();
 
-enum TLogLevel {logERROR, logWARNING, logINFO, logDEBUG, logDEBUG1, logDEBUG2, logDEBUG3, logDEBUG4};
+enum TLogLevel {
+  logERROR        = 0x1,
+  logWARNING      = 0x2,
+  logINFO         = 0x4,
+  logLOCATION     = 0x8,
+  logSPI          = 0x10,
+  logDISPLAY      = 0x20,
+  logWIFI         = 0x40,
+  logKEYPAD       = 0x80,
+  logDEBUG        = 0x100,
+  logDEBUG1       = 0x200,
+  logDEBUG2       = 0x400,
+  logDEBUG3       = 0x800,
+  logDEBUG4       = 0x1000
+};
 
 template <typename T>
 class Log
@@ -51,14 +65,16 @@ Log<T>::~Log()
 template <typename T>
 TLogLevel& Log<T>::ReportingLevel()
 {
-    static TLogLevel reportingLevel = logDEBUG4;
+    static TLogLevel reportingLevel = logINFO;
     return reportingLevel;
 }
 
 template <typename T>
 std::string Log<T>::ToString(TLogLevel level)
 {
-  static const char* const buffer[] = {"ERROR", "WARNING", "INFO", "DEBUG", "DEBUG1", "DEBUG2", "DEBUG3", "DEBUG4"};
+  static const char* const buffer[] = {"ERROR", "WARNING", "INFO",
+    "LOCATION", "SPI", "DISPLAY", "WIFI", "KEYPAD",
+    "DEBUG", "DEBUG1", "DEBUG2", "DEBUG3", "DEBUG4"};
     return buffer[level];
 }
 
@@ -75,6 +91,16 @@ TLogLevel Log<T>::FromString(const std::string& level)
         return logDEBUG1;
     if (level == "DEBUG")
         return logDEBUG;
+    if (level == "KEYPAD")
+        return logKEYPAD;
+    if (level == "WIFI")
+        return logWIFI;
+    if (level == "DISPLAY")
+        return logDISPLAY;
+    if (level == "SPI")
+        return logSPI;
+    if (level == "LOCATION")
+        return logLOCATION;
     if (level == "INFO")
         return logINFO;
     if (level == "WARNING")
@@ -115,8 +141,11 @@ inline void Output2FILE::Output(const std::string& msg)
     if (!pStream)
         return;
     fprintf(pStream, "%s", msg.c_str());
+    printf("%s", msg.c_str());
     fflush(pStream);
 }
+
+#define SELECTION (logKEYPAD | logDISPLAY)
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #   if defined (BUILDING_FILELOG_DLL)
@@ -140,6 +169,7 @@ class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
 #define FILE_LOG(level) \
     if (level > FILELOG_MAX_LEVEL) ;\
     else if (level > FILELog::ReportingLevel() || !Output2FILE::Stream()) ; \
+    else if (!(level & SELECTION)) ; \
     else FILELog().Get(level)
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)

@@ -15,7 +15,7 @@ void sighandler(int sig)
 
 void init_gpio(){
    if (!bcm2835_init()) return;
-	
+
 	  bcm2835_gpio_fsel(W1, BCM2835_GPIO_FSEL_OUTP);
 		bcm2835_gpio_fsel(W2, BCM2835_GPIO_FSEL_OUTP);
 		bcm2835_gpio_fsel(W3, BCM2835_GPIO_FSEL_OUTP);
@@ -29,26 +29,26 @@ void init_gpio(){
 		bcm2835_gpio_set_pud(R1, BCM2835_GPIO_PUD_DOWN);
 		bcm2835_gpio_set_pud(R2, BCM2835_GPIO_PUD_DOWN);
 		bcm2835_gpio_set_pud(R3, BCM2835_GPIO_PUD_DOWN);
-		bcm2835_gpio_set_pud(R4, BCM2835_GPIO_PUD_DOWN); 
+		bcm2835_gpio_set_pud(R4, BCM2835_GPIO_PUD_DOWN);
 		//detect edge
-    bcm2835_gpio_fen(R1); 
-    bcm2835_gpio_fen(R2); 
-    bcm2835_gpio_fen(R3);
-    bcm2835_gpio_fen(R4); 
+    bcm2835_gpio_hen(R1);
+    bcm2835_gpio_hen(R2);
+    bcm2835_gpio_hen(R3);
+    bcm2835_gpio_hen(R4);
 }
 
 int main(void) {
     signal(SIGABRT, &sighandler);
 		signal(SIGTERM, &sighandler);
 		signal(SIGINT, &sighandler);
-		buffer = "";   
+		buffer = "";
 		int state = 0, old_state = -1, new_state = 0;
     init_gpio();
 		while(forever){
 			for(int i = 0; i < 4; i++){
-				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4))); 
+				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4)));
 				bcm2835_gpio_write(Wn, HIGH);
-				new_state = get_event();	
+				new_state = get_event();
 				if(old_state != new_state){
 					//this press is new, we will consider it
 					delay(1);
@@ -57,19 +57,19 @@ int main(void) {
 					state = get_event();	//compare it to the press 1ms later
 
 					//if it changes, we discard it
-					if(state == new_state){	
+					if(state == new_state){
 						processButton(state, i);
 					}
-			
+
 					old_state = state;
-	
+
 			  }
 				//clear all GPIO states
 				bcm2835_gpio_clr(W1);
 				bcm2835_gpio_clr(W2);
 				bcm2835_gpio_clr(W3);
 				bcm2835_gpio_clr(W4);
-				
+
 				delay(4); //delay for clearing GPIO
 
 			}
@@ -103,17 +103,18 @@ int get_event(){
 		  if (bcm2835_gpio_eds(R1))
 				{
 					state = 1;
-					bcm2835_gpio_set_eds(R1); 
+					bcm2835_gpio_set_eds(R1);
 				}else if(bcm2835_gpio_eds(R2)){
 					state = 2;
 
-					bcm2835_gpio_set_eds(R2); 
+					bcm2835_gpio_set_eds(R2);
 				}else if(bcm2835_gpio_eds(R3)){
 					state = 3;
-					bcm2835_gpio_set_eds(R3); 
+					bcm2835_gpio_set_eds(R3);
 				}else if(bcm2835_gpio_eds(R4)){
 					state = 4;
-					bcm2835_gpio_set_eds(R4); 
+					bcm2835_gpio_set_eds(R4);
 	      }
+      cout << "state -> " << state;
 			return state;
 }

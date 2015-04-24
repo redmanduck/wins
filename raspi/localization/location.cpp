@@ -148,6 +148,7 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   }
   H_t = H.transpose();
 
+  cout << "I x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
 
   if (last_update_time_ > tp_epoch_) {

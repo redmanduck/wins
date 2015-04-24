@@ -9,15 +9,15 @@
 
 namespace wins {
 
-#define W1 RPI_BPLUS_GPIO_J8_11
-#define W2 RPI_BPLUS_GPIO_J8_36
-#define W3 RPI_BPLUS_GPIO_J8_10
-#define W4 RPI_BPLUS_GPIO_J8_08
+#define W1 RPI_BPLUS_GPIO_J8_37
+#define W2 RPI_BPLUS_GPIO_J8_35
+#define W3 RPI_BPLUS_GPIO_J8_33
+#define W4 RPI_BPLUS_GPIO_J8_31
 
 #define R1 RPI_BPLUS_GPIO_J8_40
 #define R2 RPI_BPLUS_GPIO_J8_38
-#define R3 RPI_BPLUS_GPIO_J8_35
-#define R4 RPI_BPLUS_GPIO_J8_12
+#define R3 RPI_BPLUS_GPIO_J8_36
+#define R4 RPI_BPLUS_GPIO_J8_32
 
 thread KeypadHandler::keypad_thread_;
 atomic_bool terminate_(false);
@@ -85,9 +85,11 @@ void KeypadHandler::MainLoop() {
   int state = 0, old_state = -1, new_state = 0;
   if(!init_gpio()) {
     FILE_LOG(logERROR) << "GPIO Failed to Initialize!\n";
+    cout << "GPIO Failed to Initialize!\n";
 		while(not terminate_.load());
   } else {
 		while(not terminate_.load()){
+      cout << "=====LOOPING\n";
 			for(int i = 0; i < 4; i++){
 				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4)));
 				bcm2835_gpio_write(Wn, HIGH);
@@ -102,7 +104,9 @@ void KeypadHandler::MainLoop() {
 					//if it changes, we discard it
 					if(state == new_state){
 						ProcessButton(state, i);
-					}
+					} else {
+            cout << "DISCARDED!!! - " << new_state << "\n";
+          }
 
 					old_state = state;
 
@@ -140,6 +144,7 @@ int KeypadHandler::GetEvent(){
     state = 4;
     bcm2835_gpio_set_eds(R4);
   }
+  cout << "-------------- GPIO READ\n" << state;
   return state;
 }
 

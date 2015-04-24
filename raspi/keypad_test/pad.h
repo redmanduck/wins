@@ -4,15 +4,15 @@
 #include <string>
 #include <mutex>
 
-#define W1 RPI_BPLUS_GPIO_J8_11
-#define W2 RPI_BPLUS_GPIO_J8_36
-#define W3 RPI_BPLUS_GPIO_J8_10
-#define W4 RPI_BPLUS_GPIO_J8_08
+#define W1 RPI_BPLUS_GPIO_J8_31
+#define W2 RPI_BPLUS_GPIO_J8_33
+#define W3 RPI_BPLUS_GPIO_J8_35
+#define W4 RPI_BPLUS_GPIO_J8_37
 
-#define R1 RPI_BPLUS_GPIO_J8_40
-#define R2 RPI_BPLUS_GPIO_J8_38
-#define R3 RPI_BPLUS_GPIO_J8_35
-#define R4 RPI_BPLUS_GPIO_J8_12
+#define R1 RPI_BPLUS_GPIO_J8_32
+#define R2 RPI_BPLUS_GPIO_J8_36
+#define R3 RPI_BPLUS_GPIO_J8_38
+#define R4 RPI_BPLUS_GPIO_J8_40
 using namespace std;
 class KeypadHandler{
 	public:
@@ -23,4 +23,4 @@ class KeypadHandler{
 string buffer;
 void processButton(int r,int c);
 void sighandler(int sig);
-int get_event();	
+int get_event();

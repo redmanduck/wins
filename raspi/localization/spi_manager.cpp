@@ -39,7 +39,7 @@ namespace wins {
 // specific I2C addresses may be passed as a parameter here
 // AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
 // AD0 high = 0x69
-MPU6050 mpu(0x69);
+MPU6050 mpu(0x68);
 // uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
 // quaternion components in a [w, x, y, z] format (not best for parsing
 // on a remote host such as Processing or something though)
@@ -163,9 +163,9 @@ void SPI::MainLoop() {
                 op_err++;
                 usleep(10000);
                 RX = bcm2835_spi_transfer(TX);
-                printf("| tx:%x rx:%x(%c) |", TX, RX, RX);
-                if (op_err % 10 == 0)
-                    printf("\n");
+                //printf("| tx:%x rx:%x(%c) |", TX, RX, RX);
+                //if (op_err % 10 == 0)
+                //    printf("\n");
             }
             //printf("%d:Bat: %d%% %f Data: ", data_p, bat1, (bat1 + (float) bat2 / 256));
             for (i = 0; i < CHUNK_SIZE; i++) {
