@@ -59,21 +59,22 @@ float ypr[3];
 
 bool setup() {
     // initialize device
-    printf("Initializing I2C devices...\n");
+    FILE_LOG(logSPI) << "Initializing I2C devices...\n";
     mpu.initialize();
 
     // verify connection
-    printf("Testing device connections...\n");
-    printf(mpu.testConnection() ? "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
+    FILE_LOG(logSPI) << "Testing device connections...\n";
+    FILE_LOG(logSPI) << (mpu.testConnection() ?
+        "MPU6050 connection successful\n" : "MPU6050 connection failed\n");
 
     // load and configure the DMP
-    printf("Initializing DMP...\n");
+    FILE_LOG(logSPI) << ("Initializing DMP...\n");
     devStatus = mpu.dmpInitialize();
 
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
-        printf("Enabling DMP...\n");
+        FILE_LOG(logSPI) << ("Enabling DMP...\n");
         mpu.setDMPEnabled(true);
 
         // enable Arduino interrupt detection
@@ -82,7 +83,7 @@ bool setup() {
         mpuIntStatus = mpu.getIntStatus();
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
-        printf("DMP ready!\n");
+        FILE_LOG(logSPI) << ("DMP ready!\n");
         dmpReady = true;
 
         // get expected DMP packet size for later comparison
@@ -93,7 +94,7 @@ bool setup() {
         // 1 = initial memory load failed
         // 2 = DMP configuration updates failed
         // (if it's going to break, usually the code will be 1)
-        printf("DMP Initialization failed (code %d)\n", devStatus);
+        FILE_LOG(logSPI) << "DMP Initialization failed code: " << devStatus;
         return false;
     }
 }
@@ -116,7 +117,6 @@ void SPI::MainLoop() {
     usleep(100000);
     if (!dmp_success or !bcm2835_init()) {
       FILE_LOG(logERROR) << "Unable to init SPI!";
-      cout << "Unable to init SPI!";
       while(not terminate_.load());
       return;
     }
@@ -189,7 +189,7 @@ void SPI::MainLoop() {
                 data_p += CHUNK_SIZE;
             }
             else{
-              printf("Invalid\n");
+              FILE_LOG(logSPI) << ("Invalid\n");
             }
 
 
@@ -207,12 +207,15 @@ void SPI::MainLoop() {
                 q.w, q.x, q.y, q.z);
 
             if(packets%10==5){
-              printf("ypr  %7.2f %7.2f %7.2f - %7.2f %7.2f %7.2f  ",
+              char buffer[100];
+              sprintf(buffer, "ypr  %7.2f %7.2f %7.2f - %7.2f %7.2f %7.2f  ",
                   ypr[0] * 180 / M_PI, ypr[1] * 180 / M_PI, ypr[2] * 180 / M_PI,
                   aaWorld.x * MS_2_PER_UNIT, aaWorld.y * MS_2_PER_UNIT,
                   aaWorld.z * MS_2_PER_UNIT);
+              FILE_LOG(logSPI) << buffer;
               float diffsec = (float) (clock() - total) / CLOCKS_PER_SEC;
-              printf("ERR %d|| total time = %f\n", op_err, diffsec);
+              sprintf(buffer, "ERR %d|| total time = %f\n", op_err, diffsec);
+              FILE_LOG(logSPI) << buffer;
             }
             //  gettimeofday(&tval_after, NULL);
             //   timersub(&tval_after, &tval_before, &tval_result);
@@ -222,7 +225,7 @@ void SPI::MainLoop() {
             //if(packets%100==0)
             usleep(TIME_BETWEEN_CHUNK);
         }
- //       printf("PACKET %d successfully transferred\n", packets);
+ //       FILE_LOG(logSPI) << ("PACKET %d successfully transferred\n", packets);
         packets++;
         usleep(TIME_BETWEEN_BUF);
         auto& display = Display::GetInstance();

@@ -6,6 +6,7 @@
 
 #include "gamma.hpp"
 #include "global.h"
+#include "log.h"
 #include "map.h"
 #include "wifi_estimate.h"
 
@@ -69,7 +70,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(vector<Result> s,
 
   // Determine the probability of being at each of the possible points from
   // Mahalanobis distance.
-  //cout << "likely points = " << current_likely_points.size() << "\n";
+  FILE_LOG(logWIFI) << "likely points = " << current_likely_points.size() << "\n";
   for (auto& node : current_likely_points) {
     auto point = node->point;
     if (debug and distance(point->x, point->y, realx - Global::FilterBiasX,
@@ -90,7 +91,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(vector<Result> s,
       df += 1;
     }
     if (df < MIN_DF) {
-      //cout << "--------------------------df low!!!\n";
+      FILE_LOG(logWIFI) << "--------------------------df low!!!\n";
       continue;
     }
 
@@ -115,7 +116,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(vector<Result> s,
   //char buffer[100];
   //sprintf(buffer, "\n%7s %7s %7s %7s %7s\n",
   //    "weight", "x", "y", "df", "metric");
-  //cout << buffer;
+  //FILE_LOG(logWIFI) << buffer;
   //sort(point_stats.begin(), point_stats.end(),
   //    [](const stat &a, const stat &b) -> bool {
   //        return get<0>(a) > get<0>(b);
@@ -127,7 +128,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(vector<Result> s,
   //      get<1>(p_stat)->y,
   //      get<2>(p_stat),
   //      get<3>(p_stat));
-  //  cout << buffer;
+  //  FILE_LOG(logWIFI) << buffer;
   //}
 
 //  if (v & WIFI_VARIANT_TOP1 or v & WIFI_VARIANT_TOP_FEW) {
@@ -155,7 +156,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(vector<Result> s,
 //    }
   vector<PointEstimate> estimates;
   if (point_stats.size() == 0) {
-		cout << "-------------------Algorithm found no estimaes!!!\n";
+		FILE_LOG(logWIFI) << "-------------------Algorithm found no estimaes!!!\n";
     return estimates;
   }
 
@@ -363,19 +364,19 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
     throw runtime_error("No scanner");
   }
   if (read_count > 1) {
-    //cout << "AVERAGING...\n";
+    FILE_LOG(logWIFI) << "AVERAGING...\n";
     vector<vector<Result>> scans;
     for (int i = 0; i < read_count; ++i) {
       scans.push_back(scanner_->Fetch());
     }
     return ClosestByMahalanobis(AverageScans(scans), v);
   } else {
-    //cout << "Fetching fresh\n";
+    FILE_LOG(logWIFI) << "Fetching fresh\n";
     vector<Result> results = scanner_->Fetch();
-    //cout << "size = " << results.size() << "\n";
+    FILE_LOG(logWIFI) << "size = " << results.size() << "\n";
     auto wifi_estimates = ClosestByMahalanobis(results, v);
     if (wifi_estimates.size() > 0) {
-      cout << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
+      FILE_LOG(logWIFI) << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
           wifi_estimates[0].y_mean << "\n";
     }
     return wifi_estimates;

@@ -144,7 +144,7 @@ int WifiScan::scan_channels(duck_scan_head * context)
   has_range = (iw_get_range_info(socket_, interface_, &range) >= 0);
   if ((!has_range) || (range.we_version_compiled < 14))
   {
-    std::cerr << interface_ << "does not support scanning." << std::endl;
+    FILE_LOG (logERROR) << interface_ << "does not support scanning." << std::endl;
     return SCAN_CHANNELS_NO_SCAN_SUPPORT;
   }
 
@@ -177,7 +177,7 @@ int WifiScan::scan_channels(duck_scan_head * context)
   {
     if ((errno != EPERM) || (scanflags != 0))
     {
-      std::cerr << interface_ << "does not support scanning: "
+      FILE_LOG(logERROR) << interface_ << "does not support scanning: "
           << strerror(errno) << std::endl;
       return SCAN_CHANNELS_NO_SCAN_SUPPORT;
     }
@@ -311,10 +311,10 @@ int WifiScan::scan_channels(duck_scan_head * context)
       }
     } while (ret > 0);
 
-    //std::cout << interface_ << ": scan completed" << std::endl;
+    FILE_LOG(logWIFI) << interface_ << ": scan completed" << std::endl;
   }
   else
-    //std::cout << interface_ << ": no scan results" << std::endl;
+    FILE_LOG(logWIFI) << interface_ << ": no scan results" << std::endl;
 
   free(buffer);
   return 0;
@@ -363,8 +363,9 @@ vector<Result> WifiScan::Fetch()
   scan_context.result = NULL;
   vector<Result> results;
 
-  if (geteuid() != 0)
-    std::cout << "uid: " << geteuid();
+  if (geteuid() != 0) {
+    FILE_LOG(logWIFI) << "uid: " << geteuid();
+  }
 
   if (scan_channels(&scan_context) < 0) {
     //throw WIFISCAN_ERROR_IN_IW_SCAN;
@@ -374,7 +375,7 @@ vector<Result> WifiScan::Fetch()
     // return -1;
     return results;
   }
-    // std::cout << "Done scanning...";
+    // FILE_LOG(logWIFI) << "Done scanning...";
 
   /* Loop over result, build fingerprint. */
 
@@ -404,7 +405,7 @@ vector<Result> WifiScan::Fetch()
     }
     std::string SSID = std::string(address);
 
-		//std::cout << "SSID: " << SSID << "\n";
+		//FILE_LOG(logWIFI) << "SSID: " << SSID << "\n";
 		int ttl = 0;
 		std::vector<std::string> x;
 		try {
@@ -418,13 +419,13 @@ vector<Result> WifiScan::Fetch()
 				throw std::runtime_error("y");
 			}
 		} catch(...) {
-			cout << "Could not convert: " << "\n";
+			FILE_LOG(logWIFI) << "Could not convert: " << "\n";
 		}
-		//std::cout << "Last beacon(ms): " << ttl << "\n";
+		FILE_LOG(logWIFI) << "Last beacon(ms): " << ttl << "\n";
 
 		if(ttl > BEACON_TTL){
 			//kill it
-			//std::cout << "Killing result !" << "\n";
+			FILE_LOG(logWIFI) << "Killing result !" << "\n";
 			continue;
 		}
     results.push_back({ string(address), dBm });

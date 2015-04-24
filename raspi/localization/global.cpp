@@ -5,8 +5,9 @@
 
 #include "common_utils.h"
 #include "display.h"
-#include "keypad_handler.h"
 #include "global.h"
+#include "keypad_handler.h"
+#include "log.h"
 #include "shutdown_exception.h"
 #include "spi_manager.h"
 
@@ -57,6 +58,7 @@ void Global::RunMainLoop() {
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
+  FILELog::LogSelect() = (TLogLevel)(logKEYPAD | logLOCATION);
   SPI::StartThread();
   KeypadHandler::StartThread();
   Map::StartNavigationThread();

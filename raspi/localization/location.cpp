@@ -93,7 +93,6 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
 
   if (wifi_estimates.size() == 0) {
     FILE_LOG(logERROR) << "No WIFI Estimates.";
-    cout << "No WIFI Estimates.";
     unknown_count_ += 1;
     if (unknown_count_ == MAX_UNKNOWN_COUNT) {
       current_node_ = nullptr;
@@ -148,7 +147,7 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   }
   H_t = H.transpose();
 
-  cout << "I x = " << X(0,0) <<", y = " << X(1,0) << "\n";
+  FILE_LOG(logLOCATION) << "I x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
 
   if (last_update_time_ > tp_epoch_) {
@@ -158,12 +157,12 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   Imu::X.block<2,1>(0,0) = X;
   Imu::P.block<2,2>(0,0) = P;
   Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
-  //cout << P.format(CleanFmt) << "\n\n";
+  //FILE_LOG(logLOCATION) << P.format(CleanFmt) << "\n\n";
 
   last_update_time_ = new_update_time;
   prev_X = X;
 
-  cout << "L x = " << X(0,0) <<", y = " << X(1,0) << "\n";
+  FILE_LOG(logLOCATION) << "L x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   current_node_ = Map::NodeNearest(X(0,0), X(1,0));
 	return true;
 }
@@ -182,7 +181,7 @@ void Location::UpdateEstimate() {
   } else if (not close_enough(max_distance_, NORMAL_MAX_DIST)) {
     max_distance_ /= 1.5;
   }
-	//cout <<"max dist = " << max_distance_ << "\n";
+	//FILE_LOG(logLOCATION) <<"max dist = " << max_distance_ << "\n";
 }
 
 vector<FakeWifiScan*> Location::TestInit(vector<vector<Result>> setup_points,

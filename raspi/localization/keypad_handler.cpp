@@ -68,8 +68,8 @@ char map[4][4]  = {
 void KeypadHandler::ProcessButton(int row, int col) {
 	if(row == -1 || col == -1) return;
 
-	//cout << "Row Pressed " << row << " Col " << col << "\n";
-  //cout << "Key value:" << map[row-1][col] << "\n";
+	FILE_LOG(logKEYPAD) << "Row Pressed " << row << " Col " << col << "\n";
+  FILE_LOG(logKEYPAD) << "Key value:" << map[row-1][col] << "\n";
 
 	//get lock
 	lock_guard<mutex> lock(buffer_mutex_);
@@ -85,11 +85,10 @@ void KeypadHandler::MainLoop() {
   int state = 0, old_state = -1, new_state = 0;
   if(!init_gpio()) {
     FILE_LOG(logERROR) << "GPIO Failed to Initialize!\n";
-    cout << "GPIO Failed to Initialize!\n";
 		while(not terminate_.load());
   } else {
 		while(not terminate_.load()){
-      cout << "=====LOOPING\n";
+      FILE_LOG(logKEYPAD) << "=====LOOPING\n";
 			for(int i = 0; i < 4; i++){
 				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4)));
 				bcm2835_gpio_write(Wn, HIGH);
@@ -105,7 +104,7 @@ void KeypadHandler::MainLoop() {
 					if(state == new_state){
 						ProcessButton(state, i);
 					} else {
-            cout << "DISCARDED!!! - " << new_state << "\n";
+            FILE_LOG(logKEYPAD) << "DISCARDED!!! - " << new_state << "\n";
           }
 
 					old_state = state;
@@ -144,7 +143,7 @@ int KeypadHandler::GetEvent(){
     state = 4;
     bcm2835_gpio_set_eds(R4);
   }
-  cout << "-------------- GPIO READ\n" << state;
+  FILE_LOG(logKEYPAD) << "-------------- GPIO READ\n" << state;
   return state;
 }
 

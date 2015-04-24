@@ -8,6 +8,7 @@
 inline std::string NowTime();
 
 enum TLogLevel {
+  logCRITICAL     = 0x0,
   logERROR        = 0x1,
   logWARNING      = 0x2,
   logINFO         = 0x4,
@@ -20,7 +21,7 @@ enum TLogLevel {
   logDEBUG1       = 0x200,
   logDEBUG2       = 0x400,
   logDEBUG3       = 0x800,
-  logDEBUG4       = 0x1000
+  logDEBUG4       = 0x1000,
 };
 
 template <typename T>
@@ -32,6 +33,7 @@ public:
     std::ostringstream& Get(TLogLevel level = logINFO);
 public:
     static TLogLevel& ReportingLevel();
+    static TLogLevel& LogSelect();
     static std::string ToString(TLogLevel level);
     static TLogLevel FromString(const std::string& level);
 protected:
@@ -65,17 +67,48 @@ Log<T>::~Log()
 template <typename T>
 TLogLevel& Log<T>::ReportingLevel()
 {
-    static TLogLevel reportingLevel = logINFO;
+    static TLogLevel reportingLevel = logCRITICAL;
     return reportingLevel;
+}
+
+template <typename T>
+TLogLevel& Log<T>::LogSelect() {
+    static TLogLevel logSelect = logCRITICAL;
+    return logSelect;
 }
 
 template <typename T>
 std::string Log<T>::ToString(TLogLevel level)
 {
-  static const char* const buffer[] = {"ERROR", "WARNING", "INFO",
-    "LOCATION", "SPI", "DISPLAY", "WIFI", "KEYPAD",
-    "DEBUG", "DEBUG1", "DEBUG2", "DEBUG3", "DEBUG4"};
-    return buffer[level];
+    if (level == logDEBUG4)
+        return "DEBUG4";
+    if (level == logDEBUG3)
+        return "DEBUG3";
+    if (level == logDEBUG2)
+        return "DEBUG2";
+    if (level == logDEBUG1)
+        return "DEBUG1";
+    if (level == logDEBUG)
+        return "DEBUG";
+    if (level == logKEYPAD)
+        return "KEYPAD";
+    if (level == logWIFI)
+        return "WIFI";
+    if (level == logDISPLAY)
+        return "DISPLAY";
+    if (level == logSPI)
+        return "SPI";
+    if (level == logLOCATION)
+        return "LOCATION";
+    if (level == logINFO)
+        return "INFO";
+    if (level == logWARNING)
+        return "WARNING";
+    if (level == logERROR)
+        return "ERROR";
+    if (level == logCRITICAL)
+        return "CRITICAL";
+    return "UNKOWN LOG LEVEL";
 }
 
 template <typename T>
@@ -107,6 +140,8 @@ TLogLevel Log<T>::FromString(const std::string& level)
         return logWARNING;
     if (level == "ERROR")
         return logERROR;
+    if (level == "CRITICAL")
+        return logCRITICAL;
     Log<T>().Get(logWARNING) << "Unknown logging level '" << level << "'. Using INFO level as default.";
     return logINFO;
 }
@@ -141,11 +176,12 @@ inline void Output2FILE::Output(const std::string& msg)
     if (!pStream)
         return;
     fprintf(pStream, "%s", msg.c_str());
-    printf("%s", msg.c_str());
     fflush(pStream);
+    printf("%s", msg.c_str());
+    fflush(stdout);
 }
 
-#define SELECTION (logKEYPAD | logDISPLAY)
+#define LOG_SELECT (logKEYPAD | logDISPLAY)
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #   if defined (BUILDING_FILELOG_DLL)
@@ -168,8 +204,8 @@ class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
 
 #define FILE_LOG(level) \
     if (level > FILELOG_MAX_LEVEL) ;\
-    else if (level > FILELog::ReportingLevel() || !Output2FILE::Stream()) ; \
-    else if (!(level & SELECTION)) ; \
+    else if ((level > FILELog::ReportingLevel() || !Output2FILE::Stream()) \
+              && !(level & FILELog::LogSelect())) ; \
     else FILELog().Get(level)
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
