@@ -1,5 +1,5 @@
 #include <thread>
-
+#include "log.h"
 #include "imu.h"
 #include "kalman.h"
 
@@ -39,7 +39,7 @@ vector<double> Imu::process_variance;
 
 ImuResult Imu::imu_buffer_;
 mutex Imu::imu_buffer_mutex_;
-atomic_bool Imu::calibrated_(false);
+atomic_bool Imu::calibrated_(true);
 Quaternion<double> Imu::north_quat_inverse_ = Quaternion<double>::Identity();
 
 void Imu::Init() {
@@ -129,6 +129,7 @@ PointEstimate Imu::DoKalman(const ImuResult& imu_result, ImuVariant v) {
     for (int i = 0; i < OBSERVATIONS; ++i) {
       Z(i, 0) = reading[i];
     }
+
     KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
     x_sum += X;
     p_sum += P;

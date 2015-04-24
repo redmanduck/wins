@@ -185,6 +185,7 @@ public:
                     uint8_t color);
 
     uint8_t * get_st7565_buffer();
+    std::unique_ptr<uint8_t> getMappedBuffer();
     void savebitmap(std::string filename);
     std::unique_ptr<bitmap_image> getImage();
 

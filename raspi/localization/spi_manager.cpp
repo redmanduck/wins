@@ -39,7 +39,7 @@ namespace wins {
 // specific I2C addresses may be passed as a parameter here
 // AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
 // AD0 high = 0x69
-MPU6050 mpu(0x68);
+MPU6050 mpu(0x69);
 // uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
 // quaternion components in a [w, x, y, z] format (not best for parsing
 // on a remote host such as Processing or something though)
@@ -85,9 +85,9 @@ bool setup() {
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
         FILE_LOG(logSPI) << ("DMP ready!\n");
         dmpReady = true;
-
         // get expected DMP packet size for later comparison
         packetSize = mpu.dmpGetFIFOPacketSize();
+
         return true;
     } else {
         // ERROR!
@@ -115,20 +115,25 @@ uint8_t SPI::Exchange(uint8_t send_byte) {
 void SPI::MainLoop() {
     bool dmp_success = setup();
     usleep(100000);
+
     if (!dmp_success or !bcm2835_init()) {
       FILE_LOG(logERROR) << "Unable to init SPI!";
       while(not terminate_.load());
       return;
     }
+
     bcm2835_spi_begin();
+
     bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, 0);
     bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS1, 0);
     bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_256); //4096); //2048);
     bcm2835_spi_setDataMode(BCM2835_SPI_MODE1);
     bcm2835_spi_chipSelect(BCM2835_SPI_CS0);
+
     for (int var = 0; var < BUF_SIZE; var++) {
         imu_buf[var] = 0x00;
     }
+
     init_success_ = true;
     while(not terminate_.load()) {
 		    clock_t total = clock();
@@ -154,6 +159,9 @@ void SPI::MainLoop() {
         // battery status is stored in bat1 and bat2
         data_p = 0;
 
+        auto& display = Display::GetInstance();
+        lcd_buffer_ = display.GetBufferCopy();
+
         //trasnferring 1024 bytes of data: 12 at a time
         while (data_p < BUF_SIZE) {
             TX = ACCEL;
@@ -167,6 +175,7 @@ void SPI::MainLoop() {
                 //if (op_err % 10 == 0)
                 //    printf("\n");
             }
+
             //printf("%d:Bat: %d%% %f Data: ", data_p, bat1, (bat1 + (float) bat2 / 256));
             for (i = 0; i < CHUNK_SIZE; i++) {
                 TX = lcd_buffer_.get()[data_p + i];
@@ -174,6 +183,7 @@ void SPI::MainLoop() {
                 imu_buf[data_p + i] = RX;
                 //printf("%x ", RX);
             }
+
             /*
             int x = (imu_buf[data_p + 0] << 8) | imu_buf[data_p + 1];
             int y = (imu_buf[data_p + 2] << 8) | imu_buf[data_p + 3];
@@ -185,6 +195,7 @@ void SPI::MainLoop() {
             */
             TX = VALID;
             RX = bcm2835_spi_transfer(TX);
+
             if (RX == VALID) {
                 data_p += CHUNK_SIZE;
             }
@@ -194,7 +205,9 @@ void SPI::MainLoop() {
 
 
             mpu.dmpGetQuaternion(&q, &imu_buf[data_p-CHUNK_SIZE]);
+
             q = Quaternion(Imu::RelativeToNorth(q.w, q.x, q.y, q.z));
+
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
             mpu.dmpGetAccel(&aa, &imu_buf[data_p-CHUNK_SIZE]);
@@ -228,8 +241,6 @@ void SPI::MainLoop() {
  //       FILE_LOG(logSPI) << ("PACKET %d successfully transferred\n", packets);
         packets++;
         usleep(TIME_BETWEEN_BUF);
-        auto& display = Display::GetInstance();
-        lcd_buffer_ = display.GetBufferCopy();
     }
     bcm2835_spi_end();
     bcm2835_close();
@@ -237,7 +248,6 @@ void SPI::MainLoop() {
 
 SPI::SPI() {
   terminate_ = false;
-
 }
 
 SPI& SPI::GetInstance() {

@@ -44,6 +44,15 @@ std::chrono::time_point<std::chrono::steady_clock> Location::last_update_time_;
 vector<int> default_channels =
     { 1, 6, 11, 48, 149, 36, 40, 157, 44, 153, 161 };
 
+double Location::imu_x = -1;
+double Location::imu_y = -1;
+double Location::wifi_x = -1;
+double Location::wifi_y = -1;
+double Location::kalman_x = -1;
+double Location::kalman_y = -1;
+double Location::prev_x = -1;
+double Location::prev_y = -1;
+
 vector<PointEstimate> Location::GetWiFiReadings(int count) {
   vector<PointEstimate> estimates;
   vector<future<vector<PointEstimate>>> handles;
@@ -71,6 +80,7 @@ void Location::InitKalman() {
   A_t = A.transpose();
   //const_R = 2 * Eigen::MatrixXd::Identity(2,2);
   const_R = 2 * Eigen::MatrixXd::Identity(2,2) * Global::LocationRFactor / 3;
+  prev_X = Eigen::MatrixXd::Identity(2,1);
 }
 
 void Location::Init() {
@@ -148,7 +158,17 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   H_t = H.transpose();
 
   FILE_LOG(logLOCATION) << "I x = " << X(0,0) <<", y = " << X(1,0) << "\n";
+  imu_x = X(0,0);
+  imu_y = X(1,0);
+  wifi_x = wifi_estimates[0].x_mean;
+  wifi_y = wifi_estimates[0].y_mean;
+
   KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
+
+  kalman_x = X(0,0);
+  kalman_y = X(1,0);
+  prev_x = prev_X(0,0);
+  prev_y = prev_X(1,0);
 
   if (last_update_time_ > tp_epoch_) {
     Eigen::Vector2d V = (X - prev_X) / msecs;

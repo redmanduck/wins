@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstring>
 
 #include "display.h"
 #include "global.h"
@@ -8,6 +9,7 @@
 
 int main(int argc, char *argv[]) {
   using namespace wins;
+  using namespace std;
 
   if (string(argv[1]) == "test") {
     Test(argc, argv);

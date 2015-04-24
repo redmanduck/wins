@@ -376,7 +376,7 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
     FILE_LOG(logWIFI) << "size = " << results.size() << "\n";
     auto wifi_estimates = ClosestByMahalanobis(results, v);
     if (wifi_estimates.size() > 0) {
-      FILE_LOG(logWIFI) << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
+      FILE_LOG(logLOCATION) << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
           wifi_estimates[0].y_mean << "\n";
     }
     return wifi_estimates;

@@ -32,8 +32,8 @@ class SPI {
 
   uint8_t imu_buf[BUF_SIZE];
   unique_ptr<uint8_t> lcd_buffer_;
-  char RX = '0';
-  char TX = '0';
+  uint8_t RX = '0';
+  uint8_t TX = '0';
   int i = 0;
   int ct = 0;
   int err = 0;

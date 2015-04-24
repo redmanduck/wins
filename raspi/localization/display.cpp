@@ -168,7 +168,7 @@ Display::Display()
 
 Page Display::Splash() {
   Flush();
-  this_thread::sleep_for(chrono::seconds(1));
+  this_thread::sleep_for(chrono::seconds(10));
   return PAGE_CALIBRATE_PROMPT;
 }
 
@@ -233,8 +233,8 @@ Page Display::Menu() {
   IncrmLine();
   PutString("4. Shut Down");
   IncrmLine();
-  PutString("5. Map floor");
-  IncrmLine();
+  //PutString("5. Map floor");
+  //IncrmLine();
   IncrmLine();
   current_page_ = PAGE_MENU;
 
@@ -245,8 +245,8 @@ Page Display::Menu() {
       case '2': return PAGE_NAVIGATING;
       case '3': return PAGE_CALBRATING;
       case '4': return PAGE_SHUT_DOWN;
-      case '5': return PAGE_MAP_SCAN;
-      default : PutString("Enter a number in 1-5", true);
+      //case '5': return PAGE_MAP_SCAN;
+      default : PutString("Enter a number in 1-4", true);
     }
   }
 }
@@ -261,12 +261,13 @@ Page Display::DestinationPrompt() {
     PutString("Enter destination:", true);
     current_page_ = PAGE_DESTINATION_PROMPT;
 
+    ClearLine(3);
     SetCurrentLine(3);
     if (Navigation::TrySetDestinationFromCoords(GetStringAndEcho())) {
-      SetCurrentLine(1);
-      PutString("Invalid location", true);
       break;
     }
+    SetCurrentLine(1);
+    PutString("Invalid location", true);
   }
   return PAGE_NAVIGATING;
 }
@@ -274,29 +275,53 @@ Page Display::DestinationPrompt() {
 Page Display::Navigating() {
   ClearScreen();
   current_page_ = PAGE_NAVIGATING;
+  bool input = false;
+  SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
   while(true) {
     auto result = Global::BlockForEvent(WINS_EVENT_ALL);
     auto events = result.events;
     if (events & WINS_EVENT_KEYPRESS) {
-      SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
+      input = true;
+      ClearScreen();
       SetCurrentLine(2);
       PutString("What's up?", true);
 
       SetCurrentLine(3);
-      PutString("1: Menu 2: Continue", true);
+      PutString("1: Menu", true);
+      IncrmLine();
+      PutString("2: Continue", true);
       char input = GetChar();
       if (input == '1') {
         Navigation::ResetDestination();
         return PAGE_MENU;
       } else {
-        continue;
+        input = false;
+        ClearScreen();
       }
     }
+    if (input) {
+      continue;
+    }
     if (events & WINS_EVENT_POS_CHANGE) {
-      SetCurrentLine(3);
       auto node = Location::GetCurrentNode();
+      char buffer[50];
+      sprintf(buffer, "PREV %3.3f, %3.3f", Location::prev_x, Location::prev_y);
+      SetCurrentLine(1);
+      PutString(buffer, true);
+      sprintf(buffer, "IMU  %3.3f, %3.3f", Location::imu_x, Location::imu_y);
+      SetCurrentLine(2);
+      PutString(buffer, true);
+      sprintf(buffer, "WIFI %3.3f, %3.3f", Location::wifi_x, Location::wifi_y);
+      SetCurrentLine(3);
+      PutString(buffer, true);
+      sprintf(buffer, "KALM %3.3f, %3.3f", Location::kalman_x,
+          Location::kalman_y);
+      SetCurrentLine(4);
+      PutString(buffer, true);
+
       if (node != nullptr) {
         auto point = node->point;
+        SetCurrentLine(6);
         PutString("At (" + to_string((int)point->x) + ", " +
             to_string((int)point->y) + ")");
         auto node = Navigation::current_begin();
@@ -397,8 +422,9 @@ void Display::SaveAsBitmap(string saveas){
 
 unique_ptr<uint8_t> Display::GetBufferCopy() {
   lock_guard<mutex> lock(glcd_mutex);
-  unique_ptr<uint8_t> buffer_copy(new uint8_t[1024]);
-  memcpy(buffer_copy.get(), glcd_.st7565_buffer, 1024);
+  //unique_ptr<uint8_t> buffer_copy(new uint8_t[1024]);
+  //memcpy(buffer_copy.get(), glcd_.st7565_buffer, 1024);
+  unique_ptr<uint8_t> buffer_copy = glcd_.getMappedBuffer();
   return buffer_copy;
 }
 

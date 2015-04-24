@@ -43,7 +43,7 @@ namespace wins {
 uint8_t is_reversed = 0;
 
 // a handy reference to where the pages are on the screen
-const uint8_t pagemap[] = { 3, 2, 1, 0, 7, 6, 5, 4 };
+const uint8_t pagemap[] = { 7, 6, 5, 4, 3, 2, 1, 0 };
 
 // a 5x7 font table
 // 5x7 LCD font 'flipped' for the ST7565 - public domain
@@ -381,6 +381,14 @@ std::unique_ptr<bitmap_image> ST7565::getImage(){
      return image;
 }
 
+std::unique_ptr<uint8_t> ST7565::getMappedBuffer() {
+  std::unique_ptr<uint8_t> buffer(new uint8_t[1024]);
+  for (unsigned int y = 0; y < 8; ++y) {
+    memcpy(&(buffer.get()[y*128]), &(st7565_buffer[pagemap[y]*128]), 128);
+  }
+  return buffer;
+}
+
 void ST7565::savebitmap(std::string filename){
      auto image = getImage();
 
@@ -422,8 +430,8 @@ void  ST7565::drawchar(uint8_t x, uint8_t line, char c) {
     for (uint8_t i = 0; i<5; i++ ) {
         uint8_t b = font[(c * 5) + i];
         // Equation to reverse a byte :/
-        b = ((b * 0x0802LU & 0x22110LU) | (b * 0x8020LU & 0x88440LU)) *
-            0x10101LU >> 16;
+        //b = ((b * 0x0802LU & 0x22110LU) | (b * 0x8020LU & 0x88440LU)) *
+        //    0x10101LU >> 16;
         st7565_buffer[x + (line * 128) ] = b;
         x++;
     }

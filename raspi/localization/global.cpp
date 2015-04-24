@@ -58,7 +58,7 @@ void Global::RunMainLoop() {
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
-  FILELog::LogSelect() = (TLogLevel)(logKEYPAD | logLOCATION);
+  FILELog::LogSelect() = (TLogLevel)(logSPI);
   SPI::StartThread();
   KeypadHandler::StartThread();
   Map::StartNavigationThread();

@@ -41,6 +41,15 @@ class Location {
   static bool DoKalmanUpdate(vector<PointEstimate> wifi_estimates);
 
  public:
+  static double imu_x;
+  static double imu_y;
+  static double wifi_x;
+  static double wifi_y;
+  static double kalman_x;
+  static double kalman_y;
+  static double prev_x;
+  static double prev_y;
+
   static vector<PointEstimate> GetWiFiReadings(int count = 1);
   static void Init();
   static kdtree::node<Point*>* GetCurrentNode();

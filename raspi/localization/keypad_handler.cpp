@@ -50,20 +50,34 @@ bool init_gpio(){
 		bcm2835_gpio_set_pud(R3, BCM2835_GPIO_PUD_DOWN);
 		bcm2835_gpio_set_pud(R4, BCM2835_GPIO_PUD_DOWN);
 		//detect edge
-    bcm2835_gpio_fen(R1);
-    bcm2835_gpio_fen(R2);
-    bcm2835_gpio_fen(R3);
-    bcm2835_gpio_fen(R4);
+    bcm2835_gpio_hen(R1);
+    bcm2835_gpio_hen(R2);
+    bcm2835_gpio_hen(R3);
+    bcm2835_gpio_hen(R4);
 
     return true;
 }
 
+/*
 char map[4][4]  = {
-	{'1','2','3','A'},
-	{'4','5','6','B'},
-	{'7','8','9','C'},
-	{'*','0','#','D'}
+	{'A','B','C','D'},
+	{'3','6','9','#'},
+	{'2','5','8','0'},
+	{'1','4','7','*'}
+};*/
+//char map[4][4]  = {
+//  {'D','A','B','C'},
+//  {'#','3','6','9'},
+//  {'0','2','5','8'},
+//  {'*','1','4','7'}
+//};
+char map[4][4]  = {
+  {'1','*','7','4'},
+  {'2','0','8','5'},
+  {'3','#','9','6'},
+  {'A','D','C','B'}
 };
+
 
 void KeypadHandler::ProcessButton(int row, int col) {
 	if(row == -1 || col == -1) return;
@@ -88,7 +102,7 @@ void KeypadHandler::MainLoop() {
 		while(not terminate_.load());
   } else {
 		while(not terminate_.load()){
-      FILE_LOG(logKEYPAD) << "=====LOOPING\n";
+      //FILE_LOG(logKEYPAD) << "=====LOOPING\n";
 			for(int i = 0; i < 4; i++){
 				int Wn = (i == 1 ? W1 : (i == 2? W2:  (i == 3? W3: W4)));
 				bcm2835_gpio_write(Wn, HIGH);
@@ -104,7 +118,7 @@ void KeypadHandler::MainLoop() {
 					if(state == new_state){
 						ProcessButton(state, i);
 					} else {
-            FILE_LOG(logKEYPAD) << "DISCARDED!!! - " << new_state << "\n";
+            //FILE_LOG(logKEYPAD) << "DISCARDED!!! - " << new_state << "\n";
           }
 
 					old_state = state;
@@ -143,7 +157,7 @@ int KeypadHandler::GetEvent(){
     state = 4;
     bcm2835_gpio_set_eds(R4);
   }
-  FILE_LOG(logKEYPAD) << "-------------- GPIO READ\n" << state;
+  //FILE_LOG(logKEYPAD) << "-------------- GPIO READ\n" << state;
   return state;
 }
 
