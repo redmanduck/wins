@@ -1,8 +1,8 @@
 #define WINSD_VER "monitor_2.0"
-#define BUF_SIZE 1024
-#define CHUNK_SIZE 256
+#define BUF_SIZE 896
+#define CHUNK_SIZE 128
 #define TIME_BETWEEN_CHUNK 5000
-#define TIME_BETWEEN_BUF 10000
+#define TIME_BETWEEN_BUF 0
 #include <time.h>
 
 #include <bcm2835.h>
@@ -188,15 +188,16 @@ int main() {
             else{
               printf("Invalid\n");
             }
-            float diffsec = (float) (clock() - total) / CLOCKS_PER_SEC;
-            printf("\nERR %d|| total time = %f\n", op_err, diffsec);
 
 
             mpu.dmpGetQuaternion(&q, &imu_buf[data_p-CHUNK_SIZE]);
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            if(packets%10==5)
-              printf("ypr  %7.2f %7.2f %7.2f   \n", ypr[0] * 180 / M_PI, ypr[1] * 180 / M_PI, ypr[2] * 180 / M_PI);
+            if(packets%10==5){
+              printf("ypr  %7.2f %7.2f %7.2f   ", ypr[0] * 180 / M_PI, ypr[1] * 180 / M_PI, ypr[2] * 180 / M_PI);
+              float diffsec = (float) (clock() - total) / CLOCKS_PER_SEC;
+              printf("ERR %d|| total time = %f\n", op_err, diffsec);
+            }
             //  gettimeofday(&tval_after, NULL);
             //   timersub(&tval_after, &tval_before, &tval_result);
             //   printf(" ---- transfer time %ld.%06ld sec", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
