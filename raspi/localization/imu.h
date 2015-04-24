@@ -48,7 +48,7 @@ class Imu{
   static Eigen::MatrixXd X;      // Current state estimate.
   static Eigen::MatrixXd P;  // Current covariance estimate.
 
-  static void AddReading(vector<uint8_t> pic_data);
+  static void AddReading(double x, double y);
   static void Calibrate();
   static void Init();
   static PointEstimate DoKalman(const ImuResult& imu_result,

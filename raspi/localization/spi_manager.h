@@ -8,20 +8,19 @@
 
 namespace wins {
 
+#define BUF_SIZE 896
+
 enum opcode {
-    OP_IMU,
-    OP_ACCEL,
-    OP_GYRO,
-    OP_KEYPAD,
-    OP_HALT,
-    OP_ULTRASONIC,
-    OP_POSITION,
-    OP_VALID,
-    OP_ERROR,
-    OP_BAT,
-    OP_BUSY,
-    OP_START,
-    OP_SHUTDOWN
+    IMU = 'M',
+    ACCEL = 'A',
+    GYRO = 'G',
+    KEYPAD = 'K',
+    HALT = 'H',
+    ULTRASONIC = 'U',
+    POSITION = 'P',
+    VALID = 'V',
+    ERROR = 'E',
+    BAT = 'B',
 };
 
 class SPI {
@@ -30,7 +29,20 @@ class SPI {
   static thread spi_thread_;
   int next_packet_;
   bool init_success_;
+
+  uint8_t imu_buf[BUF_SIZE];
   unique_ptr<uint8_t> lcd_buffer_;
+  char RX = '0';
+  char TX = '0';
+  int i = 0;
+  int ct = 0;
+  int err = 0;
+  int op_err = 0;
+  int packets = 0;
+  int seconds = 0;
+  unsigned char bat1 = 0;
+  unsigned char bat2 = 0;
+  int data_p = 0;
 
   uint8_t Exchange(uint8_t send_byte);
   void MainLoop();

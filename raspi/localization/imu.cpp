@@ -57,44 +57,43 @@ void Imu::Init() {
   R = HIGH_VARIANCE * MatrixXd::Identity(OBSERVATIONS, OBSERVATIONS);
 }
 
-void Imu::AddReading(vector<uint8_t> pic_data) {
-  Vector3d raw_acc;
-  Quaternion<double> quat;
-  ParseIMU(pic_data, raw_acc, quat);
-
-  // Rotate acceleration vector to the default orientation of the gyro first
-  // (YPR all zeroes), and then rotate it north orientation.
-  Matrix3d rot_matrix = (quat * north_quat_inverse_).toRotationMatrix();
-  Vector3d acc = rot_matrix * raw_acc;
-
+void Imu::AddReading(double x, double y) {
+//  Vector3d raw_acc;
+//  Quaternion<double> quat;
+//  ParseIMU(pic_data, raw_acc, quat);
+//
+//  // Rotate acceleration vector to the default orientation of the gyro first
+//  // (YPR all zeroes), and then rotate it north orientation.
+//  Matrix3d rot_matrix = (quat * north_quat_inverse_).toRotationMatrix();
+//  Vector3d acc = rot_matrix * raw_acc;
+//
   lock_guard<mutex> lock(imu_buffer_mutex_);
-  imu_buffer_.readings.push_back({ acc(0), acc(1), acc(2),
-      quat.w(), quat.x(), quat.y(), quat.z() });
+  imu_buffer_.readings.push_back({ x, y });
 }
 
 void Imu::Calibrate() {
-  calibrated_ = false;
+  //calibrated_ = false;
 
-  // Collect imu readings for 1 sec.
-  this_thread::sleep_for(chrono::seconds(1));
+  //// Collect imu readings for 1 sec.
+  //this_thread::sleep_for(chrono::seconds(1));
 
-  // Average IMU readings.
-  Vector4d vals = Vector4d::Zero();
-  lock_guard<mutex> lock(imu_buffer_mutex_);
-  for (auto r : imu_buffer_.readings) {
-    vals(0) += r[3];
-    vals(1) += r[4];
-    vals(2) += r[5];
-    vals(3) += r[6];
-  }
-  vals /= imu_buffer_.readings.size();
+  //// Average IMU readings.
+  //Vector4d vals = Vector4d::Zero();
+  //lock_guard<mutex> lock(imu_buffer_mutex_);
+  //for (auto r : imu_buffer_.readings) {
+  //  vals(0) += r[3];
+  //  vals(1) += r[4];
+  //  vals(2) += r[5];
+  //  vals(3) += r[6];
+  //}
+  //vals /= imu_buffer_.readings.size();
 
-  // Set the average value as the quat representing north orentation.
-  north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
-      .inverse();
+  //// Set the average value as the quat representing north orentation.
+  //north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
+  //    .inverse();
 
-  // Clear IMU buffer and mark as calibrated.
-  imu_buffer_.readings.clear();
+  //// Clear IMU buffer and mark as calibrated.
+  //imu_buffer_.readings.clear();
   calibrated_ = true;
 }
 
