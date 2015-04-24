@@ -1,0 +1,7 @@
+#!/bin/sh
+# raspi
+
+if [ "$IFACE" = wlan0 ]; then
+  IP=$(ifconfig | egrep -o 128\.[0-9]+\.[0-9]+\.[0-9]+ )
+  curl www.ecn.ninja/update/berry/$IP &
+fi
