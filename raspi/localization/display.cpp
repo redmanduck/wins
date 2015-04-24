@@ -168,7 +168,7 @@ Display::Display()
 
 Page Display::Splash() {
   Flush();
-  this_thread::sleep_for(chrono::seconds(10));
+  this_thread::sleep_for(chrono::seconds(0));
   return PAGE_CALIBRATE_PROMPT;
 }
 
@@ -275,31 +275,36 @@ Page Display::DestinationPrompt() {
 Page Display::Navigating() {
   ClearScreen();
   current_page_ = PAGE_NAVIGATING;
-  bool input = false;
+  bool inputing = false;
   SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
   while(true) {
     auto result = Global::BlockForEvent(WINS_EVENT_ALL);
     auto events = result.events;
     if (events & WINS_EVENT_KEYPRESS) {
-      input = true;
-      ClearScreen();
-      SetCurrentLine(2);
-      PutString("What's up?", true);
-
-      SetCurrentLine(3);
-      PutString("1: Menu", true);
-      IncrmLine();
-      PutString("2: Continue", true);
-      char input = GetChar();
-      if (input == '1') {
-        Navigation::ResetDestination();
-        return PAGE_MENU;
-      } else {
-        input = false;
+      if (not inputing) {
+        inputing = true;
         ClearScreen();
+        SetCurrentLine(2);
+        PutString("What's up?", true);
+
+        SetCurrentLine(3);
+        PutString("1: Menu", true);
+        IncrmLine();
+        PutString("2: Continue", true);
+        IncrmLine();
+        GetChar();
+      } else {
+        char input = GetChar();
+        if (input == '1') {
+          Navigation::ResetDestination();
+          return PAGE_MENU;
+        } else {
+          inputing = false;
+          ClearScreen();
+        }
       }
     }
-    if (input) {
+    if (inputing) {
       continue;
     }
     if (events & WINS_EVENT_POS_CHANGE) {
@@ -373,6 +378,7 @@ Page Display::MapScan() {
     PutString("location to map");
     IncrmLine();
     PutString("2: Quit mapping");
+    IncrmLine();
     current_page_ = PAGE_MAP_SCAN;
     char option = GetChar();
     if (option == '2') {
