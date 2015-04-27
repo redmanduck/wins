@@ -134,7 +134,9 @@ void Display::Flush() {
 }
 
 void Display::MapLoadWorld(string mapfile){
-        //load background into big buffer	
+        //load background into big buffer
+	//hard code for now
+	//its in WORLD
 }
 
 void Display::MapDrawVisible(){
