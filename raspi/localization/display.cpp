@@ -133,6 +133,50 @@ void Display::Flush() {
   flushed_ = true;
 }
 
+void Display::MapLoadWorld(string mapfile){
+        //load background into big buffer	
+}
+
+void Display::MapDrawVisible(){
+	//this dump visible area into gcld
+}
+
+void Display::MapUpdateIndicator(Coord N, int rad){
+	int DELTA = 10; 
+
+	int bound_L = map_box_.first + DELTA;
+	int bound_T = map_box_.second + DELTA;
+	int bound_R = map_box_.first + (128 - DELTA);
+        int bound_B = map_box_.second + (64 - DELTA);	
+
+	bool doUpdate = (N.first > bound_L) || (N.second < bound_T) || (N.first > bound_R) || (N.second > bound_B);
+
+	if(doUpdate){
+	   //the point has moved out of bound 
+	   //update box
+	   int new_box_x = N.first - 64;
+	   int new_box_y = N.second - 32;
+	   MapSetVisibleBound(new_box_x, new_box_y);
+	}
+        map_indi_.first = N.first;
+	map_indi_.second = N.second;
+
+	//note indi is within box
+	//and box is what we draw
+}
+
+void Display::MapSetVisibleBound(int x, int y){
+ 	map_box_.first = x;
+	map_box_.second = y;
+}
+Coord Display::ToScreenCoordinate(Coord sid){
+	return sid;
+}
+
+Coord Display::ToSidCoordinate(Coord screen){
+	return screen;
+}
+
 void Display::SetFont(FontSize size, Alignment al, int expected_width) {
   font_size_ = size;
   alignment_ = al;

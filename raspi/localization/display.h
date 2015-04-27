@@ -37,6 +37,8 @@ enum Page {
   PAGE_MAP_SCAN
 };
 
+typedef std::pair<int,int> Coord;
+
 class Display {
  private:
 
@@ -58,15 +60,17 @@ class Display {
   void SetCurrentLine(int line);
   void IncrmLine();
 
-  
-  Point ToScreenCoordinate(Point sidean_coord);
-  Point ToSideanCoordinate(Point screen_coord);
+  Coord map_box_; //box location (top left)
+  Coord map_indi_;  //indicator location
+  uint8_t map_big_buffer[2048] = {0};
+ 
+  Coord ToScreenCoordinate(Coord sid);
+  Coord ToSidCoordinate(Coord screen);
 
-  /* All map functions use screen cooridinate
-   * */
-  void MapLoadBackground(); //load map background
-  void MapUpdateIndicator(Point screen_coord, int rad);
-  void MapMoveFocusArea(Point nw_corner);
+  void MapLoadWorld(string mapfile);
+  void MapUpdateIndicator(Coord screen_coord, int rad);
+  void MapSetVisibleBound(int x, int y);
+  void MapDrawVisible();
 
   Display();
 
