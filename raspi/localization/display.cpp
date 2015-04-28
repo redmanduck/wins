@@ -141,6 +141,11 @@ void Display::MapLoadWorld(string mapfile){
 
 void Display::MapDrawVisible(){
 	//this dump visible area into gcld
+	//first extract the visible content from WORLD 
+	//use map_box as WORLD offset 
+	int W = 170;
+	int world_offset = W*map_box_.second+map_box_.first;
+	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 1024);	
 }
 
 void Display::MapUpdateIndicator(Coord N, int rad){
@@ -172,10 +177,12 @@ void Display::MapSetVisibleBound(int x, int y){
 	map_box_.second = y;
 }
 Coord Display::ToScreenCoordinate(Coord sid){
+	//TODO: turn scaled version of sid 
 	return sid;
 }
 
 Coord Display::ToSidCoordinate(Coord screen){
+	//TODO: return reverse scaled version of screen
 	return screen;
 }
 
