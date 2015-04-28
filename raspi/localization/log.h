@@ -12,16 +12,17 @@ enum TLogLevel {
   logERROR        = 0x1,
   logWARNING      = 0x2,
   logINFO         = 0x4,
-  logLOCATION     = 0x8,
-  logSPI          = 0x10,
-  logDISPLAY      = 0x20,
-  logWIFI         = 0x40,
-  logKEYPAD       = 0x80,
-  logDEBUG        = 0x100,
-  logDEBUG1       = 0x200,
-  logDEBUG2       = 0x400,
-  logDEBUG3       = 0x800,
-  logDEBUG4       = 0x1000,
+  logIMU          = 0x8,
+  logLOCATION     = 0x10,
+  logSPI          = 0x20,
+  logDISPLAY      = 0x40,
+  logWIFI         = 0x80,
+  logKEYPAD       = 0x100,
+  logDEBUG        = 0x200,
+  logDEBUG1       = 0x400,
+  logDEBUG2       = 0x800,
+  logDEBUG3       = 0x1000,
+  logDEBUG4       = 0x2000
 };
 
 template <typename T>
@@ -100,6 +101,8 @@ std::string Log<T>::ToString(TLogLevel level)
         return "SPI";
     if (level == logLOCATION)
         return "LOCATION";
+    if (level == logIMU)
+        return "IMU";
     if (level == logINFO)
         return "INFO";
     if (level == logWARNING)
@@ -134,6 +137,8 @@ TLogLevel Log<T>::FromString(const std::string& level)
         return logSPI;
     if (level == "LOCATION")
         return logLOCATION;
+    if (level == "IMU")
+        return logIMU;
     if (level == "INFO")
         return logINFO;
     if (level == "WARNING")

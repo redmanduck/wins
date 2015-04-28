@@ -15,7 +15,8 @@ namespace wins {
 
 using namespace std;
 
-string Global::MapFile = "ee_ab_map.dat";
+string Global::MapFile = "/home/pi/wins/raspi/localization/data/"
+    "ee_ab_map_8lin.dat";
 
 WinsEvent Global::event_flags_;
 condition_variable Global::display_event_pending_;
@@ -58,7 +59,7 @@ void Global::RunMainLoop() {
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
-  //FILELog::LogSelect() = (TLogLevel)(logSPI);
+  FILELog::LogSelect() = (TLogLevel)(logSPI | logIMU);
   SPI::StartThread();
   KeypadHandler::StartThread();
   Map::StartNavigationThread();

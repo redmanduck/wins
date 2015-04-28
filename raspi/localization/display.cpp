@@ -103,31 +103,29 @@ string Display::GetStringAndEcho() {
 void Display::Flush() {
   static int refresh_count = 0;
 #ifdef FLUSH_TO_SCREEN
-  if (Global::IsTest()) {
-    //system("clear");
-    cout << "Screen refresh count = " << ++refresh_count << "\n";
-    unsigned char r;
-    unsigned char g;
+  //system("clear");
+  cout << "Screen refresh count = " << ++refresh_count << "\n";
+  unsigned char r;
+  unsigned char g;
 
-    unsigned char b;
-    unique_ptr<bitmap_image> image = glcd_.getImage();
-    for (unsigned int y = 0; y < 32; ++y) {
-      for (unsigned int x = 0; x < 128; ++x) {
-        image->get_pixel(x, y*2, r, g, b);
-        bool up = r > 0;
-        image->get_pixel(x, y*2+1, r, g, b);
-        bool down = r > 0;
-        if (up and down)
-          cout << "█";
-        else if (up)
-          cout << "▀";
-        else if (down)
-          cout << "▄";
-        else
-          cout << " ";
-      }
-      cout <<"\n";
+  unsigned char b;
+  unique_ptr<bitmap_image> image = glcd_.getImage();
+  for (unsigned int y = 0; y < 32; ++y) {
+    for (unsigned int x = 0; x < 128; ++x) {
+      image->get_pixel(x, y*2, r, g, b);
+      bool up = r > 0;
+      image->get_pixel(x, y*2+1, r, g, b);
+      bool down = r > 0;
+      if (up and down)
+        cout << "█";
+      else if (up)
+        cout << "▀";
+      else if (down)
+        cout << "▄";
+      else
+        cout << " ";
     }
+    cout <<"\n";
   }
 #endif
   flushed_ = true;
