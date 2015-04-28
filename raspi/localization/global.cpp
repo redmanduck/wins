@@ -124,6 +124,9 @@ void Global::ShutDown() {
   SPI::TerminateThread();
   Map::TerminateThread();
   system("sudo kill -9 $(pgrep -f winsd)");
+  if (is_test_ == false) {
+    cout << "Shutting down...\n";
+  }
   system(shutdown_command_.c_str());
 }
 
