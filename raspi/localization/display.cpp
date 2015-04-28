@@ -6,7 +6,7 @@
 #include "common_utils.h"
 #endif
 #include "display.h"
-
+#include "world.h"
 #ifndef ISOLATED_TEST
 #include "global.h"
 #include "imu.h"

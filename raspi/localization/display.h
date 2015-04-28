@@ -6,7 +6,6 @@
 #endif
 
 #include "ST7565.h"
-#include "world.h"
 #define RETURN_CHARACTER '#'
 
 namespace wins {
