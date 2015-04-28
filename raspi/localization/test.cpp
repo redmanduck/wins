@@ -232,19 +232,8 @@ void Test(int argc, char *orig_argv[]) {
       getline(cin, line);
       if (line.size() == 0) {
          continue;
-      } else if (line[0] == 'q') {
-        break;
       }
       keypad_handler.FakeStringEnter(line);
-    }
-
-    auto result = Global::BlockForEvent(WINS_EVENT_SHUTDOWN_DONE, 5000);
-    if (result.status == cv_status::timeout) {
-      cout << "Main did not terminate. Forcing exit...\n";
-      exit(1);
-    } else {
-      main_thread.join();
-      cout << "Main terminted cleanly.\n";
     }
   } else if (string(argv[2]) == "imu1") {
 
