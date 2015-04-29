@@ -30,8 +30,6 @@ namespace wins {
 void Test(int argc, char *orig_argv[]) {
   vector<string> argv(orig_argv, orig_argv + argc);
 
-  Global::SetTestMode();
-
   if (string(argv[2]) == "make_binary") {
     assert(argc == 5);
     Map::TryConvertJSONMap(argv[3], argv[4]);

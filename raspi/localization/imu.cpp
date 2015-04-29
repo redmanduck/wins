@@ -69,7 +69,15 @@ void Imu::AddReading(double ax, double ay, double az,
 //  Vector3d acc = rot_matrix * raw_acc;
 //
   lock_guard<mutex> lock(imu_buffer_mutex_);
+  FILE_LOG(logIMU) << "Adding reading ax: " << ax
+                                << ", ay: " << ay
+                                << ", az: " << az
+                                << ", qw: " << qw
+                                << ", qx: " << qx
+                                << ", qy: " << qy
+                                << ", qz: " << qz << "\n";
   imu_buffer_.readings.push_back({ ax, ay, az, qw, qx, qy, qz });
+  FILE_LOG(logIMU) << "Buffer size: " << imu_buffer_.readings.size() << "\n";
 }
 
 void Imu::Calibrate() {
@@ -169,6 +177,7 @@ PointEstimate Imu::EstimateLocation(ImuVariant v) {
     lock_guard<mutex> lock(imu_buffer_mutex_);
     results = imu_buffer_;
     imu_buffer_.readings.clear();
+    FILE_LOG(logIMU) << "Clearing buffer on estimation\n";
   }
   return DoKalman(results, v);
 }
