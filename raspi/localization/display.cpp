@@ -140,28 +140,28 @@ void Display::MapLoadWorld(string mapfile){
 void Display::MapDrawVisible(){
 	lock_guard<mutex> lock(glcd_mutex);
 	//this dump visible area into gcld
-	//first extract the visible content from WORLD 
-	//use map_box as WORLD offset 
+	//first extract the visible content from WORLD
+	//use map_box as WORLD offset
 	int W = 170;
 	int world_offset = W*map_box_.second+map_box_.first;
-//	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);	
+//	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);
 	for(int i = 0; i < 8; i++){
-		memcpy(&glcd_.st7565_buffer[i*128],&WORLD[world_offset + W*i], 128);	
-	}	
+		memcpy(&glcd_.st7565_buffer[i*128],&WORLD[world_offset + W*i], 128);
+	}
 }
 
 void Display::MapUpdateIndicator(Coord N, int rad){
-	int DELTA = 10; 
+	int DELTA = 10;
 
 	int bound_L = map_box_.first + DELTA;
 	int bound_T = map_box_.second + DELTA;
 	int bound_R = map_box_.first + (128 - DELTA);
-        int bound_B = map_box_.second + (64 - DELTA);	
+        int bound_B = map_box_.second + (64 - DELTA);
 
 	bool doUpdate = (N.first > bound_L) || (N.second < bound_T) || (N.first > bound_R) || (N.second > bound_B);
 
 	if(doUpdate){
-	   //the point has moved out of bound 
+	   //the point has moved out of bound
 	   //update box
 	   int new_box_x = N.first - 64;
 	   int new_box_y = N.second - 32;
@@ -179,7 +179,7 @@ void Display::MapSetVisibleBound(int x, int y){
 	map_box_.second = y;
 }
 Coord Display::ToScreenCoordinate(Coord sid){
-	//TODO: turn scaled version of sid 
+	//TODO: turn scaled version of sid
 	return sid;
 }
 
@@ -219,22 +219,32 @@ Display::Display()
   cursor_ = 0;
   current_line_ = 0;
 
-  for(int i = 0; i < 5; i++){
+/*  for(int i = 0; i < 5; i++){
    MapSetVisibleBound(0,i);
    MapDrawVisible();
    Flush();
 
-   usleep(2000);
-  }
-  
+   usleep(5000000);
+  }*/
+
   Flush();
 
-  usleep(10000);
 }
 
 Page Display::Splash() {
   Flush();
   this_thread::sleep_for(chrono::seconds(0));
+
+  for(int i = 0; i < 5; i++){
+   MapSetVisibleBound(0,i);
+   MapDrawVisible();
+   Flush();
+
+   this_thread::sleep_for(chrono::seconds(2));
+  }
+
+  this_thread::sleep_for(chrono::seconds(5));
+
   return PAGE_CALIBRATE_PROMPT;
 }
 
