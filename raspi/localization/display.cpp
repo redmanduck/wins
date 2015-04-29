@@ -146,7 +146,12 @@ void Display::MapDrawVisible(){
 	int world_offset = W*map_box_.second+map_box_.first;
 //	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);
 	for(int i = 0; i < 8; i++){
-		memcpy(&glcd_.st7565_buffer[i*128],&WORLD[world_offset + W*i], 128);
+	   int ac = 1024-i*128;
+	   memcpy(&glcd_.st7565_buffer[ac],&WORLD[world_offset + W*i], 128);
+	   // Equation to reverse a byte :/
+	   for(int j = 0; j < 128; j++){
+              glcd_.st7565_buffer[ac] = ((glcd_.st7565_buffer[ac] * 0x0802LU & 0x22110LU) | ( glcd_.st7565_buffer[ac]* 0x8020LU & 0x88440LU)) *  0x10101LU >> 16;
+	   }
 	}
 }
 
