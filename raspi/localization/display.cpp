@@ -137,6 +137,7 @@ void Display::MapLoadWorld(string mapfile){
 	//its in WORLD
 }
 
+int radii_ = 0;
 void Display::MapDrawVisible(){
 	lock_guard<mutex> lock(glcd_mutex);
 	//this dump visible area into gcld
@@ -147,25 +148,34 @@ void Display::MapDrawVisible(){
 //	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);
 	for(int i = 0; i < 8; i++){
 	   int ac = i*128;//(128*7)-i*128;
+	   
+	   if(128 + world_offset + W*i >= 20910){
+		cout << "World access out of bound!!!";
+	   }  
+
 	   memcpy(&glcd_.st7565_buffer[ac],&WORLD[world_offset + W*i], 128);
 	   // Equation to reverse a byte :/
 	   for(int j = 0; j < 128; j++){
               glcd_.st7565_buffer[ac+j] = ((glcd_.st7565_buffer[ac+j] * 0x0802LU & 0x22110LU) | ( glcd_.st7565_buffer[ac+j]* 0x8020LU & 0x88440LU)) *  0x10101LU >> 16;
 	   }
 	}
+	if(radii_ > 5) radii_ = 0;
+  	glcd_.setpixel(map_indi_.first, map_indi_.second, 255);
+	glcd_.drawcircle(map_indi_.first, map_indi_.second, radii_++, 255);
 }
 
 void Display::MapUpdateIndicator(Coord N, int rad){
-	int DELTA = 10;
+	int DELTA = 4;
 
 	int bound_L = map_box_.first + DELTA;
 	int bound_T = map_box_.second + DELTA;
 	int bound_R = map_box_.first + (128 - DELTA);
         int bound_B = map_box_.second + (64 - DELTA);
 
-	bool doUpdate = (N.first > bound_L) || (N.second < bound_T) || (N.first > bound_R) || (N.second > bound_B);
-
+//	bool doUpdate = (N.first > bound_L) || (N.second < bound_T) || (N.first > bound_R) || (N.second > bound_B);
+	bool doUpdate = false;
 	if(doUpdate){
+           cout << "Updating bounds!\n";
 	   //the point has moved out of bound
 	   //update box
 	   int new_box_x = N.first - 64;
@@ -177,6 +187,13 @@ void Display::MapUpdateIndicator(Coord N, int rad){
 
 	//note indi is within box
 	//and box is what we draw
+        
+	
+	cout << "Indicator: ";
+	cout << map_indi_.first;
+	cout << ", ";
+	cout << map_indi_.second;
+	cout << "\n";
 }
 
 void Display::MapSetVisibleBound(int x, int y){
@@ -224,14 +241,6 @@ Display::Display()
   cursor_ = 0;
   current_line_ = 0;
 
-/*  for(int i = 0; i < 5; i++){
-   MapSetVisibleBound(0,i);
-   MapDrawVisible();
-   Flush();
-
-   usleep(5000000);
-  }*/
-
   Flush();
 
 }
@@ -240,15 +249,19 @@ Page Display::Splash() {
   Flush();
   this_thread::sleep_for(chrono::seconds(0));
 
-  for(int i = 0; i < 5; i++){
-   MapSetVisibleBound(0,i);
+  for(int i = 0; i < 128; i++){
+//   MapSetVisibleBound(i*3,i);
+   
+   MapUpdateIndicator(Coord(i, 20), 4);
    MapDrawVisible();
    Flush();
-
-   this_thread::sleep_for(chrono::seconds(2));
+     
+   usleep(500000);
+   //this_thread::sleep_for(chrono::seconds(1));
+   if (system("CLS")) system("clear");  
   }
 
-  this_thread::sleep_for(chrono::seconds(5));
+  this_thread::sleep_for(chrono::seconds(1));
 
   return PAGE_CALIBRATE_PROMPT;
 }
