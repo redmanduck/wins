@@ -59,17 +59,14 @@ class Display {
   void SetCurrentLine(int line);
   void IncrmLine();
 
-  Coord map_box_; //box location (top left)
-  Coord map_indi_;  //indicator location
+  Coord map_box_ = Coord(0,0); //box location (top left)
+  Coord map_indi_ = Coord(64, 32);  //indicator location
   uint8_t map_big_buffer[2048] = {0};
  
   Coord ToScreenCoordinate(Coord sid);
   Coord ToSidCoordinate(Coord screen);
 
   void MapLoadWorld(string mapfile);
-  void MapUpdateIndicator(Coord screen_coord, int rad);
-  void MapSetVisibleBound(int x, int y);
-  void MapDrawVisible();
 
   Display();
 
@@ -95,6 +92,10 @@ class Display {
 
   void SaveAsBitmap(string saveas);
   unique_ptr<uint8_t> GetBufferCopy();
+
+  void MapUpdateIndicator(Coord screen_coord, int rad);
+  void MapSetVisibleBound(int x, int y);
+  void MapDrawVisible();
 
   static Display& GetInstance();
 
