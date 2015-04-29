@@ -140,12 +140,16 @@ void Display::MapLoadWorld(string mapfile){
 }
 
 void Display::MapDrawVisible(){
+	lock_guard<mutex> lock(glcd_mutex);
 	//this dump visible area into gcld
 	//first extract the visible content from WORLD 
 	//use map_box as WORLD offset 
 	int W = 170;
 	int world_offset = W*map_box_.second+map_box_.first;
-	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 1024);	
+//	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);	
+	for(int i = 0; i < 8; i++){
+		memcpy(&glcd_.st7565_buffer[i*128],&WORLD[world_offset + W*i], 128);	
+	}	
 }
 
 void Display::MapUpdateIndicator(Coord N, int rad){
@@ -216,7 +220,18 @@ Display::Display()
   font_size_ = FONT_SIZE_MEDIUM;
   cursor_ = 0;
   current_line_ = 0;
+
+  for(int i = 0; i < 5; i++){
+   MapSetVisibleBound(0,i);
+   MapDrawVisible();
+   Flush();
+
+   usleep(2000);
+  }
+  
   Flush();
+
+  usleep(10000);
 }
 
 Page Display::Splash() {
