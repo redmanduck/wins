@@ -112,9 +112,9 @@ void Display::Flush() {
   unique_ptr<bitmap_image> image = glcd_.getImage();
   for (unsigned int y = 32; y > 0; --y) {
     for (unsigned int x = 0; x < 128; ++x) {
-      image->get_pixel(x,  y*2, r, g, b); //64- 
+      image->get_pixel(x,  y*2-2, r, g, b); //64-
       bool down = r > 0;
-      image->get_pixel(x, y*2+1, r, g, b);
+      image->get_pixel(x, y*2-1, r, g, b);
       bool up = r > 0;
       if (up and down)
         cout << "█";

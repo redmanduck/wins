@@ -373,7 +373,7 @@ std::unique_ptr<bitmap_image> ST7565::getImage(){
                  if((st7565_buffer[x + (y * 128)] & (0x01 << j)) == 0){
                      continue;
                  }
-                 image->set_pixel(x,y*8+ j,255,255,255);
+                 image->set_pixel(x,(7-y)*8+ j,255,255,255);
              }
          }
      }
