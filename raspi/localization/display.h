@@ -63,10 +63,9 @@ class Display {
 
   Coord map_box_ = Coord(0,0); //box location (top left)
   Coord map_indi_ = Coord(64, 32);  //indicator location
-  uint8_t map_big_buffer[2048] = {0};
  
-  Coord ToScreenCoordinate(Coord sid);
-  Coord ToSidCoordinate(Coord screen);
+//  Coord ToScreenCoordinate(Coord sid);
+//  Coord ToSidCoordinate(Coord screen);
 
   void MapLoadWorld(string mapfile);
   void resetWorld();

@@ -280,14 +280,7 @@ void Display::MapSetVisibleBound(int x, int y){
  	map_box_.first = x;
 	map_box_.second = y;
 }
-Coord Display::ToScreenCoordinate(Coord sid){
-	return Coord(sid.first + 10, sid.second + 10);
-}
 
-Coord Display::ToSidCoordinate(Coord screen){
-	//TODO: return reverse scaled version of screen
-	return screen;
-}
 
 void Display::SetFont(FontSize size, Alignment al, int expected_width) {
   font_size_ = size;
@@ -332,9 +325,9 @@ Page Display::Splash() {
 //  Flush();
  
   for(int i = 0; i < 64; i++){
-//   MapSetVisibleBound(i*3,i);
    
-   MapUpdateIndicator(Coord(4*i, i));
+   MapUpdateIndicator(Coord(15+i,39));
+//   MapUpdateIndicator(Coord(4*i, i));
 
    MapDrawVisible();
    Flush();
