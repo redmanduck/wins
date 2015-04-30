@@ -159,35 +159,35 @@ void Display::MapDrawVisible(){
               glcd_.st7565_buffer[ac+j] = ((glcd_.st7565_buffer[ac+j] * 0x0802LU & 0x22110LU) | ( glcd_.st7565_buffer[ac+j]* 0x8020LU & 0x88440LU)) *  0x10101LU >> 16;
 	   }
 	}
+//	Draw indictor
 	if(radii_ > 5) radii_ = 0;
   	glcd_.setpixel(map_indi_.first, map_indi_.second, 255);
 	glcd_.drawcircle(map_indi_.first, map_indi_.second, radii_++, 255);
 }
 
 void Display::MapUpdateIndicator(Coord N, int rad){
-	int DELTA = 4;
-
-	int bound_L = map_box_.first + DELTA;
-	int bound_T = map_box_.second + DELTA;
-	int bound_R = map_box_.first + (128 - DELTA);
-        int bound_B = map_box_.second + (64 - DELTA);
-
-//	bool doUpdate = (N.first > bound_L) || (N.second < bound_T) || (N.first > bound_R) || (N.second > bound_B);
-	bool doUpdate = false;
-	if(doUpdate){
-           cout << "Updating bounds!\n";
-	   //the point has moved out of bound
-	   //update box
-	   int new_box_x = N.first - 64;
-	   int new_box_y = N.second - 32;
-	   MapSetVisibleBound(new_box_x, new_box_y);
+	int DELTA = 30;
+//	bool doUpdate = false;
+	int new_box_x = map_box_.first;
+	int new_box_y = map_box_.second;	
+	int y0 = N.second;
+	int x0 = N.first;
+	
+	if(x0 > 128 - DELTA){
+	   new_box_x = N.first - DELTA;
 	}
-        map_indi_.first = N.first;
+
+	if(y0 > 64 - DELTA){
+	   new_box_y = N.second - DELTA;
+	}	
+                
+	MapSetVisibleBound(new_box_x, new_box_y);
+	
+	map_indi_.first = N.first;
 	map_indi_.second = N.second;
 
 	//note indi is within box
 	//and box is what we draw
-        
 	
 	cout << "Indicator: ";
 	cout << map_indi_.first;
@@ -197,6 +197,15 @@ void Display::MapUpdateIndicator(Coord N, int rad){
 }
 
 void Display::MapSetVisibleBound(int x, int y){
+	if(x >= (WORLD_WMAX - 128)){
+		cout << "Normalizing X\n";
+		x = WORLD_WMAX - 128;	
+	}
+	if(y >= (WORLD_HMAX - 64)){
+		cout << "noramlizing Y\n";
+		y = WORLD_HMAX - 64;	
+	}
+
  	map_box_.first = x;
 	map_box_.second = y;
 }
@@ -248,11 +257,15 @@ Display::Display()
 Page Display::Splash() {
   Flush();
   this_thread::sleep_for(chrono::seconds(0));
-
-  for(int i = 0; i < 128; i++){
+//  MapSetVisibleBound(100, 0);
+//  MapDrawVisible();
+//  Flush();
+ 
+ for(int x =0; x < 2; x++){
+  for(int i = 0; i < 64; i++){
 //   MapSetVisibleBound(i*3,i);
    
-   MapUpdateIndicator(Coord(i, 20), 4);
+   MapUpdateIndicator(Coord(i*2, 20), 4);
    MapDrawVisible();
    Flush();
      
@@ -260,6 +273,7 @@ Page Display::Splash() {
    //this_thread::sleep_for(chrono::seconds(1));
    if (system("CLS")) system("clear");  
   }
+}
 
   this_thread::sleep_for(chrono::seconds(1));
 
