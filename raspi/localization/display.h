@@ -48,7 +48,9 @@ class Display {
   bool flushed_;
   Page current_page_;
   mutex glcd_mutex;
-
+  void setWorldPixel(uint8_t x, uint8_t y, uint8_t color);
+  void drawWorldCircle(uint8_t x0, uint8_t y0, uint8_t r,
+                        uint8_t color);
   void ClearLine(int line);
   void ClearScreen();
   char GetChar();
@@ -67,7 +69,7 @@ class Display {
   Coord ToSidCoordinate(Coord screen);
 
   void MapLoadWorld(string mapfile);
-
+  void resetWorld();
   Display();
 
   Page Splash();

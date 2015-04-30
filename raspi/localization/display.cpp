@@ -131,6 +131,65 @@ void Display::Flush() {
   flushed_ = true;
 }
 
+
+void Display::drawWorldCircle(uint8_t x0, uint8_t y0, uint8_t r,
+                        uint8_t color) {
+
+    int8_t f = 1 - r;
+    int8_t ddF_x = 1;
+    int8_t ddF_y = -2 * r;
+    int8_t x = 0;
+    int8_t y = r;
+
+    setWorldPixel(x0, y0+r, color);
+    setWorldPixel(x0, y0-r, color);
+    setWorldPixel(x0+r, y0, color);
+    setWorldPixel(x0-r, y0, color);
+
+    while (x<y) {
+        if (f >= 0) {
+            y--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        x++;
+        ddF_x += 2;
+        f += ddF_x;
+
+        setWorldPixel(x0 + x, y0 + y, color);
+        setWorldPixel(x0 - x, y0 + y, color);
+        setWorldPixel(x0 + x, y0 - y, color);
+        setWorldPixel(x0 - x, y0 - y, color);
+
+        setWorldPixel(x0 + y, y0 + x, color);
+        setWorldPixel(x0 - y, y0 + x, color);
+        setWorldPixel(x0 + y, y0 - x, color);
+        setWorldPixel(x0 - y, y0 - x, color);
+
+    }
+
+
+
+}
+
+void Display::resetWorld(){
+   //Highly inefficient function to reset map
+   memcpy(WORLD, WORLD_MAP, 20910);
+}
+
+void Display::setWorldPixel(uint8_t x, uint8_t y, uint8_t color) {
+    if ((x >= 170) || (y >= 128))
+        return;
+
+    if(color){
+        WORLD[x+ (y/8)*170] |= (1<<(7-(y%8)));
+    }else{
+    	WORLD[x+ (y/8)*170] &= ~(1<<(7-(y%8)));
+    }
+    //WORLD[x+ (y/8)*170] &= ~(1<<(7-(y%8))); 
+
+}
+
 void Display::MapLoadWorld(string mapfile){
         //load background into big buffer
 	//hard code for now
@@ -146,6 +205,15 @@ void Display::MapDrawVisible(){
 	int W = 170;
 	int world_offset = W*map_box_.second+map_box_.first;
 //	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);
+		
+	//Draw indicator
+	//indicator must be drawn in bottom layer
+	resetWorld();
+
+	if(radii_ > 3) radii_ = 0;
+	setWorldPixel(map_indi_.first, map_indi_.second, 255);
+	drawWorldCircle(map_indi_.first, map_indi_.second, radii_++,255);
+	
 	for(int i = 0; i < 8; i++){
 	   int ac = i*128;//(128*7)-i*128;
 	   
@@ -159,10 +227,11 @@ void Display::MapDrawVisible(){
               glcd_.st7565_buffer[ac+j] = ((glcd_.st7565_buffer[ac+j] * 0x0802LU & 0x22110LU) | ( glcd_.st7565_buffer[ac+j]* 0x8020LU & 0x88440LU)) *  0x10101LU >> 16;
 	   }
 	}
+
 //	Draw indictor
-	if(radii_ > 5) radii_ = 0;
-  	glcd_.setpixel(map_indi_.first, map_indi_.second, 255);
-	glcd_.drawcircle(map_indi_.first, map_indi_.second, radii_++, 255);
+//	if(radii_ > 5) radii_ = 0;
+//	glcd_.setpixel(map_indi_.first, map_indi_.second, 255);
+//	glcd_.drawcircle(map_indi_.first, map_indi_.second, radii_++, 255);
 }
 
 void Display::MapUpdateIndicator(Coord N, int rad){
@@ -170,19 +239,23 @@ void Display::MapUpdateIndicator(Coord N, int rad){
 //	bool doUpdate = false;
 	int new_box_x = map_box_.first;
 	int new_box_y = map_box_.second;	
-	int y0 = N.second;
-	int x0 = N.first;
-	
-	if(x0 > 128 - DELTA){
-	   new_box_x = N.first - DELTA;
+
+	//Shift Screen to reveal more	
+	//If location N is beyond current map_box_ bound
+
+	if(N.first >= map_box_.first + 128){
+	 	cout << "Shifting X\n";	
+		new_box_x += 20;
 	}
 
-	if(y0 > 64 - DELTA){
-	   new_box_y = N.second - DELTA;
-	}	
-                
+	if(N.second >= map_box_.second + 64){
+		cout << "Shifting Y\n";
+		new_box_y += 20;
+	}
+          
 	MapSetVisibleBound(new_box_x, new_box_y);
 	
+	//Update indicator position
 	map_indi_.first = N.first;
 	map_indi_.second = N.second;
 
@@ -205,7 +278,7 @@ void Display::MapSetVisibleBound(int x, int y){
 		cout << "noramlizing Y\n";
 		y = WORLD_HMAX - 64;	
 	}
-
+	cout <<"shifting bound " << x <<"," << y << "\n";
  	map_box_.first = x;
 	map_box_.second = y;
 }
@@ -261,19 +334,17 @@ Page Display::Splash() {
 //  MapDrawVisible();
 //  Flush();
  
- for(int x =0; x < 2; x++){
   for(int i = 0; i < 64; i++){
 //   MapSetVisibleBound(i*3,i);
    
-   MapUpdateIndicator(Coord(i*2, 20), 4);
+   MapUpdateIndicator(Coord(i, 20), 4);
    MapDrawVisible();
    Flush();
      
-   usleep(500000);
+   usleep(200000);
    //this_thread::sleep_for(chrono::seconds(1));
    if (system("CLS")) system("clear");  
   }
-}
 
   this_thread::sleep_for(chrono::seconds(1));
 
