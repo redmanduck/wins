@@ -337,7 +337,7 @@ Page Display::Splash() {
   for(int i = 0; i < 64; i++){
 //   MapSetVisibleBound(i*3,i);
    
-   MapUpdateIndicator(Coord(i, 20), 4);
+   MapUpdateIndicator(Coord(i*5, 20), 4);
    MapDrawVisible();
    Flush();
      
