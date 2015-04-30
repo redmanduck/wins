@@ -95,7 +95,7 @@ class Display {
   void SaveAsBitmap(string saveas);
   unique_ptr<uint8_t> GetBufferCopy();
 
-  void MapUpdateIndicator(Coord screen_coord, int rad);
+  void MapUpdateIndicator(Coord screen_coord);
   void MapSetVisibleBound(int x, int y);
   void MapDrawVisible();
 

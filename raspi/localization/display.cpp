@@ -180,14 +180,12 @@ void Display::resetWorld(){
 void Display::setWorldPixel(uint8_t x, uint8_t y, uint8_t color) {
     if ((x >= 170) || (y >= 128))
         return;
-
+  
     if(color){
-        WORLD[x+ (y/8)*170] |= (1<<(7-(y%8)));
+        WORLD[x+ (y/8)*170] ^= (1<<((y%8))); //xor , and no reverse
     }else{
-    	WORLD[x+ (y/8)*170] &= ~(1<<(7-(y%8)));
+    	WORLD[x+ (y/8)*170] &= ~(1<<((y%8)));
     }
-    //WORLD[x+ (y/8)*170] &= ~(1<<(7-(y%8))); 
-
 }
 
 void Display::MapLoadWorld(string mapfile){
@@ -210,7 +208,7 @@ void Display::MapDrawVisible(){
 	//indicator must be drawn in bottom layer
 	resetWorld();
 
-	if(radii_ > 3) radii_ = 0;
+	if(radii_ > 5) radii_ = 0;
 	setWorldPixel(map_indi_.first, map_indi_.second, 255);
 	drawWorldCircle(map_indi_.first, map_indi_.second, radii_++,255);
 	
@@ -234,8 +232,8 @@ void Display::MapDrawVisible(){
 //	glcd_.drawcircle(map_indi_.first, map_indi_.second, radii_++, 255);
 }
 
-void Display::MapUpdateIndicator(Coord N, int rad){
-	int DELTA = 30;
+void Display::MapUpdateIndicator(Coord N){
+//	int DELTA = 30;
 //	bool doUpdate = false;
 	int new_box_x = map_box_.first;
 	int new_box_y = map_box_.second;	
@@ -283,8 +281,7 @@ void Display::MapSetVisibleBound(int x, int y){
 	map_box_.second = y;
 }
 Coord Display::ToScreenCoordinate(Coord sid){
-	//TODO: turn scaled version of sid
-	return sid;
+	return Coord(sid.first + 10, sid.second + 10);
 }
 
 Coord Display::ToSidCoordinate(Coord screen){
@@ -337,7 +334,8 @@ Page Display::Splash() {
   for(int i = 0; i < 64; i++){
 //   MapSetVisibleBound(i*3,i);
    
-   MapUpdateIndicator(Coord(i*5, 20), 4);
+   MapUpdateIndicator(Coord(4*i, i));
+
    MapDrawVisible();
    Flush();
      
