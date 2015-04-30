@@ -178,13 +178,13 @@ void Display::resetWorld(){
 }
 
 void Display::setWorldPixel(uint8_t x, uint8_t y, uint8_t color) {
-    if ((x >= 170) || (y >= 128))
+    if ((x >= WORLD_WMAX) || (y >= WORLD_HMAX))
         return;
   
     if(color){
-        WORLD[x+ (y/8)*170] ^= (1<<((y%8))); //xor , and no reverse
+        WORLD[x+ (y/8)*WORLD_WMAX] ^= (1<<((y%8))); //xor , and no reverse
     }else{
-    	WORLD[x+ (y/8)*170] &= ~(1<<((y%8)));
+    	WORLD[x+ (y/8)*WORLD_WMAX] &= ~(1<<((y%8)));
     }
 }
 
@@ -200,8 +200,9 @@ void Display::MapDrawVisible(){
 	//this dump visible area into gcld
 	//first extract the visible content from WORLD
 	//use map_box as WORLD offset
-	int W = 170;
+	int W = WORLD_WMAX;
 	int world_offset = W*map_box_.second+map_box_.first;
+	cout << "World Offset Y: " << map_box_.second << "\n";
 //	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);
 		
 	//Draw indicator
@@ -233,23 +234,37 @@ void Display::MapDrawVisible(){
 }
 
 void Display::MapUpdateIndicator(Coord N){
-//	int DELTA = 30;
 //	bool doUpdate = false;
 	int new_box_x = map_box_.first;
 	int new_box_y = map_box_.second;	
+
+	int X_DELTA = 20;
+	int Y_DELTA = 2;
 
 	//Shift Screen to reveal more	
 	//If location N is beyond current map_box_ bound
 
 	if(N.first >= map_box_.first + 128){
 	 	cout << "Shifting X\n";	
-		new_box_x += 20;
+		new_box_x += X_DELTA;
 	}
 
 	if(N.second >= map_box_.second + 64){
 		cout << "Shifting Y\n";
-		new_box_y += 20;
+		new_box_y += Y_DELTA;
 	}
+
+
+	if(N.first <= map_box_.first - 128){
+	 	cout << "Shifting -X\n";	
+		new_box_x -= X_DELTA;
+	}
+
+	if(N.second <= map_box_.second - 64){
+		cout << "Shifting -Y\n";
+		new_box_y -= Y_DELTA;
+	}
+
           
 	MapSetVisibleBound(new_box_x, new_box_y);
 	
@@ -272,9 +287,9 @@ void Display::MapSetVisibleBound(int x, int y){
 		cout << "Normalizing X\n";
 		x = WORLD_WMAX - 128;	
 	}
-	if(y >= (WORLD_HMAX - 64)){
+	if(y >= (WORLD_HMAX - 64)/8){
 		cout << "noramlizing Y\n";
-		y = WORLD_HMAX - 64;	
+		y = (WORLD_HMAX - 64)/8;//(WORLD_HMAX - 64)/8;	
 	}
 	cout <<"shifting bound " << x <<"," << y << "\n";
  	map_box_.first = x;
@@ -320,14 +335,22 @@ Display::Display()
 Page Display::Splash() {
   Flush();
   this_thread::sleep_for(chrono::seconds(0));
-//  MapSetVisibleBound(100, 0);
-//  MapDrawVisible();
-//  Flush();
- 
+  //  MapSetVisibleBound(100, 0);
+  //  MapDrawVisible();
+  //  Flush();
+
+//  for(int f=0;f<10;f++){
+//    MapUpdateIndicator(Coord(ORIGIN_X + 29*0.646913580247,ORIGIN_Y -2));
+///    MapDrawVisible();
+ //   Flush();
+  //  usleep(100000);
+//}
+
+/*
   for(int i = 0; i < 64; i++){
    
-   MapUpdateIndicator(Coord(15+i,39));
-//   MapUpdateIndicator(Coord(4*i, i));
+//   MapUpdateIndicator(Coord(ORIGIN_X+i*3,ORIGIN_Y));
+   MapUpdateIndicator(Coord(ORIGIN_X, ORIGIN_Y + i*3));
 
    MapDrawVisible();
    Flush();
@@ -336,11 +359,12 @@ Page Display::Splash() {
    //this_thread::sleep_for(chrono::seconds(1));
    if (system("CLS")) system("clear");  
   }
-
+*/
   this_thread::sleep_for(chrono::seconds(1));
 
   return PAGE_CALIBRATE_PROMPT;
 }
+
 
 Page Display::CalibratePrompt() {
   ClearScreen();
@@ -403,8 +427,8 @@ Page Display::Menu() {
   IncrmLine();
   PutString("4. Shut Down");
   IncrmLine();
-  //PutString("5. Map floor");
-  //IncrmLine();
+  PutString("5. Map floor");
+  IncrmLine();
   IncrmLine();
   current_page_ = PAGE_MENU;
 
@@ -415,7 +439,7 @@ Page Display::Menu() {
       case '2': return PAGE_NAVIGATING;
       case '3': return PAGE_CALBRATING;
       case '4': return PAGE_SHUT_DOWN;
-      //case '5': return PAGE_MAP_SCAN;
+      case '5': return PAGE_MAP_SCAN;
       default : PutString("Enter a number in 1-4", true);
     }
   }
@@ -541,33 +565,53 @@ Page Display::ShutDown() {
   return PAGE_SHUT_DOWN;
 }
 
+
+string getNextSegmentName(){
+   //For mapping mode
+   //return next available segment filename
+   system("mkdir /wifimap"); //Keep it simple stupid (KISS) 
+   FILE * max_p = popen("ls /wifimap  | sort -n -r | egrep -o '[0-9]+' | head -n 1", "r");
+   char buffer[64]; 
+   char *line_p = fgets(buffer, sizeof(buffer), max_p);
+   pclose(max_p);
+   return string(buffer);
+}
+
+bool MAP_SCANNING_ = false;
+int samples = 0;
 Page Display::MapScan() {
-  while(true) {
-    ClearScreen();
-    SetCurrentLine(2);
-    PutString("1: Add current");
+  ClearScreen();
+  SetCurrentLine(1);
+  string nxt = getNextSegmentName();
+  int next = 0;
+  try{
+    next = stoi(nxt) + 1;
+  }catch (...){
+   return PAGE_MENU;
+  }
+  PutString("Name: S0" + to_string(next));
+
+  IncrmLine();
+  if(MAP_SCANNING_){
+   PutString("#Sample: " + to_string(samples));
+   IncrmLine();  
+   PutString("1. Stop Scan");
+   //do scan here or someting  
+  }else{
     IncrmLine();
-    PutString("location to map");
-    IncrmLine();
-    PutString("2: Quit mapping");
-    IncrmLine();
-    current_page_ = PAGE_MAP_SCAN;
+    PutString("1. Start Scan");
+    PutString("2. Next File");
+  }
+
+  current_page_ = PAGE_MAP_SCAN;
+  while (true) {
     char option = GetChar();
-    if (option == '2') {
+    if (option == '1') {
+      MAP_SCANNING_ = !MAP_SCANNING_;
+      return PAGE_MAP_SCAN; 
+    } else {
       return PAGE_MENU;
     }
-
-    ClearScreen();
-    SetCurrentLine(3);
-    PutString("Name of location");
-    string name = GetStringAndEcho();
-
-    ClearScreen();
-    SetCurrentLine(3);
-    PutString("Mapping...");
-    IncrmLine();
-    PutString("Please stay still");
-    //Map::MapCurrentLocation(name);
   }
 }
 
@@ -582,6 +626,7 @@ Page Display::ShowPage(Page p) {
     case PAGE_NOCALIBRATE_WARN:     return NoCalibrateWarn();
     case PAGE_CALBRATING:           return Calibrating();
     case PAGE_MENU:                 return Menu();
+    case PAGE_MAP_SCAN:		    return MapScan();
     case PAGE_NAVIGATING:           return Navigating();
     case PAGE_DESTINATION_PROMPT:   return DestinationPrompt();
     case PAGE_SHUT_DOWN:            return ShutDown();
