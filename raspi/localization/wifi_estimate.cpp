@@ -358,6 +358,10 @@ WiFiEstimate::WiFiEstimate(unique_ptr<WifiScan> scanner) {
   scanner_ = move(scanner);
 }
 
+vector<Result> WiFiEstimate::GetScans() {
+  return scanner_->Fetch();
+}
+
 vector<PointEstimate> WiFiEstimate::EstimateLocation(
     WiFiVariant v,
     int read_count) {
@@ -370,7 +374,12 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
     for (int i = 0; i < read_count; ++i) {
       scans.push_back(scanner_->Fetch());
     }
-    return ClosestByMahalanobis(AverageScans(scans), v);
+    if (Global::WiFiExp1 != 0) {
+      return ClosestByMahalanobis(AverageScans(scans), v, 0, 0, Global::WiFiExp1,
+          Global::WiFiExp2, false);
+    } else {
+      return ClosestByMahalanobis(AverageScans(scans), v);
+    }
   } else {
     FILE_LOG(logWIFI) << "Fetching fresh\n";
     vector<Result> results = scanner_->Fetch();
@@ -378,13 +387,19 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
       lock_guard<mutex> lock(Global::DumpMutex);
       ofstream dumpfile(Global::DumpFile, ofstream::app);
       for (auto r : results) {
-        dumpfile << "WIFI, " << r.name << ", " << r.signal << "\n";
+        dumpfile << "WIFI," << r.name << "," << r.signal << "\n";
       }
       dumpfile << "-----";
       dumpfile.close();
     }
     FILE_LOG(logWIFI) << "size = " << results.size() << "\n";
-    auto wifi_estimates = ClosestByMahalanobis(results, v);
+    vector<PointEstimate> wifi_estimates;
+    if (Global::WiFiExp1 != 0) {
+      wifi_estimates = ClosestByMahalanobis(results, v, 0, 0, Global::WiFiExp1,
+          Global::WiFiExp2, false);
+    } else {
+      wifi_estimates = ClosestByMahalanobis(results, v);
+    }
     if (wifi_estimates.size() > 0) {
       FILE_LOG(logLOCATION) << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
           wifi_estimates[0].y_mean << "\n";

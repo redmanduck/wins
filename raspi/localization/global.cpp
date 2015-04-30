@@ -33,6 +33,8 @@ int Global::IMU_R = 0.03;
 int Global::IMU_QD = 0.0003;
 int Global::IMU_QV = 0.003;
 int Global::IMU_QA = 0.03;
+double Global::WiFiExp1 = 0;
+double Global::WiFiExp2 = 0;
 int Global::DurationOverride = -1;
 vector<string> Global::WiFiDevices({ "wlan0" });
 int Global::InitWiFiReadings = 3;
@@ -139,7 +141,6 @@ void Global::ShutDown() {
   cout << "IN Global::ShutDown ========================\n";
   SetEventFlag(WINS_EVENT_SHUTTING_DOWN);
   Global::Destroy();
-  SPI::TerminateThread();
   KeypadHandler::TerminateThread();
   Map::TerminateThread();
   cout << "Teriminated threads______________\n";
@@ -150,6 +151,7 @@ void Global::ShutDown() {
   }
   cout << "shutdown command: " << shutdown_command_ << "\n";
   system(shutdown_command_.c_str());
+  SPI::TerminateThread();
 }
 
 void Global::SetTestMode() {

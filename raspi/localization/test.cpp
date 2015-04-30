@@ -269,6 +269,25 @@ void Test(int argc, char *orig_argv[]) {
       }
       keypad_handler.FakeStringEnter(line);
     }
+  } else if (string(argv[2]) == "walk") {
+    assert(argc == 11);
+    Map::InitMap(argv[3]);
+
+    vector<unique_ptr<Point>> test_points;
+    ifstream is(argv[4], ios::binary);
+    cereal::BinaryInputArchive archive(is);
+
+    archive(test_points);
+    is.close();
+
+    int imu_readings = 0;
+    Global::InitWiFiReadings = 0;
+    ifstream data_file(argv[10]);
+
+    auto fakescanners = Location::TestInit(vector<vector<Result>>(), 1);
+    assert(fakescanners.size() == 1);
+
+    //AddNextSet(data_file);
   }
 }
 

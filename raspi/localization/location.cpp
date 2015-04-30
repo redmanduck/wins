@@ -109,7 +109,9 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
     }
 
     // Sleep for a while and retry.
-    this_thread::sleep_for(chrono::seconds(1));
+    if (not Global::IsTest()) {
+      this_thread::sleep_for(chrono::seconds(1));
+    }
     return false;
   }
 
@@ -195,8 +197,14 @@ kdtree::node<Point*>* Location::GetCurrentNode() {
 
 void Location::UpdateEstimate() {
   auto wifi_estimates = GetWiFiReadings(Global::ReadingsPerUpdate);
-  Imu::EstimateLocation(chrono::duration_cast<chrono::seconds>(
-      chrono::steady_clock::now() - last_update_time_).count());
+  double secs;
+  if (Global::DurationOverride > 0) {
+    secs = Global::DurationOverride / 1000;
+  } else {
+    secs = chrono::duration_cast<chrono::seconds>(
+      chrono::steady_clock::now() - last_update_time_).count();
+  }
+  Imu::EstimateLocation(secs);
   Map::UpdateLikelyPoints(max_distance_ * Global::Scale);
   if (not DoKalmanUpdate(wifi_estimates) and max_distance_ <= MAX_MAX_DIST) {
     max_distance_ *= 1.5;
@@ -227,6 +235,10 @@ vector<FakeWifiScan*> Location::TestInit(vector<vector<Result>> setup_points,
   InitialEstimate();
 
   return fakescanners;
+}
+
+vector<Result> Location::GetScans() {
+  return wifi_estimators_[0]->GetScans();
 }
 
 void Location::TestSetCurrentNode(kdtree::node<Point*>* node) {

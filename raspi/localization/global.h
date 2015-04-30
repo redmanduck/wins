@@ -50,6 +50,8 @@ class Global {
   static int IMU_QD;
   static int IMU_QV;
   static int IMU_QA;
+  static double WiFiExp1;
+  static double WiFiExp2;
   static int DurationOverride;
   static string MapFile;
   static vector<string> WiFiDevices;
