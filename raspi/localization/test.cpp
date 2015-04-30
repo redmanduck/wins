@@ -218,7 +218,7 @@ void Test(int argc, char *orig_argv[]) {
     assert(argc == 4);
     Global::MapFile = string(argv[3]);
     thread main_thread = thread(&Global::RunMainLoop);
-    auto& display = Display::GetInstance();
+    //auto& display = Display::GetInstance();
     auto& keypad_handler = KeypadHandler::GetInstance();
 
     //while(display.CurrentPage() != PAGE_MENU);
@@ -235,8 +235,40 @@ void Test(int argc, char *orig_argv[]) {
       }
       keypad_handler.FakeStringEnter(line);
     }
-  } else if (string(argv[2]) == "imu1") {
+  } else if (string(argv[2]) == "imu") {
+    assert(argc == 8);
+    Global::IMU_R = stoi(argv[4]);
+    Global::IMU_QD = stoi(argv[5]);
+    Global::IMU_QV = stoi(argv[6]);
+    Global::IMU_QA = stoi(argv[7]);
 
+    Global::MapFile = string(argv[3]);
+    thread main_thread = thread(&Global::RunMainLoop);
+    auto& keypad_handler = KeypadHandler::GetInstance();
+    while (true) {
+      string line;
+      getline(cin, line);
+      if (line.size() == 0) {
+         continue;
+      }
+      keypad_handler.FakeStringEnter(line);
+    }
+  } else if (string(argv[2]) == "data_dump") {
+    assert(argc == 5);
+    Global::DataDump = true;
+    Global::DumpFile = string(argv[4]);
+
+    Global::MapFile = string(argv[3]);
+    thread main_thread = thread(&Global::RunMainLoop);
+    auto& keypad_handler = KeypadHandler::GetInstance();
+    while (true) {
+      string line;
+      getline(cin, line);
+      if (line.size() == 0) {
+         continue;
+      }
+      keypad_handler.FakeStringEnter(line);
+    }
   }
 }
 

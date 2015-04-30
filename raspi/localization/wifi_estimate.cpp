@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <fstream>
 #include <tuple>
 #include <unordered_map>
 
@@ -373,6 +374,15 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
   } else {
     FILE_LOG(logWIFI) << "Fetching fresh\n";
     vector<Result> results = scanner_->Fetch();
+    if (Global::DataDump) {
+      lock_guard<mutex> lock(Global::DumpMutex);
+      ofstream dumpfile(Global::DumpFile, ofstream::app);
+      for (auto r : results) {
+        dumpfile << "WIFI, " << r.name << ", " << r.signal << "\n";
+      }
+      dumpfile << "-----";
+      dumpfile.close();
+    }
     FILE_LOG(logWIFI) << "size = " << results.size() << "\n";
     auto wifi_estimates = ClosestByMahalanobis(results, v);
     if (wifi_estimates.size() > 0) {

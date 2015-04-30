@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <iomanip>
+#include <signal.h>
 
 #include "common_utils.h"
 #include "display.h"
@@ -28,13 +29,26 @@ int Global::FilterBiasX = 5;
 int Global::FilterBiasY = 5;
 int Global::LocationRFactor = 4;
 int Global::LocationQFactor = 5;
+int Global::IMU_R = 0.03;
+int Global::IMU_QD = 0.0003;
+int Global::IMU_QV = 0.003;
+int Global::IMU_QA = 0.03;
 int Global::DurationOverride = -1;
 vector<string> Global::WiFiDevices({ "wlan0" });
 int Global::InitWiFiReadings = 3;
 int Global::ReadingsPerUpdate = 1;
 double Global::Scale = (1/1.1);
+bool Global::DataDump = false;
+string Global::DumpFile = "dump.txt";
+mutex Global::DumpMutex;
 string Global::shutdown_command_ = "sudo shutdown -hP now";
 bool Global::is_test_ = false;
+
+void sighandler(int sig)
+{
+  FILE_LOG(logCRITICAL) << "Signal received. Initiating clean shut down...\n";
+  Global::SetEventFlag(WINS_EVENT_SHUTTING_DOWN);
+}
 
 void Global::RunMainLoop() {
   Global::Init();
@@ -59,7 +73,11 @@ void Global::RunMainLoop() {
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
-  FILELog::LogSelect() = (TLogLevel)(logSPI | logIMU);
+  FILELog::LogSelect() = (TLogLevel)(logLOCATION | logIMU);
+  signal(SIGABRT, &sighandler);
+  signal(SIGTERM, &sighandler);
+  signal(SIGINT, &sighandler);
+
   SPI::StartThread();
   KeypadHandler::StartThread();
   Map::StartNavigationThread();
@@ -118,15 +136,19 @@ thread::id Global::GetMainThreadId() {
 }
 
 void Global::ShutDown() {
+  cout << "IN Global::ShutDown ========================\n";
   SetEventFlag(WINS_EVENT_SHUTTING_DOWN);
   Global::Destroy();
-  KeypadHandler::TerminateThread();
   SPI::TerminateThread();
+  KeypadHandler::TerminateThread();
   Map::TerminateThread();
+  cout << "Teriminated threads______________\n";
   system("sudo kill -9 $(pgrep -f winsd)");
+  cout << "is test " << is_test_ << "\n";
   if (is_test_ == false) {
     cout << "Shutting down...\n";
   }
+  cout << "shutdown command: " << shutdown_command_ << "\n";
   system(shutdown_command_.c_str());
 }
 
