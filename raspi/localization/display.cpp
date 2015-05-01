@@ -266,7 +266,7 @@ void Display::MapUpdateIndicator(Coord N){
 	int new_box_x = map_box_.first;
 	int new_box_y = map_box_.second;	
 
-	int X_DELTA = 20;
+	int X_DELTA = 60;
 	int Y_DELTA = 2;
 
 	//Shift Screen to reveal more	
@@ -363,7 +363,7 @@ Display::Display()
 Page Display::Splash() {
   //Flush();
   this_thread::sleep_for(chrono::seconds(0));
-  MapLoadWorld("worlds/EE.world");
+  MapLoadWorld("worlds/wang.world");
   //  MapSetVisibleBound(100, 0);
   //  MapDrawVisible();
   //  Flush();
@@ -376,7 +376,7 @@ Page Display::Splash() {
 //}
 
 
-  for(int i = 0; i < 64; i++){
+  for(int i = 0; i < 10; i++){
    
    MapUpdateIndicator(Coord(ORIGIN_X+i*3,ORIGIN_Y));
 //   MapUpdateIndicator(Coord(ORIGIN_X, ORIGIN_Y + i*3));
@@ -611,6 +611,7 @@ int MAP_samples_ = 0;  	    //count number of sample
 string MAP_FILENAME_ = "";  //map_file name
 string MAP_record_ = ""; //map_file
 ofstream MAP_fp_ ;
+bool SKIP_SCAN = false;
 void updateFilename(){
   string nxt = getNextSegmentName();
   int next = 0;
@@ -647,8 +648,14 @@ Page Display::MapScan() {
     }
  
     if(MAP_SCANNING_){
+	bool skipflag = false;
+	if(SKIP_SCAN){
+		SKIP_SCAN = !SKIP_SCAN;
+		skipflag = true;
+	}
        vector<Result> r = Location::GetScans();
 	for(int xx = 0; xx < 10; xx++){
+	  if(skipflag) continue;
           MAP_samples_++; 
           //This is one scan
        	  for(auto i = r.begin(); i != r.end(); i++ ){
@@ -657,16 +664,20 @@ Page Display::MapScan() {
  	  //EOS
   	  MAP_record_ += "-----------------------\n";
 
-	ClearScreen();
-
-	PutString("# Sample: " + to_string(MAP_samples_));
-     	IncrmLine();  
-     PutString("1. Done");
-     IncrmLine();
-     PutString("3. Delimit");
+  	  ClearScreen();
+	  PutString("Collecting..");
+  	  IncrmLine();
+	  PutString("# Sample: " + to_string(MAP_samples_));
+     	  IncrmLine();  
 
       }
-        
+	  ClearScreen();
+	  PutString("# Sample: " + to_string(MAP_samples_));
+     	  IncrmLine();  
+          PutString("1. Done");
+          IncrmLine();
+          PutString("3. Delimit");
+       
     }  
     
     char option = GetChar();
@@ -697,8 +708,17 @@ Page Display::MapScan() {
     //}else if(option == '2' && MAP_SCANNING_){
     //   continue;
     }else if(option == '3' && MAP_SCANNING_){
-       MAP_record_ += "========== [FLAGGED] =============\n"; 
+     ClearScreen();
+     PutString("Confirm delim? (5=Y)");
+     IncrmLine();
+     Flush();
+     char option2 = GetChar();
+     if(option2 == '5'){
+      MAP_record_ += "========== [FLAGGED] =============\n"; 
 	cout << "MPU6050" << MAP_record_;
+     }else{
+	SKIP_SCAN = true;
+     }
     }
 
   }

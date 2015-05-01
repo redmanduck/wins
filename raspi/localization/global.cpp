@@ -75,7 +75,7 @@ void Global::RunMainLoop() {
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
-  FILELog::LogSelect() = (TLogLevel)(logLOCATION | logIMU);
+  FILELog::LogSelect() = (TLogLevel)(logLOCATION);
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);
