@@ -344,76 +344,78 @@ WifiScan::~WifiScan()
 
 vector<Result> WifiScan::Fetch()
 {
-  duck_scan_head scan_context;
-  scan_context.result = NULL;
   vector<Result> results;
+  while (results.size() == 0) {
+    duck_scan_head scan_context;
+    scan_context.result = NULL;
 
-  if (geteuid() != 0) {
-    FILE_LOG(logWIFI) << "uid: " << geteuid();
-  }
-
-  if (scan_channels(&scan_context) < 0) {
-    //throw WIFISCAN_ERROR_IN_IW_SCAN;
-    return results;
-  }
-  if (scan_context.result == NULL){
-    // return -1;
-    return results;
-  }
-    // FILE_LOG(logWIFI) << "Done scanning...";
-
-  /* Loop over result, build fingerprint. */
-
-  for (duck_scan *i = scan_context.result; i != NULL; i = i->next)
-  {
-    /* Retrieve device address. */
-    char address[128];
-    snprintf(address, 128, "%02X-%02X-%02X-%02X-%02X-%02X",
-             (unsigned char)i->ap_addr.sa_data[0],
-             (unsigned char)i->ap_addr.sa_data[1],
-             (unsigned char)i->ap_addr.sa_data[2],
-             (unsigned char)i->ap_addr.sa_data[3],
-             (unsigned char)i->ap_addr.sa_data[4],
-             (unsigned char)i->ap_addr.sa_data[5]);
-
-    /* Retrieve RSSI */
-    double dBm;
-    if (i->stats.qual.updated & IW_QUAL_DBM)
-    {
-      dBm = i->stats.qual.level;
-      if (i->stats.qual.level >= 64)
-        dBm -= 0x100;
+    if (geteuid() != 0) {
+      FILE_LOG(logWIFI) << "uid: " << geteuid();
     }
-    else if (i->stats.qual.updated & IW_QUAL_RCPI)
-    {
-      dBm = (i->stats.qual.level / 2.0) - 110.0;
+
+    if (scan_channels(&scan_context) < 0) {
+      //throw WIFISCAN_ERROR_IN_IW_SCAN;
+      return results;
     }
-    std::string SSID = std::string(address);
+    if (scan_context.result == NULL){
+      // return -1;
+      return results;
+    }
+      // FILE_LOG(logWIFI) << "Done scanning...";
 
-		//FILE_LOG(logWIFI) << "SSID: " << SSID << "\n";
-		int ttl = 0;
-		std::vector<std::string> x;
-		try {
-			x = split(i->extra, ':');
-			if (x.size() == 0)
-				throw std::runtime_error("x");
-			std::vector<std::string> y = split(x[1], 'm');
-			if (y.size() > 0) {
-				ttl = std::stoi(y[0],nullptr,0);
-			} else {
-				throw std::runtime_error("y");
-			}
-		} catch(...) {
-			FILE_LOG(logWIFI) << "Could not convert: " << "\n";
-		}
-		FILE_LOG(logWIFI) << "Last beacon(ms): " << ttl << "\n";
+    /* Loop over result, build fingerprint. */
 
-		if(ttl > BEACON_TTL){
-			//kill it
-			FILE_LOG(logWIFI) << "Killing result !" << "\n";
-			continue;
-		}
-    results.push_back({ string(address), dBm });
+    for (duck_scan *i = scan_context.result; i != NULL; i = i->next)
+    {
+      /* Retrieve device address. */
+      char address[128];
+      snprintf(address, 128, "%02X-%02X-%02X-%02X-%02X-%02X",
+               (unsigned char)i->ap_addr.sa_data[0],
+               (unsigned char)i->ap_addr.sa_data[1],
+               (unsigned char)i->ap_addr.sa_data[2],
+               (unsigned char)i->ap_addr.sa_data[3],
+               (unsigned char)i->ap_addr.sa_data[4],
+               (unsigned char)i->ap_addr.sa_data[5]);
+
+      /* Retrieve RSSI */
+      double dBm;
+      if (i->stats.qual.updated & IW_QUAL_DBM)
+      {
+        dBm = i->stats.qual.level;
+        if (i->stats.qual.level >= 64)
+          dBm -= 0x100;
+      }
+      else if (i->stats.qual.updated & IW_QUAL_RCPI)
+      {
+        dBm = (i->stats.qual.level / 2.0) - 110.0;
+      }
+      std::string SSID = std::string(address);
+
+      //FILE_LOG(logWIFI) << "SSID: " << SSID << "\n";
+      int ttl = 0;
+      std::vector<std::string> x;
+      try {
+        x = split(i->extra, ':');
+        if (x.size() == 0)
+          throw std::runtime_error("x");
+        std::vector<std::string> y = split(x[1], 'm');
+        if (y.size() > 0) {
+          ttl = std::stoi(y[0],nullptr,0);
+        } else {
+          throw std::runtime_error("y");
+        }
+      } catch(...) {
+        FILE_LOG(logWIFI) << "Could not convert: " << "\n";
+      }
+      FILE_LOG(logWIFI) << "Last beacon(ms): " << ttl << "\n";
+
+      if(ttl > BEACON_TTL){
+        //kill it
+        FILE_LOG(logWIFI) << "Killing result !" << "\n";
+        continue;
+      }
+      results.push_back({ string(address), dBm });
+    }
   }
   return results;
 }

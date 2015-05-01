@@ -663,9 +663,9 @@ Page Display::MapScan() {
 		SKIP_SCAN = !SKIP_SCAN;
 		skipflag = true;
 	}
-       vector<Result> r = Location::GetScans();
 	for(int xx = 0; xx < 10; xx++){
 	  if(skipflag) continue;
+         vector<Result> r = Location::GetScans();
           MAP_samples_++; 
           //This is one scan
        	  for(auto i = r.begin(); i != r.end(); i++ ){
