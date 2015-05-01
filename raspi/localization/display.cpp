@@ -191,20 +191,27 @@ void Display::MapLoadWorld(string mapfile){
 		cout << "Unable to open world: " + mapfile + ". Will crash.\n";
 		throw;
 	}
-	char wsize[8]; //size of world
-	char wmax[8]; //width of world
-	char hmax[8]; //height of world
-	fread(wsize, 1, 7, pFile);
-	fread(wmax, 1, 7, pFile);
-	fread(hmax, 1, 7, pFile);
+	//char wsize[8]; //size of world
+	//char wmax[8]; //width of world
+	//char hmax[8]; //height of world
 
-	wsize[8] = 0x00;
+	//fread(wsize, sizeof(char), 7, pFile);
+	//fread(wmax, sizeof(char), 7, pFile);
+	//fread(hmax, sizeof(char), 7, pFile);
+
+//	cout << wsize;
+
+/*	wsize[8] = 0x00;
 	wmax[8] = 0x00;
-	hmax[8] = 0x00;
-	int x = atoi(wsize);
-	int wm = atoi(wmax);
-	int hm = atoi(hmax);
+	hmax[8] = 0x00;*/
+	//int x = atoi(wsize);
+//	int wm = atoi(wmax);
+//	int hm = atoi(hmax);
 
+	long unsigned int x, wm, hm;
+	fscanf(pFile, "%07lu", &x);
+	fscanf(pFile, "%07lu", &wm);
+	fscanf(pFile, "%07lu", &hm);
 	WORLD_SIZE = x;
 	WORLD_HMAX = hm;
 	WORLD_WMAX = wm;
@@ -212,14 +219,17 @@ void Display::MapLoadWorld(string mapfile){
 	cout << WORLD_SIZE << " is world size\n";
 	cout << WORLD_WMAX << " is world width\n";
 	cout << WORLD_HMAX << " is world height\n";
+
    	WORLD = (uint8_t *)malloc(sizeof(uint8_t)*x);
 	WORLD_MAP = (uint8_t *)malloc(sizeof(uint8_t)*x);	
-	size_t result = fread (WORLD,1,x,pFile);
+	size_t result = fread (WORLD,sizeof(uint8_t),x,pFile);
    	memcpy(WORLD_MAP, WORLD, x);
 	if(result != (unsigned int)x){
 		cout << "Unable to load world from " + mapfile + ". Will crash.\n";
 		throw;
-	}	
+	}
+	
+	fclose(pFile);
 }
 
 int radii_ = 0;
@@ -601,7 +611,7 @@ string getNextSegmentName(){
    system("mkdir /wifimap"); //Keep it simple stupid (KISS) 
    FILE * max_p = popen("ls /wifimap  | sort -n -r | egrep -o '[0-9]+' | head -n 1", "r");
    char buffer[64]; 
-   char *line_p = fgets(buffer, sizeof(buffer), max_p);
+   fgets(buffer, sizeof(buffer), max_p);
    pclose(max_p);
    return string(buffer);
 }
