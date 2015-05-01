@@ -170,7 +170,7 @@ void Display::drawWorldCircle(uint8_t x0, uint8_t y0, uint8_t r,
 
 void Display::resetWorld(){
    //Highly inefficient function to reset map
-   memcpy(WORLD, WORLD_MAP, 20910);
+   memcpy(WORLD, WORLD_MAP, WORLD_SIZE);
 }
 
 void Display::setWorldPixel(uint8_t x, uint8_t y, uint8_t color) {
@@ -185,9 +185,41 @@ void Display::setWorldPixel(uint8_t x, uint8_t y, uint8_t color) {
 }
 
 void Display::MapLoadWorld(string mapfile){
-        //load background into big buffer
-	//hard code for now
-	//its in WORLD
+	FILE * pFile;
+        pFile = fopen (mapfile.c_str(), "rb");
+        if (pFile==NULL) {fputs ("File error",stderr);
+		cout << "Unable to open world: " + mapfile + ". Will crash.\n";
+		throw;
+	}
+	char wsize[8]; //size of world
+	char wmax[8]; //width of world
+	char hmax[8]; //height of world
+	fread(wsize, 1, 7, pFile);
+	fread(wmax, 1, 7, pFile);
+	fread(hmax, 1, 7, pFile);
+
+	wsize[8] = 0x00;
+	wmax[8] = 0x00;
+	hmax[8] = 0x00;
+	int x = atoi(wsize);
+	int wm = atoi(wmax);
+	int hm = atoi(hmax);
+
+	WORLD_SIZE = x;
+	WORLD_HMAX = hm;
+	WORLD_WMAX = wm;
+
+	cout << WORLD_SIZE << " is world size\n";
+	cout << WORLD_WMAX << " is world width\n";
+	cout << WORLD_HMAX << " is world height\n";
+   	WORLD = (uint8_t *)malloc(sizeof(uint8_t)*x);
+	WORLD_MAP = (uint8_t *)malloc(sizeof(uint8_t)*x);	
+	size_t result = fread (WORLD,1,x,pFile);
+   	memcpy(WORLD_MAP, WORLD, x);
+	if(result != (unsigned int)x){
+		cout << "Unable to load world from " + mapfile + ". Will crash.\n";
+		throw;
+	}	
 }
 
 int radii_ = 0;
@@ -212,7 +244,7 @@ void Display::MapDrawVisible(){
 	for(int i = 0; i < 8; i++){
 	   int ac = i*128;//(128*7)-i*128;
 	   
-	   if(128 + world_offset + W*i >= 20910){
+	   if(128 + world_offset + W*i >= WORLD_SIZE){
 		cout << "World access out of bound!!!";
 	   }  
 
@@ -329,8 +361,9 @@ Display::Display()
 }
 
 Page Display::Splash() {
-  Flush();
+  //Flush();
   this_thread::sleep_for(chrono::seconds(0));
+  MapLoadWorld("worlds/EE.world");
   //  MapSetVisibleBound(100, 0);
   //  MapDrawVisible();
   //  Flush();
@@ -342,20 +375,20 @@ Page Display::Splash() {
   //  usleep(100000);
 //}
 
-/*
+
   for(int i = 0; i < 64; i++){
    
-//   MapUpdateIndicator(Coord(ORIGIN_X+i*3,ORIGIN_Y));
-   MapUpdateIndicator(Coord(ORIGIN_X, ORIGIN_Y + i*3));
+   MapUpdateIndicator(Coord(ORIGIN_X+i*3,ORIGIN_Y));
+//   MapUpdateIndicator(Coord(ORIGIN_X, ORIGIN_Y + i*3));
 
    MapDrawVisible();
    Flush();
      
-   usleep(200000);
+   usleep(120000);
    //this_thread::sleep_for(chrono::seconds(1));
    if (system("CLS")) system("clear");  
   }
-*/
+
   this_thread::sleep_for(chrono::seconds(1));
 
   return PAGE_CALIBRATE_PROMPT;
@@ -585,6 +618,7 @@ void updateFilename(){
     next = stoi(nxt) + 1;
   }catch (...){
     cout << "Unable to determine filename. Crashing";
+    throw;
     return;
   }
   MAP_FILENAME_ = to_string(next) + ".txt";
