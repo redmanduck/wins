@@ -9,6 +9,7 @@
 #include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
 #include "global.h"
+#include "imu.h"
 #include "location.h"
 #include "map.h"
 #include "point.h"
@@ -21,22 +22,6 @@ namespace wins {
 #define BAD_READING 10000000
 
 namespace {
-  double mean(vector<double> v) {
-    double sum = std::accumulate(v.begin(), v.end(), 0.0);
-    double mean = sum / v.size();
-    return mean;
-  }
-
-  double std(vector<double> v) {
-    std::vector<double> diff(v.size());
-    std::transform(v.begin(), v.end(), diff.begin(),
-                   std::bind2nd(std::minus<double>(), mean(v)));
-    double sq_sum = std::inner_product(diff.begin(), diff.end(),
-        diff.begin(), 0.0);
-    double stdev = std::sqrt(sq_sum / v.size());
-    return stdev;
-  }
-
   void MahalanobisAnalysis(vector<unique_ptr<Point>>& test_points,
       DebugParams dp, bool debug, WiFiVariant v) {
     vector<double> distances;
@@ -71,7 +56,7 @@ namespace {
       }
     }
     dp.mean = mean(distances);
-    dp.std = std(distances);
+    dp.std = stddev(distances);
     dp.mean_var_x = mean(x_vars);
     dp.mean_var_y = mean(y_vars);
   }
@@ -106,7 +91,7 @@ namespace {
       }
     }
     dp.mean = mean(distances);
-    dp.std = std(distances);
+    dp.std = stddev(distances);
     dp.mean_var_x = mean(x_vars);
     dp.mean_var_y = mean(y_vars);
   }
@@ -141,7 +126,7 @@ namespace {
       }
     }
     dp.mean = mean(distances);
-    dp.std = std(distances);
+    dp.std = stddev(distances);
     dp.mean_var_x = mean(x_vars);
     dp.mean_var_y = mean(y_vars);
   }
@@ -198,10 +183,35 @@ namespace {
       }
     }
     dp.mean = mean(distances);
-    dp.std = std(distances);
+    dp.std = stddev(distances);
     dp.mean_var_x = mean(x_vars);
     dp.mean_var_y = mean(y_vars);
   }
+}
+
+int AddNextSet(ifstream& fs, FakeWifiScan* fakescanner) {
+  int imu_readings = 0;
+  vector<Result> scans;
+  string line;
+  while (imu_readings < 70) {
+    if (getline(fs, line)) {
+      vector<string> parts = split(line, ',');
+      if (parts[0] == "IMU") {
+        Imu::AddReading(stod(parts[1]), stod(parts[2]), stod(parts[3]),
+            stod(parts[4]), stod(parts[5]), stod(parts[6]), stod(parts[7]));
+      } else if (parts[0] == "WIFI") {
+        scans.push_back(Result({parts[1], stod(parts[2])}));
+      } else if (parts[0] == "-----") {
+        fakescanner->result_queue.push(scans);
+        return imu_readings;
+      }
+    } else {
+      fakescanner->result_queue.push(scans);
+      return imu_readings;
+    }
+  }
+  fakescanner->result_queue.push(scans);
+  return imu_readings;
 }
 
 void learn_helper(int argc, vector<string> argv) {

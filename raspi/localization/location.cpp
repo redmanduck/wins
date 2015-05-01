@@ -109,7 +109,9 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
     }
 
     // Sleep for a while and retry.
-    this_thread::sleep_for(chrono::seconds(1));
+    if (not Global::IsTest()) {
+      this_thread::sleep_for(chrono::seconds(1));
+    }
     return false;
   }
 
@@ -163,6 +165,9 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   wifi_x = wifi_estimates[0].x_mean;
   wifi_y = wifi_estimates[0].y_mean;
 
+  Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+  FILE_LOG(logIMU) << "R :\n" << R.format(CleanFmt) << "\n";
+  FILE_LOG(logIMU) << "Q :\n" << Q.format(CleanFmt) << "\n";
   KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
 
   kalman_x = X(0,0);
@@ -176,7 +181,6 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   }
   Imu::X.block<2,1>(0,0) = X;
   Imu::P.block<2,2>(0,0) = P;
-  Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
   //FILE_LOG(logLOCATION) << P.format(CleanFmt) << "\n\n";
 
   last_update_time_ = new_update_time;
@@ -193,9 +197,15 @@ kdtree::node<Point*>* Location::GetCurrentNode() {
 
 void Location::UpdateEstimate() {
   auto wifi_estimates = GetWiFiReadings(Global::ReadingsPerUpdate);
-  Imu::EstimateLocation();
+  double secs;
+  if (Global::DurationOverride > 0) {
+    secs = Global::DurationOverride / 1000;
+  } else {
+    secs = chrono::duration_cast<chrono::seconds>(
+      chrono::steady_clock::now() - last_update_time_).count();
+  }
+  Imu::EstimateLocation(secs);
   Map::UpdateLikelyPoints(max_distance_ * Global::Scale);
-  ;
   if (not DoKalmanUpdate(wifi_estimates) and max_distance_ <= MAX_MAX_DIST) {
     max_distance_ *= 1.5;
   } else if (not close_enough(max_distance_, NORMAL_MAX_DIST)) {
@@ -225,6 +235,10 @@ vector<FakeWifiScan*> Location::TestInit(vector<vector<Result>> setup_points,
   InitialEstimate();
 
   return fakescanners;
+}
+
+vector<Result> Location::GetScans() {
+  return wifi_estimators_[0]->GetScans();
 }
 
 void Location::TestSetCurrentNode(kdtree::node<Point*>* node) {

@@ -46,12 +46,21 @@ class Global {
   static int FilterBiasY;
   static int LocationRFactor;
   static int LocationQFactor;
+  static int IMU_R;
+  static int IMU_QD;
+  static int IMU_QV;
+  static int IMU_QA;
+  static double WiFiExp1;
+  static double WiFiExp2;
   static int DurationOverride;
   static string MapFile;
   static vector<string> WiFiDevices;
   static int InitWiFiReadings;
   static int ReadingsPerUpdate;
   static double Scale;
+  static bool DataDump;
+  static string DumpFile;
+  static mutex DumpMutex;
 
   static void RunMainLoop();
   static void Init();

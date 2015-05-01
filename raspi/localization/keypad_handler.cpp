@@ -1,6 +1,5 @@
 #include <bcm2835.h>
 #include <iostream>
-#include <signal.h>
 
 #include "common_utils.h"
 #include "global.h"
@@ -21,16 +20,6 @@ namespace wins {
 
 thread KeypadHandler::keypad_thread_;
 atomic_bool terminate_(false);
-
-void sighandler(int sig)
-{
-    FILE_LOG(logINFO) << "Signal " << sig << ": Keypad Gracefully closing" << endl;
-    terminate_ = true;
-		bcm2835_gpio_write(W1, LOW);
-		bcm2835_gpio_write(W2, LOW);
-		bcm2835_gpio_write(W3, LOW);
-		bcm2835_gpio_write(W4, LOW);
-}
 
 bool init_gpio(){
    if (!bcm2835_init()) return false;
@@ -92,9 +81,6 @@ void KeypadHandler::ProcessButton(int row, int col) {
 }
 
 void KeypadHandler::MainLoop() {
-  signal(SIGABRT, &sighandler);
-  signal(SIGTERM, &sighandler);
-  signal(SIGINT, &sighandler);
   buffer_ = "";
   int state = 0, old_state = -1, new_state = 0;
   if(!init_gpio()) {
@@ -173,7 +159,12 @@ void KeypadHandler::StartThread() {
   }
 }
 void KeypadHandler::TerminateThread() {
-  sighandler(SIGTERM);
+  FILE_LOG(logKEYPAD) << ": Keypad Gracefully closing" << endl;
+  terminate_ = true;
+  bcm2835_gpio_write(W1, LOW);
+  bcm2835_gpio_write(W2, LOW);
+  bcm2835_gpio_write(W3, LOW);
+  bcm2835_gpio_write(W4, LOW);
   keypad_thread_.join();
 }
 

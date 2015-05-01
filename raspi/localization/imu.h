@@ -23,7 +23,6 @@ enum ImuVariant {
 
 struct ImuResult {
   vector<vector<double>> readings;
-  double duration;
 };
 
 class Imu{
@@ -54,9 +53,9 @@ class Imu{
   static vector<double> RelativeToNorth(double w, double x, double y, double z);
   static void Init();
   static PointEstimate DoKalman(const ImuResult& imu_result,
-      ImuVariant v = IMU_VARIANT_KALMAN_VANILLA);
-  static PointEstimate EstimateLocation(
-      ImuVariant v = IMU_VARIANT_KALMAN_VANILLA);
+      double duration, ImuVariant v = IMU_VARIANT_KALMAN_VELOCITY_AVG);
+  static PointEstimate EstimateLocation(double duration,
+      ImuVariant v = IMU_VARIANT_KALMAN_VELOCITY_AVG);
   // static PointEstimate EstimateLocation1(PointEstimate current);
 };
 

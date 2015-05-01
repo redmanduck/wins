@@ -12,9 +12,10 @@
 #include "common_utils.h"
 #include "display.h"
 #include "global.h"
-#include "location.h"
+#include "imu.h"
 #include "kdtree/kdtree.hpp"
 #include "keypad_handler.h"
+#include "location.h"
 #include "test_helpers.h"
 #include "map.h"
 #include "navigation.h"
@@ -218,7 +219,7 @@ void Test(int argc, char *orig_argv[]) {
     assert(argc == 4);
     Global::MapFile = string(argv[3]);
     thread main_thread = thread(&Global::RunMainLoop);
-    auto& display = Display::GetInstance();
+    //auto& display = Display::GetInstance();
     auto& keypad_handler = KeypadHandler::GetInstance();
 
     //while(display.CurrentPage() != PAGE_MENU);
@@ -235,8 +236,113 @@ void Test(int argc, char *orig_argv[]) {
       }
       keypad_handler.FakeStringEnter(line);
     }
-  } else if (string(argv[2]) == "imu1") {
+  } else if (string(argv[2]) == "imu") {
+    assert(argc == 8);
+    Global::IMU_R = stoi(argv[4]);
+    Global::IMU_QD = stoi(argv[5]);
+    Global::IMU_QV = stoi(argv[6]);
+    Global::IMU_QA = stoi(argv[7]);
 
+    Global::MapFile = string(argv[3]);
+    thread main_thread = thread(&Global::RunMainLoop);
+    auto& keypad_handler = KeypadHandler::GetInstance();
+    while (true) {
+      string line;
+      getline(cin, line);
+      if (line.size() == 0) {
+         continue;
+      }
+      keypad_handler.FakeStringEnter(line);
+    }
+  } else if (string(argv[2]) == "data_dump") {
+    assert(argc == 5);
+    Global::DataDump = true;
+    Global::DumpFile = string(argv[4]);
+
+    Global::MapFile = string(argv[3]);
+    thread main_thread = thread(&Global::RunMainLoop);
+    auto& keypad_handler = KeypadHandler::GetInstance();
+    while (true) {
+      string line;
+      getline(cin, line);
+      if (line.size() == 0) {
+         continue;
+      }
+      keypad_handler.FakeStringEnter(line);
+    }
+  } else if (string(argv[2]) == "walk_learn") {
+    assert(argc == 11);
+    Map::InitMap(argv[3]);
+
+    vector<unique_ptr<Point>> test_points;
+    ifstream is(argv[4], ios::binary);
+    cereal::BinaryInputArchive archive(is);
+
+    archive(test_points);
+    is.close();
+
+    ofstream out_file;
+    string line;
+    char buffer[200];
+    sprintf(buffer, "%7s %7s %7s %7s %7s %7s %7s %7s %7s\n",
+        "mean", "std", "yf", "wexp1", "wexp2", "imur", "imuqd",
+        "imuqv", "imuqa");
+    out_file << buffer;
+    cout << buffer;
+
+    double rfactor = 5;
+    for (double qfactor = 1; qfactor <= 10; qfactor += 1) {
+      for (double wexp1 = 1; wexp1 <= 10; wexp1 += 10) {
+        for (double wexp2 = 1; wexp2 <= 10; wexp2 += 10) {
+          for (double imur = 0.001; imur <= 0.05; imur += 0.005) {
+            for (double imuqd = 0.00001; imuqd <= 0.001; imuqd += 0.0001) {
+              for (double imuqv = 0.0001; imuqv <= 0.01; imuqv += 0.001) {
+                for (double imuqa = 0.001; imuqa <= 0.1; imuqa += 0.01) {
+                  Global::InitWiFiReadings = 0;
+
+                  Global::LocationRFactor = rfactor;
+                  Global::LocationQFactor = qfactor;
+                  Global::WiFiExp1 = wexp1;
+                  Global::WiFiExp2 = wexp2;
+                  Global::IMU_R = imur;
+                  Global::IMU_QD = imuqd;
+                  Global::IMU_QV = imuqv;
+                  Global::IMU_QA = imuqa;
+
+                  ifstream data_file(argv[10]);
+                  getline (data_file, line);
+                  auto parts = split(line, ',');
+                  double imu_reads = stoi(parts[0]);
+                  double max_x = stod(parts[1]);
+                  double max_y = stod(parts[2]);
+                  int cur_reading = 0;
+                  vector<double> distances;
+
+                  auto fakescanners =
+                      Location::TestInit(vector<vector<Result>>(), 1);
+                  assert(fakescanners.size() == 1);
+
+                  while (data_file) {
+                    cur_reading += AddNextSet(data_file, fakescanners[0]);
+                    Location::UpdateEstimate();
+                    double x = (cur_reading / imu_reads) * max_x;
+                    double y = (cur_reading / imu_reads) * max_y;
+                    distances.push_back(pow(Imu::X(0,0) - x, 2) +
+                        pow(Imu::X(1,0) - y, 2));
+                  }
+                  sprintf(buffer, "%7.2f %7.2f %7.2f %7.2f %7.2f %7.2f %7.2f "
+                      "%7.2f %7.2f\n", mean(distances), stddev(distances),
+                      qfactor, wexp1, wexp2, imur, imuqd, imuqv, imuqa);
+                  out_file << buffer;
+                  cout << buffer;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    out_file.close();
   }
 }
 

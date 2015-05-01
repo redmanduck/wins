@@ -57,6 +57,7 @@ class Location {
 
   static vector<FakeWifiScan*> TestInit(vector<vector<Result>> setup_points,
       int num_wifis);
+  static vector<Result> GetScans();
   static void TestSetCurrentNode(kdtree::node<Point*>* node);
 };
 

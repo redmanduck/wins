@@ -35,6 +35,7 @@ class WiFiEstimate {
   WiFiEstimate(unique_ptr<WifiScan> scanner);
   WiFiEstimate() {}
   vector<PointEstimate> EstimateLocation(WiFiVariant v, int read_count = 1);
+  vector<Result> GetScans();
 };
 
 }
