@@ -1,8 +1,11 @@
 #ifndef TEST_HELPERS_H
 #define TEST_HELPERS_H
 
+#include <fstream>
 #include <string>
 #include <vector>
+
+class FakeWifiScan;
 
 namespace wins {
 
@@ -19,6 +22,7 @@ struct DebugParams {
 };
 
 void learn_helper(int argc, vector<string> argv);
+int AddNextSet(ifstream& fs, FakeWifiScan* fakescanner);
 
 }
 

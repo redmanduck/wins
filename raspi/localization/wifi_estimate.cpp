@@ -21,12 +21,6 @@ namespace wins {
 
 // anonymous namespace
 namespace {
-  double mean(vector<double> v) {
-    double sum = std::accumulate(v.begin(), v.end(), 0.0);
-    double mean = sum / v.size();
-    return mean;
-  }
-
   double distance(double x1, double y1, double x2, double y2) {
     return sqrt(pow(x2-x1, 2) + pow(y2-y1, 2));
   }

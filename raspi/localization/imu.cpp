@@ -15,12 +15,6 @@ using namespace Eigen;
 #define GYRO_PRECISION 0
 
 namespace {
-  double mean(vector<double> v) {
-    double sum = std::accumulate(v.begin(), v.end(), 0.0);
-    double mean = sum / v.size();
-    return mean;
-  }
-
   double var(vector<double> v) {
     std::vector<double> diff(v.size());
     std::transform(v.begin(), v.end(), diff.begin(),

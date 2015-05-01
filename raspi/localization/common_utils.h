@@ -34,6 +34,12 @@ struct PointEstimate {
   }
 };
 
+double mean(vector<double> v);
+double stddev(vector<double> v);
+std::vector<std::string> &split(const std::string &s,
+  char delim, std::vector<std::string> &elems);
+std::vector<std::string> split(const std::string &s, char delim);
+
 /*
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique_helper(std::false_type, Args&&... args) {
