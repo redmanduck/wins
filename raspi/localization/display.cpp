@@ -2,19 +2,15 @@
 #include <functional>
 #include <stdexcept>
 
-#ifndef ISOLATED_TEST
 #include "common_utils.h"
-#endif
 #include "display.h"
 #include "world.h"
-#ifndef ISOLATED_TEST
 #include "global.h"
 #include "imu.h"
 #include "keypad_handler.h"
 #include "location.h"
 #include "navigation.h"
 #include "spi_manager.h"
-#endif
 
 namespace wins {
 
@@ -577,41 +573,100 @@ string getNextSegmentName(){
    return string(buffer);
 }
 
-bool MAP_SCANNING_ = false;
-int samples = 0;
-Page Display::MapScan() {
-  ClearScreen();
-  SetCurrentLine(1);
+bool MAP_SCANNING_ = false; //indicate map is scanning mode
+int MAP_samples_ = 0;  	    //count number of sample
+string MAP_FILENAME_ = "";  //map_file name
+string MAP_record_ = ""; //map_file
+ofstream MAP_fp_ ;
+void updateFilename(){
   string nxt = getNextSegmentName();
   int next = 0;
   try{
     next = stoi(nxt) + 1;
   }catch (...){
-   return PAGE_MENU;
+    cout << "Unable to determine filename. Crashing";
+    return;
   }
-  PutString("Name: S0" + to_string(next));
+  MAP_FILENAME_ = to_string(next) + ".txt";
+}
 
-  IncrmLine();
-  if(MAP_SCANNING_){
-   PutString("#Sample: " + to_string(samples));
-   IncrmLine();  
-   PutString("1. Stop Scan");
-   //do scan here or someting  
-  }else{
-    IncrmLine();
-    PutString("1. Start Scan");
-    PutString("2. Next File");
+Page Display::MapScan() {
+
+  if(MAP_FILENAME_ == ""){
+  	updateFilename();
   }
-
+ 
   current_page_ = PAGE_MAP_SCAN;
   while (true) {
+    ClearScreen();
+    SetCurrentLine(1);
+    cout << MAP_SCANNING_;
+    PutString(MAP_FILENAME_);
+    IncrmLine();
+    if(!MAP_SCANNING_){
+     IncrmLine();
+     PutString("1. Start Scan");
+     IncrmLine();
+     PutString("2. New File");
+     IncrmLine();
+     PutString("3. Quit");
+    }
+ 
+    if(MAP_SCANNING_){
+       vector<Result> r = Location::GetScans();
+	for(int xx = 0; xx < 10; xx++){
+          MAP_samples_++; 
+          //This is one scan
+       	  for(auto i = r.begin(); i != r.end(); i++ ){
+	     MAP_record_ += i->name + "," + to_string(i->signal) +  "\n";	
+          }
+ 	  //EOS
+  	  MAP_record_ += "-----------------------\n";
+
+	ClearScreen();
+
+	PutString("# Sample: " + to_string(MAP_samples_));
+     	IncrmLine();  
+     PutString("1. Done");
+     IncrmLine();
+     PutString("3. Delimit");
+
+      }
+        
+    }  
+    
     char option = GetChar();
     if (option == '1') {
       MAP_SCANNING_ = !MAP_SCANNING_;
+      MAP_samples_ = 0;
+	
+      if(!MAP_SCANNING_){   
+    	ClearScreen();
+	SetCurrentLine(3);
+	PutString("Saved to " + MAP_FILENAME_  + "!");
+	MAP_fp_.open("/wifimap/" + MAP_FILENAME_, ios::out);
+	MAP_fp_ << MAP_FILENAME_ << "\n";
+        MAP_fp_ << MAP_record_;
+	MAP_fp_.close(); 
+	usleep(1000000);
+     }
+
+      MAP_record_ = "";
+      MAP_FILENAME_ = "";
       return PAGE_MAP_SCAN; 
-    } else {
+    } else if(option == '2'){
+	updateFilename();	
+    }else if(option == '3' && !MAP_SCANNING_){
+      MAP_FILENAME_ = "";
+      MAP_samples_ = 0; 
       return PAGE_MENU;
+    //}else if(option == '2' && MAP_SCANNING_){
+    //   continue;
+    }else if(option == '3' && MAP_SCANNING_){
+       MAP_record_ += "========== [FLAGGED] =============\n"; 
+	cout << "MPU6050" << MAP_record_;
     }
+
   }
 }
 
