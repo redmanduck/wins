@@ -35,6 +35,7 @@ int Global::IMU_QV = 0.003;
 int Global::IMU_QA = 0.03;
 double Global::WiFiExp1 = 0;
 double Global::WiFiExp2 = 0;
+bool Global::NoSleep = false;
 int Global::DurationOverride = -1;
 vector<string> Global::WiFiDevices({ "wlan0" });
 int Global::InitWiFiReadings = 3;
@@ -75,7 +76,7 @@ void Global::RunMainLoop() {
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
-  FILELog::LogSelect() = (TLogLevel)(logLOCATION | logIMU);
+  FILELog::LogSelect() = (TLogLevel)(logLOCATION);
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);

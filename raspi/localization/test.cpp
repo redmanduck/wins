@@ -289,6 +289,7 @@ void Test(int argc, char *orig_argv[]) {
         "imuqv", "imuqa");
     out_file << buffer;
     cout << buffer;
+    Global::NoSleep = true;
 
     double rfactor = 5;
     for (double qfactor = 1; qfactor <= 10; qfactor += 1) {

@@ -109,7 +109,7 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
     }
 
     // Sleep for a while and retry.
-    if (not Global::IsTest()) {
+    if (not Global::NoSleep) {
       this_thread::sleep_for(chrono::seconds(1));
     }
     return false;

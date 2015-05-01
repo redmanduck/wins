@@ -383,7 +383,7 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
       for (auto r : results) {
         dumpfile << "WIFI," << r.name << "," << r.signal << "\n";
       }
-      dumpfile << "-----";
+      dumpfile << "-----\n";
       dumpfile.close();
     }
     FILE_LOG(logWIFI) << "size = " << results.size() << "\n";
