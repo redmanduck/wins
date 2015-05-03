@@ -52,7 +52,7 @@ vector<double> Imu::process_variance;
 
 ImuResult Imu::imu_buffer_;
 mutex Imu::imu_buffer_mutex_;
-atomic_bool Imu::calibrated_(true);
+atomic_bool Imu::calibrated_(false);
 Quaternion<double> Imu::north_quat_inverse_ = Quaternion<double>::Identity();
 
 void Imu::Init() {
@@ -104,7 +104,7 @@ void Imu::AddReading(double ax, double ay, double az,
   //                              << ", qz: " << qz << "\n";
   imu_buffer_.readings.push_back({ ax, ay, az, qw, qx, qy, qz });
   //FILE_LOG(logIMU) << "Buffer size: " << imu_buffer_.readings.size() << "\n";
-  if (Global::DataDump and calibrated_) {
+  if (Global::DataDump.load() and calibrated_) {
     lock_guard<mutex> lock(Global::DumpMutex);
     ofstream dumpfile(Global::DumpFile, ofstream::app);
     dumpfile << "IMU," << ax << "," << ay << "," << az << ","

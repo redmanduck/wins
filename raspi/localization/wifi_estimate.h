@@ -7,14 +7,6 @@
 
 namespace wins {
 
-enum WiFiVariant {
-  WIFI_VARIANT_NONE      = 00,
-  WIFI_VARIANT_CHI_SQ    = 01,
-  WIFI_VARIANT_TOP1      = 02,
-  WIFI_VARIANT_TOP_FEW   = 04,
-  All                    = 010,
-};
-
 class WiFiEstimate {
  public:
   unique_ptr<WifiScan> scanner_;

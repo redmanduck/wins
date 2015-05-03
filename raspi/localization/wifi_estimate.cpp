@@ -65,7 +65,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(vector<Result> s,
 
   // Determine the probability of being at each of the possible points from
   // Mahalanobis distance.
-  FILE_LOG(logWIFI) << "likely points = " << current_likely_points.size() << "\n";
+  //FILE_LOG(logWIFI) << "likely points = " << current_likely_points.size() << "\n";
   for (auto& node : current_likely_points) {
     auto point = node->point;
     if (debug and distance(point->x, point->y, realx - Global::FilterBiasX,
@@ -97,7 +97,7 @@ vector<PointEstimate> WiFiEstimate::ClosestByMahalanobis(vector<Result> s,
         // Weight of a point is the probability that the collected signal data
         // was taken at that point.
         point_stats.push_back(make_tuple(
-              pow(pow(10, df), exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
+              pow(df, exp1) * pow(100.0 * (1.0 - pchisq(sum, df)), exp2),
               point, df, pchisq(sum, df)));
       else
         // Weight of a point is proportional to the number of APs common to
@@ -377,7 +377,7 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
   } else {
     FILE_LOG(logWIFI) << "Fetching fresh\n";
     vector<Result> results = scanner_->Fetch();
-    if (Global::DataDump) {
+    if (Global::DataDump.load()) {
       lock_guard<mutex> lock(Global::DumpMutex);
       ofstream dumpfile(Global::DumpFile, ofstream::app);
       for (auto r : results) {

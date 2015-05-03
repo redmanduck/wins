@@ -35,13 +35,14 @@ int Global::IMU_QV = 100;
 int Global::IMU_QA = 1000;
 double Global::WiFiExp1 = 0;
 double Global::WiFiExp2 = 0;
+WiFiVariant Global::ScanVariant = WIFI_VARIANT_CHI_SQ;
 bool Global::NoSleep = false;
 int Global::DurationOverride = -1;
 vector<string> Global::WiFiDevices({ "wlan0" });
 int Global::InitWiFiReadings = 3;
 int Global::ReadingsPerUpdate = 1;
 double Global::Scale = (1/1.1);
-bool Global::DataDump = false;
+atomic_bool Global::DataDump(false);
 string Global::DumpFile = "dump.txt";
 mutex Global::DumpMutex;
 string Global::shutdown_command_ = "sudo shutdown -hP now";
@@ -140,18 +141,18 @@ thread::id Global::GetMainThreadId() {
 
 void Global::ShutDown() {
   cout << "IN Global::ShutDown ========================\n";
+  cout << "is test " << is_test_ << "\n";
+  if (is_test_ == false) {
+    cout << "Shutting down...\n";
+    system("sudo kill -9 $(pgrep -f winsd)");
+    cout << "shutdown command: " << shutdown_command_ << "\n";
+    system(shutdown_command_.c_str());
+  }
   SetEventFlag(WINS_EVENT_SHUTTING_DOWN);
   Global::Destroy();
   KeypadHandler::TerminateThread();
   Map::TerminateThread();
   cout << "Teriminated threads______________\n";
-  system("sudo kill -9 $(pgrep -f winsd)");
-  cout << "is test " << is_test_ << "\n";
-  if (is_test_ == false) {
-    cout << "Shutting down...\n";
-  }
-  cout << "shutdown command: " << shutdown_command_ << "\n";
-  system(shutdown_command_.c_str());
   SPI::TerminateThread();
 }
 

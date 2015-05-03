@@ -407,7 +407,7 @@ vector<Result> WifiScan::Fetch()
       } catch(...) {
         FILE_LOG(logWIFI) << "Could not convert: " << "\n";
       }
-      FILE_LOG(logWIFI) << "Last beacon(ms): " << ttl << "\n";
+      //FILE_LOG(logWIFI) << "Last beacon(ms): " << ttl << "\n";
 
       if(ttl > BEACON_TTL){
         //kill it

@@ -33,7 +33,8 @@ enum Page {
   PAGE_NAVIGATING,
   PAGE_SHUT_DOWN,
   PAGE_DONE,
-  PAGE_MAP_SCAN
+  PAGE_MAP_SCAN,
+  PAGE_DATADUMP
 };
 
 typedef std::pair<int,int> Coord;
@@ -81,6 +82,7 @@ class Display {
   Page Done();
   Page ShutDown();
   Page MapScan();
+  Page DataDump();
 
  protected:
   ST7565 glcd_;

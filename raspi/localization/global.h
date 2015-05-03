@@ -14,6 +14,14 @@ namespace wins {
 
 using namespace std;
 
+enum WiFiVariant {
+  WIFI_VARIANT_NONE      = 00,
+  WIFI_VARIANT_CHI_SQ    = 01,
+  WIFI_VARIANT_TOP1      = 02,
+  WIFI_VARIANT_TOP_FEW   = 04,
+  All                    = 010,
+};
+
 enum WinsEvent {
   WINS_EVENT_NONE               = 00,
   WINS_EVENT_POS_CHANGE         = 01,
@@ -52,6 +60,7 @@ class Global {
   static int IMU_QA;
   static double WiFiExp1;
   static double WiFiExp2;
+  static WiFiVariant ScanVariant;
   static bool NoSleep;
   static int DurationOverride;
   static string MapFile;
@@ -59,7 +68,7 @@ class Global {
   static int InitWiFiReadings;
   static int ReadingsPerUpdate;
   static double Scale;
-  static bool DataDump;
+  static atomic_bool DataDump;
   static string DumpFile;
   static mutex DumpMutex;
 

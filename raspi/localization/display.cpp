@@ -20,6 +20,12 @@ using namespace std;
 
 namespace {
 
+std::ifstream::pos_type filesize(const char* filename)
+{
+  std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
+  return in.tellg(); 
+}
+
 int MaxLength(FontSize size) {
   if(size == FONT_SIZE_MEDIUM){
     return (int)(128/6);
@@ -468,6 +474,7 @@ Page Display::Menu() {
   IncrmLine();
   PutString("5. Map floor");
   IncrmLine();
+  PutString("6. Data dump");
   IncrmLine();
   current_page_ = PAGE_MENU;
 
@@ -479,7 +486,8 @@ Page Display::Menu() {
       case '3': return PAGE_CALBRATING;
       case '4': return PAGE_SHUT_DOWN;
       case '5': return PAGE_MAP_SCAN;
-      default : PutString("Enter a number in 1-4", true);
+      case '6': return PAGE_DATADUMP;
+      default : PutString("Enter a number in 1-6", true);
     }
   }
 }
@@ -730,8 +738,37 @@ Page Display::MapScan() {
 	SKIP_SCAN = true;
      }
     }
-
   }
+}
+
+Page Display::DataDump() {
+  ClearScreen();
+  SetCurrentLine(4);
+  PutString("Start Dump?", true);
+  current_page_ = PAGE_DATADUMP;
+
+  std::time_t rawtime;
+  std::tm* timeinfo;
+  char buffer [80];
+  std::time(&rawtime);
+  timeinfo = std::localtime(&rawtime);
+  std::strftime(buffer,80,"%m-%d-%H-%M-%S.txt",timeinfo);
+  Global::DumpFile = string(buffer);
+  cout << buffer << "\n";
+  SetCurrentLine(3);
+  PutString(buffer);
+
+  SetCurrentLine(4);
+  GetChar();
+  Global::DataDump = true;
+  PutString("Press key to stop", true);
+  GetChar();
+  Global::DataDump = false;
+  PutString("Data dump complete", true);
+  IncrmLine();
+  PutString(to_string(filesize(buffer)));
+  this_thread::sleep_for(chrono::seconds(1));
+  return PAGE_MENU;
 }
 
 Page Display::FirstPage() {
@@ -750,6 +787,7 @@ Page Display::ShowPage(Page p) {
     case PAGE_DESTINATION_PROMPT:   return DestinationPrompt();
     case PAGE_SHUT_DOWN:            return ShutDown();
     case PAGE_DONE:                 return Done();
+    case PAGE_DATADUMP:             return DataDump();
     default: throw runtime_error("Unknown Page");
   }
 }

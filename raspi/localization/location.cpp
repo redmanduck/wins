@@ -58,7 +58,7 @@ vector<PointEstimate> Location::GetWiFiReadings(int count) {
   vector<future<vector<PointEstimate>>> handles;
   for (auto& estimator : wifi_estimators_) {
     auto handle = async(launch::async, &WiFiEstimate::EstimateLocation,
-          estimator.get(), WIFI_VARIANT_NONE, count);
+          estimator.get(), Global::ScanVariant, count);
     handles.push_back(move(handle));
   }
   for (auto& result : handles) {

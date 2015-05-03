@@ -254,22 +254,22 @@ void Test(int argc, char *orig_argv[]) {
       }
       keypad_handler.FakeStringEnter(line);
     }
-  } else if (string(argv[2]) == "data_dump") {
-    assert(argc == 5);
-    Global::DataDump = true;
-    Global::DumpFile = string(argv[4]);
-
-    Global::MapFile = string(argv[3]);
-    thread main_thread = thread(&Global::RunMainLoop);
-    auto& keypad_handler = KeypadHandler::GetInstance();
-    while (true) {
-      string line;
-      getline(cin, line);
-      if (line.size() == 0) {
-         continue;
-      }
-      keypad_handler.FakeStringEnter(line);
-    }
+//  } else if (string(argv[2]) == "data_dump") {
+//    assert(argc == 5);
+//    Global::ShouldDumpData = true;
+//    Global::DumpFile = string(argv[4]);
+//
+//    Global::MapFile = string(argv[3]);
+//    thread main_thread = thread(&Global::RunMainLoop);
+//    auto& keypad_handler = KeypadHandler::GetInstance();
+//    while (true) {
+//      string line;
+//      getline(cin, line);
+//      if (line.size() == 0) {
+//         continue;
+//      }
+//      keypad_handler.FakeStringEnter(line);
+//    }
   } else if (string(argv[2]) == "walk_learn") {
     assert(argc == 11);
     Map::InitMap(argv[3]);
