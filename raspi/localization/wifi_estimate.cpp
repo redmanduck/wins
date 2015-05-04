@@ -25,10 +25,10 @@ namespace {
     return sqrt(pow(x2-x1, 2) + pow(y2-y1, 2));
   }
 
-  vector<tuple<double, double, Point* const>> ComputePointStats(
+  vector<tuple<double, double, Point*>> ComputePointStats(
       vector<Result> s, double realx, double realy, bool debug) {
     auto& current_likely_points = Map::CurrentLikelyPoints();
-    vector<tuple<double, double, Point* const>> point_stats;
+    vector<tuple<double, double, Point*>> point_stats;
 
     // Determine the probability of being at each of the possible points.
     for (auto& node : current_likely_points) {
@@ -41,8 +41,11 @@ namespace {
       double total_prob = 0;
       double total_precision = 0;
       for (auto& mac : s) {
-        auto stats = Map::Stats(point, mac.name, mac.signal);
+        string name = mac.name;
+        transform(name.begin(), name.end(), name.begin(), ::tolower);
+        auto stats = Map::Stats(point, name, mac.signal);
         if (stats.mean() < 0) {
+          //cout << "meean unknown\n";
           continue;
         }
         total_prob += stats.prob() * stats.precision();
@@ -291,7 +294,27 @@ vector<PointEstimate> WiFiEstimate::MostProbableClubbed(vector<Result> s,
 
 vector<PointEstimate> WiFiEstimate::MostProbableNotClubbed(vector<Result> s,
     double realx, double realy, double exp1, double exp2, bool debug) {
-  auto point_stats = ComputePointStats(s, realx, realy, debug);
+  vector<tuple<double, double, Point*>> point_stats = ComputePointStats(s, realx, realy, debug);
+  //DEBUG CODE
+  //char buffer[100];
+  //sprintf(buffer, "\n%7s %7s %7s %7s %7s\n",
+  //    "weight", "x", "y", "prob", "prec");
+  //cout << buffer;
+  //sort(point_stats.begin(), point_stats.end(),
+  //    [exp1, exp2](tuple<double, double, Point*> a,
+  //       tuple<double, double, Point*> b) -> bool {
+  //        return pow(get<0>(a), exp1) * pow(get<1>(a), exp2) >
+  //               pow(get<0>(b), exp1) * pow(get<1>(b), exp2);
+  //    });
+  //for (auto& p_stat : point_stats) {
+  //  sprintf(buffer, "%7.2e %7.1f %7.1f %7.2e %7.2e\n",
+  //      pow(get<0>(p_stat), exp1) * pow(get<1>(p_stat), exp2),
+  //      get<2>(p_stat)->x,
+  //      get<2>(p_stat)->y,
+  //      get<0>(p_stat),
+  //      get<1>(p_stat));
+  //  cout << buffer;
+  //}
 
   // Find the point that we most likely are at.
   double pred_x = 0;
@@ -389,10 +412,12 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
     FILE_LOG(logWIFI) << "size = " << results.size() << "\n";
     vector<PointEstimate> wifi_estimates;
     if (Global::WiFiExp1 != 0) {
-      wifi_estimates = ClosestByMahalanobis(results, v, 0, 0, Global::WiFiExp1,
+      //wifi_estimates = ClosestByMahalanobis(results, v, 0, 0, Global::WiFiExp1,
+      //    Global::WiFiExp2, false);
+      wifi_estimates = MostProbableNotClubbed(results, 0, 0, Global::WiFiExp1,
           Global::WiFiExp2, false);
     } else {
-      wifi_estimates = ClosestByMahalanobis(results, v);
+      wifi_estimates = MostProbableNotClubbed(results);
     }
     if (wifi_estimates.size() > 0) {
       //cout << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
