@@ -379,7 +379,7 @@ Display::Display()
 Page Display::Splash() {
   //Flush();
   this_thread::sleep_for(chrono::seconds(0));
-  MapLoadWorld("worlds/wang.world");
+  MapLoadWorld("worlds/EE.world");
   //  MapSetVisibleBound(100, 0);
   //  MapDrawVisible();
   //  Flush();
@@ -392,9 +392,15 @@ Page Display::Splash() {
 //}
 
 
-  for(int i = 0; i < 10; i++){
+  int corridor[16] = {1,4,7,10,13,0,3,6,9,12,15,2,5,8,11,14};
+  std::vector<int> myvector (corridor, corridor+16);  
+  std::sort (myvector.begin(), myvector.begin()+16);
 
-   MapUpdateIndicator(Coord(ORIGIN_X+i*3,ORIGIN_Y));
+  //corridor 1 = 2.5 in x
+
+
+  for(int i = 0; i < 16; i++){
+   MapUpdateIndicator(Coord(ORIGIN_X+ myvector[i]*2.5,ORIGIN_Y));
 //   MapUpdateIndicator(Coord(ORIGIN_X, ORIGIN_Y + i*3));
 
    MapDrawVisible();
@@ -404,6 +410,37 @@ Page Display::Splash() {
    //this_thread::sleep_for(chrono::seconds(1));
    if (system("CLS")) system("clear");
   }
+
+  int corridor2[3] = {0,-1,-2};
+
+  //corridor 2 =  2.45 in x, 4 in y
+  for(int i = 0; i < 3; i++){
+   MapUpdateIndicator(Coord(ORIGIN_X+ 16*2.45,ORIGIN_Y + corridor2[i]*4));
+
+   MapDrawVisible();
+   Flush();
+
+   usleep(120000);
+   //this_thread::sleep_for(chrono::seconds(1));
+   if (system("CLS")) system("clear");
+  }
+
+  int corridor3[28] = {29 , 32 , 35 , 38 , 41 , 44 , 19 , 22 , 25 , 28 , 31 , 34 , 37 , 40 , 43 , 18 , 21 , 24 , 27 , 30 , 33 , 36 , 39 , 42 , 17 , 20 , 23 , 26};
+
+   std::vector<int> mv (corridor3, corridor3+28);
+   std::sort (mv.begin(), mv.begin()+28);
+ //c3 : 3, 4.5
+  for(int i = 0; i < 28; i++){
+   MapUpdateIndicator(Coord(ORIGIN_X + mv[i]*3 ,ORIGIN_Y + -2*4.5));
+   cout << "pos.x : " << mv[i] << "\n";
+   MapDrawVisible();
+   Flush();
+
+   usleep(190000);
+   //this_thread::sleep_for(chrono::seconds(1));
+   if (system("CLS")) system("clear");
+  }
+
 
   this_thread::sleep_for(chrono::seconds(1));
 

@@ -10,7 +10,7 @@
 int WORLD_SIZE; //in BYTE
 
 int ORIGIN_X = 15;
-int ORIGIN_Y = 15;
+int ORIGIN_Y = 37;
 int WORLD_WMAX = 170;
 int WORLD_HMAX = 128;
 
