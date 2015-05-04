@@ -86,24 +86,19 @@ void Imu::AddReading(double ax, double ay, double az,
 //  Quaternion<double> quat;
 //  ParseIMU(pic_data, raw_acc, quat);
 //
-//  // Rotate acceleration vector to the default orientation of the gyro first
-//  // (YPR all zeroes), and then rotate it north orientation.
-//  Matrix3d rot_matrix = (quat * north_quat_inverse_).toRotationMatrix();
-//  Vector3d acc = rot_matrix * raw_acc;
-//
-  Matrix3d rotation_matrix;
+  // Rotate acceleration vector to the default orientation of the gyro first
+  // (YPR all zeroes), and then rotate it north orientation.
+  Vector3d raw_acc(ax, ay, az);
+  Matrix3d rotation_matrix = (Quaterniond(qw, qx, qy, qz) * north_quat_inverse_).toRotationMatrix();
+  Vector3d acc = rotation_matrix * raw_acc;
+
   rotation_matrix =
       AngleAxisd(Global::IMU_Z_Correction, Vector3d::UnitZ()) *
       AngleAxisd(Global::IMU_X_Correction, Vector3d::UnitX()) *
       AngleAxisd(Global::IMU_Y_Correction, Vector3d::UnitY());
-  Vector3d acc(ax, ay, az);
   acc  = acc * Global::IMU_ACC_SCALE;
-  ax = acc(0);
-  ay = acc(1);
-  az = acc(2);
-  //std::cout << "before: " << ax <<", " << ay << ", " << az << "\n";
-  Vector3d rotated = rotation_matrix * acc;
-  acc = rotated;
+  Vector3d corrected = rotation_matrix * acc;
+  acc = corrected;
   ax = acc(0);
   ay = acc(1);
   az = acc(2);

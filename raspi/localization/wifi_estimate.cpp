@@ -412,12 +412,13 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
     FILE_LOG(logWIFI) << "size = " << results.size() << "\n";
     vector<PointEstimate> wifi_estimates;
     if (Global::WiFiExp1 != 0) {
-      //wifi_estimates = ClosestByMahalanobis(results, v, 0, 0, Global::WiFiExp1,
-      //    Global::WiFiExp2, false);
-      wifi_estimates = MostProbableNotClubbed(results, 0, 0, Global::WiFiExp1,
+      wifi_estimates = ClosestByMahalanobis(results, v, 0, 0, Global::WiFiExp1,
           Global::WiFiExp2, false);
+      //wifi_estimates = MostProbableNotClubbed(results, 0, 0, Global::WiFiExp1,
+      //    Global::WiFiExp2, false);
     } else {
-      wifi_estimates = MostProbableNotClubbed(results);
+      wifi_estimates = ClosestByMahalanobis(results, v);
+      //wifi_estimates = MostProbableNotClubbed(results);
     }
     if (wifi_estimates.size() > 0) {
       //cout << "W x = " << wifi_estimates[0].x_mean <<", y = " <<

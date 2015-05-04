@@ -282,12 +282,12 @@ void Test(int argc, char *orig_argv[]) {
     Global::NoSleep = true;
     Imu::Calibrate();
     vector<vector<double>> results;
-    for (double zrot = 0; zrot <= 0; zrot += 20) {
-      for (double xrot = 60; xrot <= 120; xrot += 20) {
-        for (double yrot = -15; yrot >= -75; yrot -= 15) {
-          for (double imuscale = 50; imuscale <= 150; imuscale += 25) {
-            for (double deltat = 0.01; deltat <= 0.07; deltat += 0.02) {
-              for (double imur = 0.6; imur <= 1; imur += 0.3) {
+    for (double zrot = 50; zrot <= 90; zrot += 20) {
+      for (double xrot = 110; xrot <= 150; xrot += 20) {
+        for (double yrot = 130; yrot <= 170; yrot += 20) {
+          for (double imuscale = 5; imuscale <= 35; imuscale += 10) {
+            for (double deltat = 0.02; deltat <= 0.02; deltat += 0.03) {
+              for (double imur = 0.7; imur < 1; imur += 0.1) {
                 Global::InitWiFiReadings = 0;
 
                 Global::IMU_X_Correction = xrot * M_PI / 180;
@@ -362,15 +362,15 @@ void Test(int argc, char *orig_argv[]) {
 
     Global::NoSleep = true;
     Global::DurationOverride = 1000;
-    Global::IMU_X_Correction = 100 * M_PI / 180;
-    Global::IMU_Y_Correction = 50 * M_PI / 180;
-    Global::IMU_Z_Correction = 0 * M_PI / 180;
+    Global::IMU_X_Correction = 126 * M_PI / 180;
+    Global::IMU_Y_Correction = 130 * M_PI / 180;
+    Global::IMU_Z_Correction = 70 * M_PI / 180;
     Global::IMU_R = 0.9;
-    Global::IMU_ACC_SCALE = 90;
+    Global::IMU_ACC_SCALE = 26;
     Global::IMU_DELTA_T = 0.02;
     Imu::Calibrate();
 
-    double rfactor = 50;
+    double rfactor = 20;
     for (double qfactor = 0.1; qfactor <= 3; qfactor += 0.5) {
       for (double wexp1 = 2; wexp1 <= 10; wexp1 += 4) {
         for (double wexp2 = 0; wexp2 <= 10; wexp2 += 4) {
