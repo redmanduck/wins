@@ -282,12 +282,12 @@ void Test(int argc, char *orig_argv[]) {
     Global::NoSleep = true;
     Imu::Calibrate();
     vector<vector<double>> results;
-    for (double zrot = 0; zrot <= 0; zrot += 20) {
-      for (double xrot = 0; xrot <= 0; xrot += 20) {
-        for (double yrot = 0; yrot <= 0; yrot += 20) {
-          for (double imuscale = 25; imuscale <= 100; imuscale += 25) {
+    for (double zrot = 0; zrot < 360; zrot += 60) {
+      for (double xrot = 0; xrot < 360; xrot += 60) {
+        for (double yrot = 0; yrot < 360; yrot += 60) {
+          for (double imuscale = 25; imuscale <= 100; imuscale += 50) {
             for (double deltat = 0.02; deltat <= 0.02; deltat += 0.03) {
-              for (double imur = 0.7; imur < 1; imur += 0.1) {
+              for (double imur = 0.7; imur < 1; imur += 0.2) {
                 Global::InitWiFiReadings = 0;
 
                 Global::IMU_X_Correction = xrot * M_PI / 180;

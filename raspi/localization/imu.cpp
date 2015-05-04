@@ -93,20 +93,34 @@ void Imu::AddReading(double ax, double ay, double az,
     lock_guard<mutex> lock(Global::DumpMutex);
     ofstream dumpfile(Global::DumpFile, ofstream::app);
     dumpfile << "IMU," << ax << "," << ay << "," << az << ","
-             << qw << "," << qx << "," << qy << "," << qz << "\n";
+             << qw << "," << qx << "," << qy << "," << qz << ","
+             << yaw << "\n";
     dumpfile.close();
   }
+  // extract yaw.
+
+  //Quaterniond q(qw, qx, qy, qz);
+  //q = north_quat_inverse_ * q;
+  //double mag = sqrt(q.w() * q.w() + q.y() * q.y());
+  //double yaw = 2*acos(q.w() / mag);
+
   Vector3d raw_acc(ax, ay, az);
   raw_acc  = raw_acc * Global::IMU_ACC_SCALE;
   Matrix3d rotation_matrix = (
-      //Quaterniond(qw, qx, qy, qz).inverse()
       north_quat_inverse_
       ).toRotationMatrix();
   Vector3d acc = rotation_matrix * raw_acc;
+  double torotate = (yaw - initial_yaw_);
+  cout << "angle = " << torotate * 180 / M_PI << "\n";
+  if (torotate < 0) {
+    torotate += 360;
+  }
   rotation_matrix =
-      AngleAxisd(Global::IMU_Z_Correction - initial_yaw_, Vector3d::UnitZ()) *
-      AngleAxisd(Global::IMU_X_Correction, Vector3d::UnitX()) *
-      AngleAxisd(Global::IMU_Y_Correction, Vector3d::UnitY());
+      AngleAxisd(Global::IMU_Z_Correction, // - (yaw - initial_yaw_),
+          Vector3d::UnitZ()) *
+      AngleAxisd(Global::IMU_Y_Correction - (yaw - initial_yaw_),
+          Vector3d::UnitY()) *
+      AngleAxisd(Global::IMU_X_Correction, Vector3d::UnitX());
   Vector3d corrected = rotation_matrix * acc;
   acc = corrected;
   ax = acc(0);
@@ -162,7 +176,14 @@ void Imu::Calibrate() {
     //north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
     //    .inverse();
     north_quat_inverse_ = AngleAxisd(angle, axis);
+
+    // extract yaw.
+    //double mag = sqrt(q.w() * q.w() + q.y() * q.y());
+    //initial_yaw_ = 2*acos(vals(0) / mag);
     initial_yaw_ = vals(4);
+    if (initial_yaw_ < 0) {
+      initial_yaw_ += 360;
+    }
   } else {
     north_quat_inverse_.setIdentity();
   }
