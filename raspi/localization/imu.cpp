@@ -98,8 +98,8 @@ void Imu::AddReading(double ax, double ay, double az,
   Vector3d raw_acc(ax, ay, az);
   raw_acc  = raw_acc * Global::IMU_ACC_SCALE;
   Matrix3d rotation_matrix = (
-      //Quaterniond(qw, qx, qy, qz).inverse()
-      north_quat_inverse_
+      Quaterniond(qw, qx, qy, qz).inverse()
+      //north_quat_inverse_
       ).toRotationMatrix();
   Vector3d acc = rotation_matrix * raw_acc;
 

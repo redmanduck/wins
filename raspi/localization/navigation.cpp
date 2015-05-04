@@ -76,34 +76,34 @@ void Navigation::UpdateRoute() {
 
   // Check if current point is in route cache.
   if (current_route_.size() > 0 and nearby_route_.count(current_node)) {
-    auto node_in_path_iter = find(current_start_, current_route_.rend(),
-        current_node);
-    if (node_in_path_iter != current_route_.rend()) {
-      lock_guard<mutex> lock(route_mutex);
-      current_start_ = node_in_path_iter;
-    } else {
-      for (auto node_iter = current_route_.rbegin();
-          node_iter != current_route_.rend();
-          node_iter++) {
-        bool found = false;
-        for (auto nearby : Map::NodesInRadius(*node_iter, NEIGHBOR_RADIUS)) {
-          if (nearby == current_node) {
-            lock_guard<mutex> lock(route_mutex);
-            current_start_ = node_iter;
-            found = true;
-            break;
-          }
-        }
-        if (found)
-          break;
-      }
-    }
     if (current_node->distance(destination_node_) < NEIGHBOR_RADIUS) {
       Global::SetEventFlag(WINS_EVENT_DEST_REACHED);
       navigating_ = false;
       return;
     }
-    return;
+    auto node_in_path_iter = find(current_start_, current_route_.rend(),
+        current_node);
+    if (node_in_path_iter != current_route_.rend()) {
+      lock_guard<mutex> lock(route_mutex);
+      current_start_ = node_in_path_iter;
+      return;
+    }
+    //  for (auto node_iter = current_route_.rbegin();
+    //      node_iter != current_route_.rend();
+    //      node_iter++) {
+    //    bool found = false;
+    //    for (auto nearby : Map::NodesInRadius(*node_iter, NEIGHBOR_RADIUS)) {
+    //      if (nearby == current_node) {
+    //        lock_guard<mutex> lock(route_mutex);
+    //        current_start_ = node_iter;
+    //        found = true;
+    //        break;
+    //      }
+    //    }
+    //    if (found)
+    //      break;
+    //  }
+    //}
   }
 
   auto target_node = destination_node_;

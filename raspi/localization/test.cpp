@@ -329,8 +329,8 @@ void Test(int argc, char *orig_argv[]) {
                   //cout << Imu::X(0,0) << ", " << Imu::X(1,0) << "\n";
                   //cout << cur_reading << ", " << imu_reads << ", " << max_x;
                   //cout << x << ", " << y << "\n";
-                  distances.push_back(pow(Imu::X(0,0) - x, 2) +
-                      pow(Imu::X(1,0) - y, 2));
+                  distances.push_back(sqrt(pow(Imu::X(0,0) - x, 2) +
+                      pow(Imu::X(1,0) - y, 2)));
                 }
                 sprintf(buffer, "%7.2f %7.2f %7.2f %7.2f %7.2f %7.2f %7.3f "
                     "%7.4f\n",
@@ -428,8 +428,8 @@ void Test(int argc, char *orig_argv[]) {
               x = -2 + (cur_reading / imu_reads) * max_x;
               y = 15 + (cur_reading / imu_reads) * max_y;
             }
-            distances.push_back(pow(Imu::X(0,0) - x, 2) +
-                pow(Imu::X(1,0) - y, 2));
+            distances.push_back(sqrt(pow(Imu::X(0,0) - x, 2) +
+                pow(Imu::X(1,0) - y, 2)));
           }
           sprintf(buffer, "%7.2f %7.2f %7.2f %7.2f %7.2f\n",
               mean(distances), stddev(distances),
