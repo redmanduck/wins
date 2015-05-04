@@ -127,6 +127,11 @@ void Imu::AddReading(double ax, double ay, double az,
 
 void Imu::Calibrate() {
   calibrated_ = false;
+  north_quat_inverse_.setIdentity();
+  {
+    lock_guard<mutex> lock(imu_buffer_mutex_);
+    imu_buffer_.readings.clear();
+  }
 
   // Collect imu readings for 1 sec.
   if (not Global::NoSleep) {
