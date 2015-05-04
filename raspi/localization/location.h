@@ -28,6 +28,7 @@ class Location {
   static chrono::steady_clock::time_point last_update_time_;
 
   static Eigen::MatrixXd prev_X;
+  static Eigen::MatrixXd prev_P;
   static Eigen::MatrixXd A;
   static Eigen::MatrixXd A_t;
   static Eigen::MatrixXd const_R;

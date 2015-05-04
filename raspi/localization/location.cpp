@@ -27,6 +27,7 @@ bool close_enough(double a, double b) {
 }
 
 Eigen::MatrixXd Location::prev_X;
+Eigen::MatrixXd Location::prev_P;
 Eigen::MatrixXd Location::A;
 Eigen::MatrixXd Location::A_t;
 Eigen::MatrixXd Location::const_R;
@@ -81,6 +82,7 @@ void Location::InitKalman() {
   //const_R = 2 * Eigen::MatrixXd::Identity(2,2);
   const_R = Eigen::MatrixXd::Identity(2,2) * Global::LocationRFactor;
   prev_X = Eigen::MatrixXd::Identity(2,1);
+  prev_P = Eigen::MatrixXd::Zero(2,2);
 }
 
 void Location::Init() {
@@ -181,12 +183,26 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
     Imu::X.block<2,1>(2,0) = V;
     Imu::P.block<2,2>(2,2) = 2 * P;
   }
+
+  bool hasnan = false;
+  for (int i = 0; i < SVARS; ++i) {
+    for (int j = 0; j < SVARS; ++j) {
+      if (isnan(Imu::X(i,j)) or isnan(Pi,j)) {
+        hasnan = true;
+      }
+    }
+  }
+  if (hasnan) {
+    Imu::X = prev_X;
+    Imu::P = prev_P;
+  }
   Imu::X.block<2,1>(0,0) = X;
   Imu::P.block<2,2>(0,0) = P;
   //cout<< "P: " << P.format(CleanFmt) << "\n\n";
 
   last_update_time_ = new_update_time;
   prev_X = X;
+  prev_P = P;
 
   //cout << "L x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   current_node_ = Map::NodeNearest(X(0,0), X(1,0));
