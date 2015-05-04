@@ -217,7 +217,7 @@ void SPI::MainLoop() {
                 aa.x * MS_2_PER_UNIT,
                 aa.y * MS_2_PER_UNIT,
                 aa.z * MS_2_PER_UNIT,
-                q.w, q.x, q.y, q.z, ypr[0]);
+                q.w, q.x, q.y, q.z);
 
             if(packets%10==5){
               char buffer[100];

@@ -200,8 +200,7 @@ int AddNextSet(ifstream& fs, FakeWifiScan* fakescanner) {
       vector<string> parts = split(line, ',');
       if (parts[0] == "IMU") {
         Imu::AddReading(stod(parts[1]), stod(parts[2]), stod(parts[3]),
-            stod(parts[4]), stod(parts[5]), stod(parts[6]), stod(parts[7]),
-            stod(parts[8]));
+            stod(parts[4]), stod(parts[5]), stod(parts[6]), stod(parts[7]));
         imu_readings += 1;
       } else if (parts[0] == "North") {
         Imu::SetNorthQuat(stod(parts[1]), stod(parts[2]), stod(parts[3]),

@@ -48,7 +48,7 @@ class Imu{
   static Eigen::MatrixXd P;  // Current covariance estimate.
 
   static void AddReading(double ax, double ay, double az,
-      double qw, double qx, double qy, double qz, double yaw);
+      double qw, double qx, double qy, double qz);
   static void Calibrate();
   static vector<double> RelativeToNorth(double w, double x, double y, double z);
   static Eigen::Quaternion<double> GetNorthQuat();

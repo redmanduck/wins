@@ -82,7 +82,7 @@ void Imu::Init() {
 }
 
 void Imu::AddReading(double ax, double ay, double az,
-    double qw, double qx, double qy, double qz, double yaw) {
+    double qw, double qx, double qy, double qz) {
 //  Vector3d raw_acc;
 //  Quaternion<double> quat;
 //  ParseIMU(pic_data, raw_acc, quat);
@@ -93,16 +93,15 @@ void Imu::AddReading(double ax, double ay, double az,
     lock_guard<mutex> lock(Global::DumpMutex);
     ofstream dumpfile(Global::DumpFile, ofstream::app);
     dumpfile << "IMU," << ax << "," << ay << "," << az << ","
-             << qw << "," << qx << "," << qy << "," << qz << ","
-             << yaw << "\n";
+             << qw << "," << qx << "," << qy << "," << qz;
     dumpfile.close();
   }
   // extract yaw.
 
-  //Quaterniond q(qw, qx, qy, qz);
+  Quaterniond q(qw, qx, qy, qz);
   //q = north_quat_inverse_ * q;
-  //double mag = sqrt(q.w() * q.w() + q.y() * q.y());
-  //double yaw = 2*acos(q.w() / mag);
+  double mag = sqrt(q.w() * q.w() + q.z() * q.z());
+  double yaw = 2*acos(q.w() / mag);
 
   Vector3d raw_acc(ax, ay, az);
   raw_acc  = raw_acc * Global::IMU_ACC_SCALE;
@@ -111,14 +110,11 @@ void Imu::AddReading(double ax, double ay, double az,
       ).toRotationMatrix();
   Vector3d acc = rotation_matrix * raw_acc;
   double torotate = (yaw - initial_yaw_);
-  cout << "angle = " << torotate * 180 / M_PI << "\n";
-  if (torotate < 0) {
-    torotate += 360;
-  }
+  //cout << "angle = " << torotate * 180 / M_PI << "\n";
   rotation_matrix =
-      AngleAxisd(Global::IMU_Z_Correction, // - (yaw - initial_yaw_),
+      AngleAxisd(Global::IMU_Z_Correction - (yaw - initial_yaw_),
           Vector3d::UnitZ()) *
-      AngleAxisd(Global::IMU_Y_Correction - (yaw - initial_yaw_),
+      AngleAxisd(Global::IMU_Y_Correction,// - (yaw - initial_yaw_),
           Vector3d::UnitY()) *
       AngleAxisd(Global::IMU_X_Correction, Vector3d::UnitX());
   Vector3d corrected = rotation_matrix * acc;
@@ -142,6 +138,7 @@ void Imu::AddReading(double ax, double ay, double az,
 void Imu::Calibrate() {
   calibrated_ = false;
   north_quat_inverse_.setIdentity();
+  initial_yaw_ = 0;
   {
     lock_guard<mutex> lock(imu_buffer_mutex_);
     imu_buffer_.readings.clear();
@@ -154,7 +151,7 @@ void Imu::Calibrate() {
 
   // Average IMU readings.
   Vector3d avals = Vector3d::Zero();
-  VectorXd vals = VectorXd::Zero(5);
+  VectorXd vals = VectorXd::Zero(4);
   lock_guard<mutex> lock(imu_buffer_mutex_);
   for (auto r : imu_buffer_.readings) {
     avals(0) += r[0];
@@ -164,7 +161,6 @@ void Imu::Calibrate() {
     vals(1) += r[4];
     vals(2) += r[5];
     vals(3) += r[6];
-    vals(4) += r[7];
   }
   if (imu_buffer_.readings.size() != 0) {
     avals /= imu_buffer_.readings.size();
@@ -178,12 +174,10 @@ void Imu::Calibrate() {
     north_quat_inverse_ = AngleAxisd(angle, axis);
 
     // extract yaw.
-    //double mag = sqrt(q.w() * q.w() + q.y() * q.y());
-    //initial_yaw_ = 2*acos(vals(0) / mag);
-    initial_yaw_ = vals(4);
-    if (initial_yaw_ < 0) {
-      initial_yaw_ += 360;
-    }
+    //double mag = sqrt(q.w() * q.w() + q.z() * q.z());
+    double mag = sqrt(vals(0) * vals(0) + vals(3) * vals(3));
+    initial_yaw_ = 2*acos(vals(0) / mag);
+    //initial_yaw_ = vals(4);
   } else {
     north_quat_inverse_.setIdentity();
   }
