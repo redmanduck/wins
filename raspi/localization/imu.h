@@ -41,13 +41,14 @@ class Imu{
   static mutex imu_buffer_mutex_;
   static atomic_bool calibrated_;
   static Eigen::Quaternion<double> north_quat_inverse_;
+  static double initial_yaw_;
 
  public:
   static Eigen::MatrixXd X;      // Current state estimate.
   static Eigen::MatrixXd P;  // Current covariance estimate.
 
   static void AddReading(double ax, double ay, double az,
-      double qw, double qx, double qy, double qz);
+      double qw, double qx, double qy, double qz, double yaw);
   static void Calibrate();
   static vector<double> RelativeToNorth(double w, double x, double y, double z);
   static Eigen::Quaternion<double> GetNorthQuat();

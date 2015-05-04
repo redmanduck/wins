@@ -55,6 +55,7 @@ ImuResult Imu::imu_buffer_;
 mutex Imu::imu_buffer_mutex_;
 atomic_bool Imu::calibrated_(false);
 Quaternion<double> Imu::north_quat_inverse_ = Quaternion<double>::Identity();
+double Imu::initial_yaw_ = 0;
 
 void Imu::Init() {
   // Observation matrix.
@@ -81,7 +82,7 @@ void Imu::Init() {
 }
 
 void Imu::AddReading(double ax, double ay, double az,
-    double qw, double qx, double qy, double qz) {
+    double qw, double qx, double qy, double qz, double yaw) {
 //  Vector3d raw_acc;
 //  Quaternion<double> quat;
 //  ParseIMU(pic_data, raw_acc, quat);
@@ -98,13 +99,12 @@ void Imu::AddReading(double ax, double ay, double az,
   Vector3d raw_acc(ax, ay, az);
   raw_acc  = raw_acc * Global::IMU_ACC_SCALE;
   Matrix3d rotation_matrix = (
-      Quaterniond(qw, qx, qy, qz).inverse()
-      //north_quat_inverse_
+      //Quaterniond(qw, qx, qy, qz).inverse()
+      north_quat_inverse_
       ).toRotationMatrix();
   Vector3d acc = rotation_matrix * raw_acc;
-
   rotation_matrix =
-      AngleAxisd(Global::IMU_Z_Correction, Vector3d::UnitZ()) *
+      AngleAxisd(Global::IMU_Z_Correction - initial_yaw_, Vector3d::UnitZ()) *
       AngleAxisd(Global::IMU_X_Correction, Vector3d::UnitX()) *
       AngleAxisd(Global::IMU_Y_Correction, Vector3d::UnitY());
   Vector3d corrected = rotation_matrix * acc;
@@ -121,7 +121,7 @@ void Imu::AddReading(double ax, double ay, double az,
   //                              << ", qx: " << qx
   //                              << ", qy: " << qy
   //                              << ", qz: " << qz << "\n";
-  imu_buffer_.readings.push_back({ ax, ay, az, qw, qx, qy, qz });
+  imu_buffer_.readings.push_back({ ax, ay, az, qw, qx, qy, qz, yaw });
   //FILE_LOG(logIMU) << "Buffer size: " << imu_buffer_.readings.size() << "\n";
 }
 
@@ -139,19 +139,30 @@ void Imu::Calibrate() {
   }
 
   // Average IMU readings.
-  Vector4d vals = Vector4d::Zero();
+  Vector3d avals = Vector3d::Zero();
+  VectorXd vals = VectorXd::Zero(5);
   lock_guard<mutex> lock(imu_buffer_mutex_);
   for (auto r : imu_buffer_.readings) {
+    avals(0) += r[0];
+    avals(1) += r[1];
+    avals(2) += r[2];
     vals(0) += r[3];
     vals(1) += r[4];
     vals(2) += r[5];
     vals(3) += r[6];
+    vals(4) += r[7];
   }
   if (imu_buffer_.readings.size() != 0) {
+    avals /= imu_buffer_.readings.size();
+    double angle = acos(avals.normalized().dot(-Vector3d::UnitZ()));
+    Vector3d axis = avals.cross(-Vector3d::UnitZ()).normalized();
+
     vals /= imu_buffer_.readings.size();
     // Set the average value as the quat representing north orentation.
-    north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
-        .inverse();
+    //north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
+    //    .inverse();
+    north_quat_inverse_ = AngleAxisd(angle, axis);
+    initial_yaw_ = vals(4);
   } else {
     north_quat_inverse_.setIdentity();
   }

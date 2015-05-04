@@ -209,7 +209,7 @@ void SPI::MainLoop() {
             //q = Quaternion(Imu::RelativeToNorth(q.w, q.x, q.y, q.z));
 
             //mpu.dmpGetGravity(&gravity, &q);
-            //mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
             mpu.dmpGetAccel(&aa, &imu_buf[data_p-CHUNK_SIZE]);
             //mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
             //mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
@@ -217,7 +217,7 @@ void SPI::MainLoop() {
                 aa.x * MS_2_PER_UNIT,
                 aa.y * MS_2_PER_UNIT,
                 aa.z * MS_2_PER_UNIT,
-                q.w, q.x, q.y, q.z);
+                q.w, q.x, q.y, q.z, ypr[0]);
 
             if(packets%10==5){
               char buffer[100];
