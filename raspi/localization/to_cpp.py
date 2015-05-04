@@ -27,7 +27,8 @@ else:
 
 cur_x = 0
 cur_y = 0
-scale = 1
+scale_x = 1
+scale_y = 1
 
 scans_cur_point = []
 macs_cur_point = set()
@@ -41,7 +42,8 @@ for line in in_file:
         cur_x = int(parts[1])
         cur_y = int(parts[2])
     elif parts[0].startswith('scale'):
-        scale = float(parts[1])
+        scale_x = float(parts[1])
+        scale_y = float(parts[2])
     elif parts[0].startswith('device'):
         device = parts[1].strip().lower()
     elif parts[0].startswith('====='):
@@ -95,7 +97,9 @@ for line in in_file:
                         ('value1', cur_y),
                         ('value2', costs),
                         ('value3', mac_info),
-                        ('value4', formatted_scans)]
+                        ('value4', formatted_scans),
+                        ('value5', scale_x),
+                        ('value6', scale_y)]
                     ))
                 ]))
             ])
@@ -104,13 +108,13 @@ for line in in_file:
         macs_cur_point = set()
 
         if parts[0][5] == 'N':
-            cur_y += scale
+            cur_y += 1
         elif parts[0][5] == 'S':
-            cur_y -= scale
+            cur_y -= 1
         elif parts[0][5] == 'E':
-            cur_x += scale
+            cur_x += 1
         elif parts[0][5] == 'W':
-            cur_x -= scale
+            cur_x -= 1
         else:
             pdb.set_trace()
             raise Exception('Unknown direction')
@@ -147,7 +151,9 @@ points[0]['ptr_wrapper']['data'] = OrderedDict([
     ('value1', d['value1']),
     ('value2', d['value2']),
     ('value3', d['value3']),
-    ('value4', d['value4'])
+    ('value4', d['value4']),
+    ('value5', d['value5']),
+    ('value6', d['value6'])
 ])
 
 out_file = open(args.outfile, 'w')

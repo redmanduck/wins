@@ -87,11 +87,11 @@ void Test(int argc, char *orig_argv[]) {
       points.emplace_back(unique_ptr<Point>(new Point {10, 0, {1,1,1,1},
         {{"mac11", {100, 90}}, {"mac12", {150, 95}}},
         {{{"mac11", 60.0}, {"mac12", 70.0}},
-         {{"mac11", 65.0}, {"mac12", 75.0}}}}));
+         {{"mac11", 65.0}, {"mac12", 75.0}}}, 1, 1}));
       points.emplace_back(unique_ptr<Point>(new Point { 9, 1, {1,1,1,1},
         {{"mac11", {110, 91}}, {"mac12", {160, 96}}},
         {{{"mac11", 60.0}, {"mac12", 70.0}},
-         {{"mac11", 65.0}, {"mac12", 75.0}}}}));
+         {{"mac11", 65.0}, {"mac12", 75.0}}}, 1, 1}));
 
       ofstream os("sample.json");
       cereal::JSONOutputArchive archive(os);

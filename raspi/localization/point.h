@@ -31,16 +31,17 @@ struct Point {
   double y;
   vector<int> cost;
   unordered_map<string, MacInfo> info;
-
   vector<vector<Result>> scans;
+  double scale_x;
+  double scale_y;
 
   template<class Archive>
   void serialize(Archive & archive, uint32_t const version) {
     assert(version == POINT_VERSION);
 #ifdef DSCAN
-    archive(x, y, cost, info, scans);
+    archive(x, y, cost, info, scans, scale_x, scale_y);
 #else
-    archive(x, y, cost, info);
+    archive(x, y, cost, info, scale_x, scale_y);
 #endif
   }
 };
