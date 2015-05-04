@@ -10,11 +10,10 @@ namespace wins {
 
 class FakeWifiScan : public WifiScan {
  public:
-  queue<vector<Result>> result_queue;
+  queue<unique_ptr<vector<Result>>> result_queue;
 
   FakeWifiScan() : WifiScan({}) { }
-  FakeWifiScan(vector<vector<Result>> results) : WifiScan({}),
-      result_queue(deque<vector<Result>>(results.begin(), results.end())) { }
+  FakeWifiScan(vector<vector<Result>> results);
   virtual vector<Result> Fetch();
 };
 

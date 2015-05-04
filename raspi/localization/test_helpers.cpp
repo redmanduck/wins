@@ -162,7 +162,8 @@ namespace {
             // This is rare.
             auto& scan = point->scans[index % point->scans.size()];
 
-            fakescanner->result_queue.push(scan);
+            fakescanner->result_queue.push(unique_ptr<vector<Result>>(
+                new vector<Result>(scan)));
             index += 1;
           }
         }
@@ -191,26 +192,31 @@ namespace {
 
 int AddNextSet(ifstream& fs, FakeWifiScan* fakescanner) {
   int imu_readings = 0;
-  vector<Result> scans;
+  unique_ptr<vector<Result>> scans = unique_ptr<vector<Result>>(
+      new vector<Result>);
   string line;
-  while (imu_readings < 70) {
+  while (imu_readings < 1000) {
     if (getline(fs, line)) {
       vector<string> parts = split(line, ',');
       if (parts[0] == "IMU") {
         Imu::AddReading(stod(parts[1]), stod(parts[2]), stod(parts[3]),
             stod(parts[4]), stod(parts[5]), stod(parts[6]), stod(parts[7]));
+        imu_readings += 1;
       } else if (parts[0] == "WIFI") {
-        scans.push_back(Result({parts[1], stod(parts[2])}));
+        scans->push_back(Result({parts[1], stod(parts[2])}));
       } else if (parts[0] == "-----") {
-        fakescanner->result_queue.push(scans);
+        if (fakescanner)
+          fakescanner->result_queue.push(move(scans));
         return imu_readings;
       }
     } else {
-      fakescanner->result_queue.push(scans);
+      if (fakescanner)
+        fakescanner->result_queue.push(move(scans));
       return imu_readings;
     }
   }
-  fakescanner->result_queue.push(scans);
+  if (fakescanner)
+    fakescanner->result_queue.push(move(scans));
   return imu_readings;
 }
 

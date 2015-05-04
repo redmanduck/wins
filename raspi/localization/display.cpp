@@ -23,7 +23,7 @@ namespace {
 std::ifstream::pos_type filesize(const char* filename)
 {
   std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
-  return in.tellg(); 
+  return in.tellg();
 }
 
 int MaxLength(FontSize size) {
@@ -182,7 +182,7 @@ void Display::resetWorld(){
 void Display::setWorldPixel(uint8_t x, uint8_t y, uint8_t color) {
     if ((x >= WORLD_WMAX) || (y >= WORLD_HMAX))
         return;
-  
+
     if(color){
         WORLD[x+ (y/8)*WORLD_WMAX] ^= (1<<((y%8))); //xor , and no reverse
     }else{
@@ -227,14 +227,14 @@ void Display::MapLoadWorld(string mapfile){
 	cout << WORLD_HMAX << " is world height\n";
 
    	WORLD = (uint8_t *)malloc(sizeof(uint8_t)*x);
-	WORLD_MAP = (uint8_t *)malloc(sizeof(uint8_t)*x);	
+	WORLD_MAP = (uint8_t *)malloc(sizeof(uint8_t)*x);
 	size_t result = fread (WORLD,sizeof(uint8_t),x,pFile);
    	memcpy(WORLD_MAP, WORLD, x);
 	if(result != (unsigned int)x){
 		cout << "Unable to load world from " + mapfile + ". Will crash.\n";
 		throw;
 	}
-	
+
 	fclose(pFile);
 }
 
@@ -248,7 +248,7 @@ void Display::MapDrawVisible(){
 	int world_offset = W*map_box_.second+map_box_.first;
 	cout << "World Offset Y: " << map_box_.second << "\n";
 //	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);
-		
+
 	//Draw indicator
 	//indicator must be drawn in bottom layer
 	resetWorld();
@@ -256,13 +256,13 @@ void Display::MapDrawVisible(){
 	if(radii_ > 5) radii_ = 0;
 	setWorldPixel(map_indi_.first, map_indi_.second, 255);
 	drawWorldCircle(map_indi_.first, map_indi_.second, radii_++,255);
-	
+
 	for(int i = 0; i < 8; i++){
 	   int ac = i*128;//(128*7)-i*128;
-	   
+
 	   if(128 + world_offset + W*i >= WORLD_SIZE){
 		cout << "World access out of bound!!!";
-	   }  
+	   }
 
 	   memcpy(&glcd_.st7565_buffer[ac],&WORLD[world_offset + W*i], 128);
 	   // Equation to reverse a byte :/
@@ -280,16 +280,16 @@ void Display::MapDrawVisible(){
 void Display::MapUpdateIndicator(Coord N){
 //	bool doUpdate = false;
 	int new_box_x = map_box_.first;
-	int new_box_y = map_box_.second;	
+	int new_box_y = map_box_.second;
 
 	int X_DELTA = 60;
 	int Y_DELTA = 2;
 
-	//Shift Screen to reveal more	
+	//Shift Screen to reveal more
 	//If location N is beyond current map_box_ bound
 
 	if(N.first >= map_box_.first + 128){
-	 	cout << "Shifting X\n";	
+	 	cout << "Shifting X\n";
 		new_box_x += X_DELTA;
 	}
 
@@ -300,7 +300,7 @@ void Display::MapUpdateIndicator(Coord N){
 
 
 	if(N.first <= map_box_.first - 128){
-	 	cout << "Shifting -X\n";	
+	 	cout << "Shifting -X\n";
 		new_box_x -= X_DELTA;
 	}
 
@@ -309,16 +309,16 @@ void Display::MapUpdateIndicator(Coord N){
 		new_box_y -= Y_DELTA;
 	}
 
-          
+
 	MapSetVisibleBound(new_box_x, new_box_y);
-	
+
 	//Update indicator position
 	map_indi_.first = N.first;
 	map_indi_.second = N.second;
 
 	//note indi is within box
 	//and box is what we draw
-	
+
 	cout << "Indicator: ";
 	cout << map_indi_.first;
 	cout << ", ";
@@ -329,11 +329,11 @@ void Display::MapUpdateIndicator(Coord N){
 void Display::MapSetVisibleBound(int x, int y){
 	if(x >= (WORLD_WMAX - 128)){
 		cout << "Normalizing X\n";
-		x = WORLD_WMAX - 128;	
+		x = WORLD_WMAX - 128;
 	}
 	if(y >= (WORLD_HMAX - 64)/8){
 		cout << "noramlizing Y\n";
-		y = (WORLD_HMAX - 64)/8;//(WORLD_HMAX - 64)/8;	
+		y = (WORLD_HMAX - 64)/8;//(WORLD_HMAX - 64)/8;
 	}
 	cout <<"shifting bound " << x <<"," << y << "\n";
  	map_box_.first = x;
@@ -393,16 +393,16 @@ Page Display::Splash() {
 
 
   for(int i = 0; i < 10; i++){
-   
+
    MapUpdateIndicator(Coord(ORIGIN_X+i*3,ORIGIN_Y));
 //   MapUpdateIndicator(Coord(ORIGIN_X, ORIGIN_Y + i*3));
 
    MapDrawVisible();
    Flush();
-     
+
    usleep(120000);
    //this_thread::sleep_for(chrono::seconds(1));
-   if (system("CLS")) system("clear");  
+   if (system("CLS")) system("clear");
   }
 
   this_thread::sleep_for(chrono::seconds(1));
@@ -616,9 +616,9 @@ Page Display::ShutDown() {
 string getNextSegmentName(){
    //For mapping mode
    //return next available segment filename
-   system("mkdir /wifimap"); //Keep it simple stupid (KISS) 
+   system("mkdir /wifimap"); //Keep it simple stupid (KISS)
    FILE * max_p = popen("ls /wifimap  | sort -n -r | egrep -o '[0-9]+' | head -n 1", "r");
-   char buffer[64]; 
+   char buffer[64];
    fgets(buffer, sizeof(buffer), max_p);
    pclose(max_p);
    return string(buffer);
@@ -648,7 +648,7 @@ Page Display::MapScan() {
   if(MAP_FILENAME_ == ""){
   	updateFilename();
   }
- 
+
   current_page_ = PAGE_MAP_SCAN;
   while (true) {
     ClearScreen();
@@ -664,7 +664,7 @@ Page Display::MapScan() {
      IncrmLine();
      PutString("3. Quit");
     }
- 
+
     if(MAP_SCANNING_){
 	bool skipflag = false;
 	if(SKIP_SCAN){
@@ -674,10 +674,10 @@ Page Display::MapScan() {
 	for(int xx = 0; xx < 10; xx++){
 	  if(skipflag) continue;
          vector<Result> r = Location::GetScans();
-          MAP_samples_++; 
+          MAP_samples_++;
           //This is one scan
        	  for(auto i = r.begin(); i != r.end(); i++ ){
-	     MAP_record_ += i->name + "," + to_string(i->signal) +  "\n";	
+	     MAP_record_ += i->name + "," + to_string(i->signal) +  "\n";
           }
  	  //EOS
   	  MAP_record_ += "-----------------------\n";
@@ -686,42 +686,42 @@ Page Display::MapScan() {
 	  PutString("Collecting..");
   	  IncrmLine();
 	  PutString("# Sample: " + to_string(MAP_samples_));
-     	  IncrmLine();  
+     	  IncrmLine();
 
       }
 	  ClearScreen();
 	  PutString("# Sample: " + to_string(MAP_samples_));
-     	  IncrmLine();  
+     	  IncrmLine();
           PutString("1. Done");
           IncrmLine();
           PutString("3. Delimit");
-       
-    }  
-    
+
+    }
+
     char option = GetChar();
     if (option == '1') {
       MAP_SCANNING_ = !MAP_SCANNING_;
       MAP_samples_ = 0;
-	
-      if(!MAP_SCANNING_){   
+
+      if(!MAP_SCANNING_){
     	ClearScreen();
 	SetCurrentLine(3);
 	PutString("Saved to " + MAP_FILENAME_  + "!");
 	MAP_fp_.open("/wifimap/" + MAP_FILENAME_, ios::out);
 	MAP_fp_ << MAP_FILENAME_ << "\n";
         MAP_fp_ << MAP_record_;
-	MAP_fp_.close(); 
+	MAP_fp_.close();
 	usleep(1000000);
      }
 
       MAP_record_ = "";
       MAP_FILENAME_ = "";
-      return PAGE_MAP_SCAN; 
+      return PAGE_MAP_SCAN;
     } else if(option == '2'){
-	updateFilename();	
+	updateFilename();
     }else if(option == '3' && !MAP_SCANNING_){
       MAP_FILENAME_ = "";
-      MAP_samples_ = 0; 
+      MAP_samples_ = 0;
       return PAGE_MENU;
     //}else if(option == '2' && MAP_SCANNING_){
     //   continue;
@@ -732,7 +732,7 @@ Page Display::MapScan() {
      Flush();
      char option2 = GetChar();
      if(option2 == '5'){
-      MAP_record_ += "========== [FLAGGED] =============\n"; 
+      MAP_record_ += "========== [FLAGGED] =============\n";
 	cout << "MPU6050" << MAP_record_;
      }else{
 	SKIP_SCAN = true;
@@ -760,6 +760,11 @@ Page Display::DataDump() {
 
   SetCurrentLine(4);
   GetChar();
+  ofstream dumpfile(Global::DumpFile, ofstream::trunc);
+  auto north_quat = Imu::GetNorthQuat();
+  dumpfile << "North," << north_quat.w() << "," << north_quat.x() << "," <<
+      north_quat.y() << "," << north_quat.z() << "\n";
+  dumpfile.close();
   Global::DataDump = true;
   PutString("Press key to stop", true);
   GetChar();

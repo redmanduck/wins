@@ -29,13 +29,18 @@ int Global::FilterBiasX = 5;
 int Global::FilterBiasY = 5;
 int Global::LocationRFactor = 4;
 int Global::LocationQFactor = 5;
-int Global::IMU_R = 0.03;
-int Global::IMU_QD = 10;
-int Global::IMU_QV = 100;
-int Global::IMU_QA = 1000;
+double Global::IMU_R = 0.03;
+double Global::IMU_QD = 10;
+double Global::IMU_QV = 100;
+double Global::IMU_QA = 1000;
+double Global::IMU_ACC_SCALE = 1;
+double Global::IMU_X_Correction = 0;
+double Global::IMU_Y_Correction = 0;
+double Global::IMU_Z_Correction = 0;
+double Global::IMU_DELTA_T = 0.05;
 double Global::WiFiExp1 = 0;
 double Global::WiFiExp2 = 0;
-WiFiVariant Global::ScanVariant = WIFI_VARIANT_CHI_SQ;
+WiFiVariant Global::ScanVariant = WIFI_VARIANT_NONE;
 bool Global::NoSleep = false;
 int Global::DurationOverride = -1;
 vector<string> Global::WiFiDevices({ "wlan0" });
@@ -77,7 +82,7 @@ void Global::RunMainLoop() {
 
 void Global::Init() {
   mainthread_id_ = this_thread::get_id();
-  FILELog::LogSelect() = (TLogLevel)(logLOCATION);
+  FILELog::LogSelect() = (TLogLevel)(logLOCATION | logIMU);
   signal(SIGABRT, &sighandler);
   signal(SIGTERM, &sighandler);
   signal(SIGINT, &sighandler);

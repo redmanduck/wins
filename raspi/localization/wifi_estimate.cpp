@@ -362,7 +362,7 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
   if (not scanner_) {
     throw runtime_error("No scanner");
   }
-  if (read_count > 1) {
+  if (read_count != 1) {
     FILE_LOG(logWIFI) << "AVERAGING...\n";
     vector<vector<Result>> scans;
     for (int i = 0; i < read_count; ++i) {
@@ -395,8 +395,8 @@ vector<PointEstimate> WiFiEstimate::EstimateLocation(
       wifi_estimates = ClosestByMahalanobis(results, v);
     }
     if (wifi_estimates.size() > 0) {
-      FILE_LOG(logLOCATION) << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
-          wifi_estimates[0].y_mean << "\n";
+      //cout << "W x = " << wifi_estimates[0].x_mean <<", y = " <<
+      //    wifi_estimates[0].y_mean << "\n";
     }
     return wifi_estimates;
   }

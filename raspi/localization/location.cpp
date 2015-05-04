@@ -79,7 +79,7 @@ void Location::InitKalman() {
   A = Eigen::MatrixXd::Identity(2,2);
   A_t = A.transpose();
   //const_R = 2 * Eigen::MatrixXd::Identity(2,2);
-  const_R = 2 * Eigen::MatrixXd::Identity(2,2) * Global::LocationRFactor / 3;
+  const_R = Eigen::MatrixXd::Identity(2,2) * Global::LocationRFactor;
   prev_X = Eigen::MatrixXd::Identity(2,1);
 }
 
@@ -142,7 +142,7 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   P = Imu::P.block<2,2>(0,0);
 
   Q = Global::Scale * Eigen::MatrixXd::Identity(2,2) * (msecs / 1000) *
-      Global::LocationQFactor / 4;
+      Global::LocationQFactor;
   R.setZero();
 
   for (size_t i = 0; i < wifi_estimates.size(); ++i) {
@@ -159,15 +159,16 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   }
   H_t = H.transpose();
 
-  FILE_LOG(logLOCATION) << "I x = " << X(0,0) <<", y = " << X(1,0) << "\n";
+  //cout << "I x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   imu_x = X(0,0);
   imu_y = X(1,0);
   wifi_x = wifi_estimates[0].x_mean;
   wifi_y = wifi_estimates[0].y_mean;
 
   Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
-  FILE_LOG(logIMU) << "R :\n" << R.format(CleanFmt) << "\n";
-  FILE_LOG(logIMU) << "Q :\n" << Q.format(CleanFmt) << "\n";
+  //cout << "R :\n" << R.format(CleanFmt) << "\n";
+  //cout << "Q :\n" << Q.format(CleanFmt) << "\n";
+  //cout << "P before: " << P.format(CleanFmt) << "\n\n";
   KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
 
   kalman_x = X(0,0);
@@ -178,15 +179,16 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   if (last_update_time_ > tp_epoch_) {
     Eigen::Vector2d V = (X - prev_X) / msecs;
     Imu::X.block<2,1>(2,0) = V;
+    Imu::P.block<2,2>(2,2) = 2 * P;
   }
   Imu::X.block<2,1>(0,0) = X;
   Imu::P.block<2,2>(0,0) = P;
-  //FILE_LOG(logLOCATION) << P.format(CleanFmt) << "\n\n";
+  //cout<< "P: " << P.format(CleanFmt) << "\n\n";
 
   last_update_time_ = new_update_time;
   prev_X = X;
 
-  FILE_LOG(logLOCATION) << "L x = " << X(0,0) <<", y = " << X(1,0) << "\n";
+  //cout << "L x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   current_node_ = Map::NodeNearest(X(0,0), X(1,0));
 	return true;
 }

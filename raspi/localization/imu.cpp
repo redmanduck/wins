@@ -1,3 +1,4 @@
+#include <iostream>
 #include <fstream>
 #include <thread>
 
@@ -40,10 +41,10 @@ namespace {
 
 MatrixXd Imu::X(SVARS, 1);
 MatrixXd Imu::P(SVARS, SVARS);
-MatrixXd Imu::R(OBSERVATIONS, OBSERVATIONS);
+MatrixXd Imu::R(SVARS, SVARS);
 MatrixXd Imu::Q(SVARS, SVARS);
-MatrixXd Imu::H(OBSERVATIONS, SVARS);
-MatrixXd Imu::H_t(SVARS, OBSERVATIONS);
+MatrixXd Imu::H(SVARS, SVARS);
+MatrixXd Imu::H_t(SVARS, SVARS);
 
 vector<double> Imu::current_state;
 vector<double> Imu::current_variance;
@@ -57,30 +58,26 @@ Quaternion<double> Imu::north_quat_inverse_ = Quaternion<double>::Identity();
 
 void Imu::Init() {
   // Observation matrix.
-  H.setZero();
-  for (int i = 0; i < IMUS; ++i) {
-    H(i * 2, 4) = 1;
-    H(i * 2 + 1, 5) = 1;
-  }
+  H.setIdentity();
+  //for (int i = 0; i < IMUS; ++i) {
+  //  H(i * 2, 4) = 1;
+  //  H(i * 2 + 1, 5) = 1;
+  //}
   H_t = H.transpose();
 
   X.setZero();
   P = HIGH_VARIANCE * MatrixXd::Identity(SVARS, SVARS);
 
   // Velocity is zero at start.
-  P(1,1) = 0;
   P(2,2) = 0;
+  P(3,3) = 0;
 
-  R = MatrixXd::Identity(OBSERVATIONS, OBSERVATIONS);
-  R(0,0) = Global::IMU_R;
-  R(1,1) = Global::IMU_R;
-  Q = MatrixXd::Identity(SVARS, SVARS);
-  Q(0,0) = Global::IMU_QD;
-  Q(1,1) = Global::IMU_QD;
-  Q(2,2) = Global::IMU_QV;
-  Q(3,3) = Global::IMU_QV;
-  Q(4,4) = Global::IMU_QA;
-  Q(5,5) = Global::IMU_QA;
+  Q.block<2,2>(0,0) = MatrixXd::Identity(2,2) * Global::IMU_QD;
+  R.block<2,2>(0,0) = MatrixXd::Identity(2,2) * Global::IMU_R * Global::IMU_QD;
+  Q.block<2,2>(2,2) = MatrixXd::Identity(2,2) * Global::IMU_QV;
+  R.block<2,2>(4,4) = MatrixXd::Identity(2,2) * Global::IMU_R * Global::IMU_QV;
+  Q.block<2,2>(4,4) = MatrixXd::Identity(2,2) * Global::IMU_QA;
+  R.block<2,2>(4,4) = MatrixXd::Identity(2,2) * Global::IMU_R * Global::IMU_QA;
 }
 
 void Imu::AddReading(double ax, double ay, double az,
@@ -94,6 +91,30 @@ void Imu::AddReading(double ax, double ay, double az,
 //  Matrix3d rot_matrix = (quat * north_quat_inverse_).toRotationMatrix();
 //  Vector3d acc = rot_matrix * raw_acc;
 //
+  Matrix3d rotation_matrix;
+  rotation_matrix =
+      AngleAxisd(Global::IMU_Z_Correction, Vector3d::UnitZ()) *
+      AngleAxisd(Global::IMU_X_Correction, Vector3d::UnitX()) *
+      AngleAxisd(Global::IMU_Y_Correction, Vector3d::UnitY());
+  Vector3d acc(ax, ay, az);
+  acc  = acc * Global::IMU_ACC_SCALE;
+  ax = acc(0);
+  ay = acc(1);
+  az = acc(2);
+  //std::cout << "before: " << ax <<", " << ay << ", " << az << "\n";
+  Vector3d rotated = rotation_matrix * acc;
+  acc = rotated;
+  ax = acc(0);
+  ay = acc(1);
+  az = acc(2);
+  //std::cout << "after: " << ax <<", " << ay << ", " << az << "\n";
+  if (Global::DataDump.load() and calibrated_) {
+    lock_guard<mutex> lock(Global::DumpMutex);
+    ofstream dumpfile(Global::DumpFile, ofstream::app);
+    dumpfile << "IMU," << ax << "," << ay << "," << az << ","
+             << qw << "," << qx << "," << qy << "," << qz << "\n";
+    dumpfile.close();
+  }
   lock_guard<mutex> lock(imu_buffer_mutex_);
   //FILE_LOG(logIMU) << "Adding reading ax: " << ax
   //                              << ", ay: " << ay
@@ -104,20 +125,15 @@ void Imu::AddReading(double ax, double ay, double az,
   //                              << ", qz: " << qz << "\n";
   imu_buffer_.readings.push_back({ ax, ay, az, qw, qx, qy, qz });
   //FILE_LOG(logIMU) << "Buffer size: " << imu_buffer_.readings.size() << "\n";
-  if (Global::DataDump.load() and calibrated_) {
-    lock_guard<mutex> lock(Global::DumpMutex);
-    ofstream dumpfile(Global::DumpFile, ofstream::app);
-    dumpfile << "IMU," << ax << "," << ay << "," << az << ","
-             << qw << "," << qx << "," << qy << "," << qz << "\n";
-    dumpfile.close();
-  }
 }
 
 void Imu::Calibrate() {
   calibrated_ = false;
 
   // Collect imu readings for 1 sec.
-  this_thread::sleep_for(chrono::seconds(1));
+  if (not Global::NoSleep) {
+    this_thread::sleep_for(chrono::seconds(1));
+  }
 
   // Average IMU readings.
   Vector4d vals = Vector4d::Zero();
@@ -128,15 +144,22 @@ void Imu::Calibrate() {
     vals(2) += r[5];
     vals(3) += r[6];
   }
-  vals /= imu_buffer_.readings.size();
-
-  // Set the average value as the quat representing north orentation.
-  north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
-      .inverse();
+  if (imu_buffer_.readings.size() != 0) {
+    vals /= imu_buffer_.readings.size();
+    // Set the average value as the quat representing north orentation.
+    north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
+        .inverse();
+  } else {
+    north_quat_inverse_.setIdentity();
+  }
 
   // Clear IMU buffer and mark as calibrated.
   imu_buffer_.readings.clear();
   calibrated_ = true;
+}
+
+Quaternion<double> Imu::GetNorthQuat() {
+  return north_quat_inverse_.inverse();
 }
 
 vector<double> Imu::RelativeToNorth(double w, double x, double y, double z) {
@@ -149,19 +172,24 @@ PointEstimate Imu::DoKalman(const ImuResult& imu_result, double duration,
     ImuVariant v) {
   vector<double> vals_x;
   vector<double> vals_y;
+  vector<double> vals_z;
   for (auto r : imu_result.readings) {
     vals_x.push_back(r[0]);
     vals_y.push_back(r[1]);
+    vals_z.push_back(r[2]);
     //FILE_LOG(logIMU) << "(" << r[0] << ", " << r[1] << ")|";
   }
+  auto mean_x = mean(vals_x);
+  auto mean_y = mean(vals_y);
+  auto mean_z = mean(vals_z);
   auto var_x = var(vals_x);
   auto var_y = var(vals_y);
 
-  auto delta_t = duration / imu_result.readings.size();
+  auto delta_t = Global::IMU_DELTA_T;
 
   Matrix<double, SVARS, 1> x_sum = X;
   Matrix<double, SVARS, SVARS> p_sum = P;
-  Matrix<double, OBSERVATIONS, 1> z_sum;
+  Matrix<double, SVARS, 1> z_sum;
   z_sum.setZero();
 
   auto X_initial = X;
@@ -180,46 +208,67 @@ PointEstimate Imu::DoKalman(const ImuResult& imu_result, double duration,
   FILE_LOG(logIMU) << "-------------------------------";
   FILE_LOG(logIMU) << "var_x: " << var_x << "\n";
   FILE_LOG(logIMU) << "var_y: " << var_y << "\n";
-  FILE_LOG(logIMU) << "delta_t: " << delta_t << "\n";
-  FILE_LOG(logIMU) << "X before:\n" << X.format(CleanFmt) << "\n";
-  FILE_LOG(logIMU) << "P before:\n" << P.format(CleanFmt) << "\n";
+  //std::cout << "delta_t: " << delta_t << "\n";
+  //std::cout << "R :\n" << R.format(CleanFmt) << "\n";
+  //std::cout << "Q :\n" << Q.format(CleanFmt) << "\n";
+  //std::cout << "X before:\n" << X.format(CleanFmt) << "\n";
+  //FILE_LOG(logIMU) << "P before:\n" << P.format(CleanFmt) << "\n";
+  //  z_sum += Z;
+
   for (auto& reading : imu_result.readings) {
-    Matrix<double, OBSERVATIONS, 1> Z;
+    Matrix<double, SVARS, 1> Z;
+    Z.block<4,1>(0,0) = X.block<4,1>(0,0);
 
-    // Copy X and Y acc values to measurement vector Z.
-    for (int i = 0; i < OBSERVATIONS; ++i) {
-      Z(i, 0) = reading[i];
-    }
+    //// Copy X and Y acc values to measurement vector Z.
+    //for (int i = 0; i < SVARS; ++i) {
+    //  Z(i, 0) = reading[i];
+    //}
+    Z(4,0) = reading[0];
+    Z(5,0) = reading[1];
+    Z = A * Z;
 
-    KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
-    //FILE_LOG(logIMU) << "P intermediate:\n" << P.format(CleanFmt) << "\n";
-    x_sum += X;
-    p_sum += P;
-    z_sum += Z;
+    X = (1 - Global::IMU_R) * X + Global::IMU_R * Z;
+    //printf("A: %f, %f, %f\n", reading[0], reading[1], reading[2]);
+    //printf("Z: %f, %f, %f, %f, %f, %f\n", Z(0,0), Z(1,0), Z(2,0), Z(3,0), Z(4,0), Z(5,0));
+    //KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
+    x_sum = X;
+    //p_sum = P;
+
+  //  KalmanUpdate(X, P, Z, A, A_t, H, H_t, R, Q);
+  //  //FILE_LOG(logIMU) << "P intermediate:\n" << P.format(CleanFmt) << "\n";
+  //  x_sum += X;
+  //  p_sum += P;
+  //  z_sum += Z;
+  }
+  //printf("X: %f, %f, %f, %f, %f, %f\n", X(0,0), X(1,0), X(2,0), X(3,0), X(4,0), X(5,0));
+
+  if (imu_result.readings.size() == 0) {
+    std::cout << "NO IMU READINGS!!\n";
   }
   auto average_state = x_sum.array() *
-      1.0 / (imu_result.readings.size() + 1);
-  auto average_error = p_sum.array() *
-      1.0 / (imu_result.readings.size() + 1);
-  auto average_z = z_sum.array() *
-      1.0 / (imu_result.readings.size() + 1);
-  FILE_LOG(logIMU) << "Average X:\n" << average_state.format(CleanFmt) << "\n";
-  FILE_LOG(logIMU) << "Average Z:\n" << average_z.format(CleanFmt) << "\n";
-  FILE_LOG(logIMU) << "P after:\n" << P.format(CleanFmt) << "\n";
+      1.0 / (imu_result.readings.size());
+  //auto average_error = p_sum.array() *
+  //    1.0 / (imu_result.readings.size());
+  //printf("A: %f, %f, %f\n", mean_x, mean_y, mean_z);
+  //auto average_z = z_sum.array() *
+  //    1.0 / (imu_result.readings.size() + 1);
+  //std::cout << "Average X:\n" << average_state.format(CleanFmt) << "\n";
+  //std::cout << "Average Z:\n" << average_z.format(CleanFmt) << "\n";
+  //std::cout << "P after:\n" << P.format(CleanFmt) << "\n";
 
   if (v == IMU_VARIANT_KALMAN_DISTANCE_AVG) {
     X.block<2,1>(0,0) = average_state.block<2,1>(0,0);
-    P.block<2,2>(0,0) = average_error.block<2,2>(0,0);
+    //P.block<2,2>(0,0) = average_error.block<2,2>(0,0);
   } else if (v == IMU_VARIANT_KALMAN_ALL_AVERAGE) {
     X = average_state;
-    P = average_error;
+    //P = average_error;
   } else if (v == IMU_VARIANT_KALMAN_VELOCITY_AVG) {
     X.block<2,1>(0,0) = X_initial.block<2,1>(0,0).array() +
         average_state.block<2,1>(2,0).array() * duration;
     X.block<2,1>(2,0) = average_state.block<2,1>(2,0);
-    P.block<4,4>(0,0) = average_error.block<4,4>(0,0);
+    //P.block<4,4>(0,0) = average_error.block<4,4>(0,0);
   }
-  FILE_LOG(logIMU) << "X after:\n" << X.format(CleanFmt) << "\n";
+  //std::cout << "X after:\n" << X.format(CleanFmt) << "\n";
   FILE_LOG(logIMU) << "P fixed:\n" << P.format(CleanFmt) << "\n";
 
   return { X(0,0), P(0,0), X(1,0), P(1,1) };

@@ -11,7 +11,6 @@ namespace wins {
 #define READINGS 100
 #define STATE_SIZE (IMUS * 4)
 #define SVARS (IMUS * 6)
-#define OBSERVATIONS (IMUS * 2)
 
 enum ImuVariant {
   IMU_VARIANT_KALMAN_VANILLA,
@@ -51,6 +50,7 @@ class Imu{
       double qw, double qx, double qy, double qz);
   static void Calibrate();
   static vector<double> RelativeToNorth(double w, double x, double y, double z);
+  static Eigen::Quaternion<double> GetNorthQuat();
   static void Init();
   static PointEstimate DoKalman(const ImuResult& imu_result,
       double duration, ImuVariant v = IMU_VARIANT_KALMAN_VELOCITY_AVG);
