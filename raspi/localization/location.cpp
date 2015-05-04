@@ -81,8 +81,8 @@ void Location::InitKalman() {
   A_t = A.transpose();
   //const_R = 2 * Eigen::MatrixXd::Identity(2,2);
   const_R = Eigen::MatrixXd::Identity(2,2) * Global::LocationRFactor;
-  prev_X = Eigen::MatrixXd::Identity(2,1);
-  prev_P = Eigen::MatrixXd::Zero(2,2);
+  prev_X = Eigen::MatrixXd::Identity(SVARS,1);
+  prev_P = Eigen::MatrixXd::Zero(SVARS, SVARS);
 }
 
 void Location::Init() {
@@ -186,16 +186,24 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
 
   bool hasnan = false;
   for (int i = 0; i < SVARS; ++i) {
+    cout << "i = " << i << ",";
+    if (std::isnan((double)Imu::X(i,0))) {
+      hasnan = true;
+      break;
+    }
     for (int j = 0; j < SVARS; ++j) {
-      if (isnan(Imu::X(i,j)) or isnan(Pi,j)) {
+      cout << "j = " << i << ",";
+      if (std::isnan((double)Imu::P(i,j))) {
         hasnan = true;
       }
     }
   }
   if (hasnan) {
+    cout <<"hasnan\n";
     Imu::X = prev_X;
     Imu::P = prev_P;
   }
+
   Imu::X.block<2,1>(0,0) = X;
   Imu::P.block<2,2>(0,0) = P;
   //cout<< "P: " << P.format(CleanFmt) << "\n\n";

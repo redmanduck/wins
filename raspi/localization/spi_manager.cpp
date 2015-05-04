@@ -210,7 +210,7 @@ void SPI::MainLoop() {
 
             //mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            //mpu.dmpGetAccel(&aa, &imu_buf[data_p-CHUNK_SIZE]);
+            mpu.dmpGetAccel(&aa, &imu_buf[data_p-CHUNK_SIZE]);
             //mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
             //mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
             Imu::AddReading(

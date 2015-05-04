@@ -93,7 +93,7 @@ void Imu::AddReading(double ax, double ay, double az,
     lock_guard<mutex> lock(Global::DumpMutex);
     ofstream dumpfile(Global::DumpFile, ofstream::app);
     dumpfile << "IMU," << ax << "," << ay << "," << az << ","
-             << qw << "," << qx << "," << qy << "," << qz;
+             << qw << "," << qx << "," << qy << "," << qz << "\n";
     dumpfile.close();
   }
   // extract yaw.
