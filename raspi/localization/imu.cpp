@@ -88,21 +88,6 @@ void Imu::AddReading(double ax, double ay, double az,
 //
   // Rotate acceleration vector to the default orientation of the gyro first
   // (YPR all zeroes), and then rotate it north orientation.
-  Vector3d raw_acc(ax, ay, az);
-  Matrix3d rotation_matrix = (Quaterniond(qw, qx, qy, qz) * north_quat_inverse_).toRotationMatrix();
-  Vector3d acc = rotation_matrix * raw_acc;
-
-  rotation_matrix =
-      AngleAxisd(Global::IMU_Z_Correction, Vector3d::UnitZ()) *
-      AngleAxisd(Global::IMU_X_Correction, Vector3d::UnitX()) *
-      AngleAxisd(Global::IMU_Y_Correction, Vector3d::UnitY());
-  acc  = acc * Global::IMU_ACC_SCALE;
-  Vector3d corrected = rotation_matrix * acc;
-  acc = corrected;
-  ax = acc(0);
-  ay = acc(1);
-  az = acc(2);
-  //std::cout << "after: " << ax <<", " << ay << ", " << az << "\n";
   if (Global::DataDump.load() and calibrated_) {
     lock_guard<mutex> lock(Global::DumpMutex);
     ofstream dumpfile(Global::DumpFile, ofstream::app);
@@ -110,6 +95,24 @@ void Imu::AddReading(double ax, double ay, double az,
              << qw << "," << qx << "," << qy << "," << qz << "\n";
     dumpfile.close();
   }
+  Vector3d raw_acc(ax, ay, az);
+  raw_acc  = raw_acc * Global::IMU_ACC_SCALE;
+  Matrix3d rotation_matrix = (
+      //Quaterniond(qw, qx, qy, qz).inverse()
+      north_quat_inverse_
+      ).toRotationMatrix();
+  Vector3d acc = rotation_matrix * raw_acc;
+
+  rotation_matrix =
+      AngleAxisd(Global::IMU_Z_Correction, Vector3d::UnitZ()) *
+      AngleAxisd(Global::IMU_X_Correction, Vector3d::UnitX()) *
+      AngleAxisd(Global::IMU_Y_Correction, Vector3d::UnitY());
+  Vector3d corrected = rotation_matrix * acc;
+  acc = corrected;
+  ax = acc(0);
+  ay = acc(1);
+  az = acc(2);
+  //std::cout << "after: " << ax <<", " << ay << ", " << az << "\n";
   lock_guard<mutex> lock(imu_buffer_mutex_);
   //FILE_LOG(logIMU) << "Adding reading ax: " << ax
   //                              << ", ay: " << ay
@@ -155,6 +158,10 @@ void Imu::Calibrate() {
 
 Quaternion<double> Imu::GetNorthQuat() {
   return north_quat_inverse_.inverse();
+}
+
+void Imu::SetNorthQuat(double w, double x, double y, double z) {
+  north_quat_inverse_ = Quaterniond(w, x, y, z).inverse();
 }
 
 vector<double> Imu::RelativeToNorth(double w, double x, double y, double z) {

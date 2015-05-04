@@ -271,7 +271,7 @@ void Test(int argc, char *orig_argv[]) {
 //      keypad_handler.FakeStringEnter(line);
 //    }
   } else if (string(argv[2]) == "learn_imu") {
-    assert(argc == 6);
+    assert(argc == 7);
     Map::InitMap(argv[3]);
 
     string line;
@@ -282,10 +282,10 @@ void Test(int argc, char *orig_argv[]) {
     Global::NoSleep = true;
     Imu::Calibrate();
     vector<vector<double>> results;
-    for (double zrot = 50; zrot <= 90; zrot += 20) {
-      for (double xrot = 110; xrot <= 150; xrot += 20) {
-        for (double yrot = 130; yrot <= 170; yrot += 20) {
-          for (double imuscale = 5; imuscale <= 35; imuscale += 10) {
+    for (double zrot = 0; zrot <= 0; zrot += 20) {
+      for (double xrot = 0; xrot <= 0; xrot += 20) {
+        for (double yrot = 0; yrot <= 0; yrot += 20) {
+          for (double imuscale = 25; imuscale <= 100; imuscale += 25) {
             for (double deltat = 0.02; deltat <= 0.02; deltat += 0.03) {
               for (double imur = 0.7; imur < 1; imur += 0.1) {
                 Global::InitWiFiReadings = 0;
@@ -307,13 +307,25 @@ void Test(int argc, char *orig_argv[]) {
                 int cur_reading = 0;
                 vector<double> distances;
 
-                Imu::X(0,0) = -2;
-                Imu::X(1,0) = 15;
+                if (argv[6][0] == 'r') {
+                  Imu::X(0,0) = -2;
+                  Imu::X(1,0) = 44;
+                } else {
+                  Imu::X(0,0) = -2;
+                  Imu::X(1,0) = 15;
+                }
                 while (data_file) {
                   cur_reading += AddNextSet(data_file, NULL);
                   Imu::EstimateLocation(0.5);
-                  double x = -2 + (cur_reading / imu_reads) * max_x;
-                  double y = 15 + (cur_reading / imu_reads) * max_y;
+                  double x;
+                  double y;
+                  if (argv[6][0] == 'r') {
+                    x = -2 - (cur_reading / imu_reads) * max_x;
+                    y = 44 - (cur_reading / imu_reads) * max_y;
+                  } else {
+                    x = -2 + (cur_reading / imu_reads) * max_x;
+                    y = 15 + (cur_reading / imu_reads) * max_y;
+                  }
                   //cout << Imu::X(0,0) << ", " << Imu::X(1,0) << "\n";
                   //cout << cur_reading << ", " << imu_reads << ", " << max_x;
                   //cout << x << ", " << y << "\n";
@@ -349,7 +361,7 @@ void Test(int argc, char *orig_argv[]) {
     }
     out_file.close();
   } else if (string(argv[2]) == "walk_learn") {
-    assert(argc == 6);
+    assert(argc == 7);
     Map::InitMap(argv[3]);
 
     string line;
@@ -362,11 +374,11 @@ void Test(int argc, char *orig_argv[]) {
 
     Global::NoSleep = true;
     Global::DurationOverride = 1000;
-    Global::IMU_X_Correction = 126 * M_PI / 180;
-    Global::IMU_Y_Correction = 130 * M_PI / 180;
-    Global::IMU_Z_Correction = 70 * M_PI / 180;
-    Global::IMU_R = 0.9;
-    Global::IMU_ACC_SCALE = 26;
+    Global::IMU_X_Correction = 0 * M_PI / 180;
+    Global::IMU_Y_Correction = 0 * M_PI / 180;
+    Global::IMU_Z_Correction = 0 * M_PI / 180;
+    Global::IMU_R = 0.8;
+    Global::IMU_ACC_SCALE = 75;
     Global::IMU_DELTA_T = 0.02;
     Imu::Calibrate();
 
@@ -394,16 +406,28 @@ void Test(int argc, char *orig_argv[]) {
               Location::TestInit(vector<vector<Result>>(), 1);
           assert(fakescanners.size() == 1);
 
-          Imu::X(0,0) = -2;
-          Imu::X(1,0) = 15;
+          if (argv[6][0] == 'r') {
+            Imu::X(0,0) = -2;
+            Imu::X(1,0) = 44;
+          } else {
+            Imu::X(0,0) = -2;
+            Imu::X(1,0) = 15;
+          }
           while (data_file) {
             cur_reading += AddNextSet(data_file, fakescanners[0]);
             Location::UpdateEstimate();
-            double x = -2 + (cur_reading / imu_reads) * max_x;
-            double y = 15 + (cur_reading / imu_reads) * max_y;
+            double x;
+            double y;
             //cout << Imu::X(0,0) << ", " << Imu::X(1,0) << "\n";
             //cout << cur_reading << ", " << imu_reads << ", " << max_x << "\n";
             //cout << x << ", " << y << "\n------\n";
+            if (argv[6][0] == 'r') {
+              x = -2 - (cur_reading / imu_reads) * max_x;
+              y = 44 - (cur_reading / imu_reads) * max_y;
+            } else {
+              x = -2 + (cur_reading / imu_reads) * max_x;
+              y = 15 + (cur_reading / imu_reads) * max_y;
+            }
             distances.push_back(pow(Imu::X(0,0) - x, 2) +
                 pow(Imu::X(1,0) - y, 2));
           }

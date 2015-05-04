@@ -51,6 +51,7 @@ class Imu{
   static void Calibrate();
   static vector<double> RelativeToNorth(double w, double x, double y, double z);
   static Eigen::Quaternion<double> GetNorthQuat();
+  static void SetNorthQuat(double w, double x, double y, double z);
   static void Init();
   static PointEstimate DoKalman(const ImuResult& imu_result,
       double duration, ImuVariant v = IMU_VARIANT_KALMAN_VELOCITY_AVG);
