@@ -1,0 +1,3 @@
+#/bin/bash
+#
+sudo ./binary test full data/ee_ab_map_8lin.dat
