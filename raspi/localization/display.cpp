@@ -609,6 +609,10 @@ Page Display::Navigating() {
         SetCurrentLine(6);
         PutString("At (" + to_string((int)point->x) + ", " +
             to_string((int)point->y) + ")");
+        IncrmLine();
+	PutString("Scale (" + to_string(point->scale_x) + ", " +
+            to_string(point->scale_y) + ")");
+
         auto node = Navigation::current_begin();
         if (node != Navigation::route_end()) {
           auto point = (*next(node))->point;
