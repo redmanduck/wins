@@ -390,7 +390,7 @@ Page Display::Splash() {
  //   Flush();
   //  usleep(100000);
 //}
-
+/*
 
   int corridor[16] = {1,4,7,10,13,0,3,6,9,12,15,2,5,8,11,14};
   std::vector<int> myvector (corridor, corridor+16);  
@@ -441,7 +441,7 @@ Page Display::Splash() {
    if (system("CLS")) system("clear");
   }
 
-
+*/
   this_thread::sleep_for(chrono::seconds(1));
 
   return PAGE_CALIBRATE_PROMPT;
@@ -589,7 +589,7 @@ Page Display::Navigating() {
     }
     if (events & WINS_EVENT_POS_CHANGE) {
       auto node = Location::GetCurrentNode();
-      char buffer[50];
+/*      char buffer[50];
       sprintf(buffer, "PREV %3.3f, %3.3f", Location::prev_x, Location::prev_y);
       SetCurrentLine(1);
       PutString(buffer, true);
@@ -603,6 +603,16 @@ Page Display::Navigating() {
           Location::kalman_y);
       SetCurrentLine(4);
       PutString(buffer, true);
+*/
+
+
+//mudgalbalin
+      MapUpdateIndicator(Coord(ORIGIN_X + node->point->x*node->point->scale_x ,ORIGIN_Y + node->point->y*node->point->scale_y));
+      MapDrawVisible();
+      Flush();
+
+       usleep(110000);
+
 
       if (node != nullptr) {
         auto point = node->point;
