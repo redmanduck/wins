@@ -212,7 +212,7 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   //cout<< "P: " << P.format(CleanFmt) << "\n\n";
 
   hasnan = false;
-  for (int i = 0; i < SVARS; ++i) {
+  for (int i = 0; i < 2; ++i) {
     //cout << "i = " << i << ",";
     if (std::isnan((double)X(i,0))) {
       hasnan = true;

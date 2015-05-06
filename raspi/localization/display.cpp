@@ -393,7 +393,7 @@ Page Display::Splash() {
 //
 /*
   int corridor[16] = {1,4,7,10,13,0,3,6,9,12,15,2,5,8,11,14};
-  std::vector<int> myvector (corridor, corridor+16);  
+  std::vector<int> myvector (corridor, corridor+16);
   std::sort (myvector.begin(), myvector.begin()+16);
 
   //corridor 1 = 2.5 in x
@@ -601,6 +601,9 @@ Page Display::Navigating() {
     }
     if (events & WINS_EVENT_POS_CHANGE) {
       auto node = Location::GetCurrentNode();
+      if (node == NULL) {
+        continue;
+      }
       if (debug) {
         char buffer[50];
         sprintf(buffer, "PREV %3.3f, %3.3f", Location::prev_x, Location::prev_y);
