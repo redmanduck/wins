@@ -106,13 +106,14 @@ void Imu::AddReading(double ax, double ay, double az,
   Vector3d raw_acc(ax, ay, az);
   raw_acc  = raw_acc * Global::IMU_ACC_SCALE;
   Matrix3d rotation_matrix = (
-      north_quat_inverse_
+      q.inverse() * north_quat_inverse_.inverse()
       ).toRotationMatrix();
   Vector3d acc = rotation_matrix * raw_acc;
   double torotate = (yaw - initial_yaw_);
+  torotate = 0;
   //cout << "angle = " << torotate * 180 / M_PI << "\n";
   rotation_matrix =
-      AngleAxisd(Global::IMU_Z_Correction - (yaw - initial_yaw_),
+      AngleAxisd(Global::IMU_Z_Correction - torotate,
           Vector3d::UnitZ()) *
       AngleAxisd(Global::IMU_Y_Correction,// - (yaw - initial_yaw_),
           Vector3d::UnitY()) *
@@ -169,9 +170,9 @@ void Imu::Calibrate() {
 
     vals /= imu_buffer_.readings.size();
     // Set the average value as the quat representing north orentation.
-    //north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
-    //    .inverse();
-    north_quat_inverse_ = AngleAxisd(angle, axis);
+    north_quat_inverse_ = Quaternion<double>(vals(0), vals(1), vals(2), vals(3))
+        .inverse();
+    //north_quat_inverse_ = AngleAxisd(angle, axis);
 
     // extract yaw.
     //double mag = sqrt(q.w() * q.w() + q.z() * q.z());

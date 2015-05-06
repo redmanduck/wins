@@ -195,7 +195,7 @@ int AddNextSet(ifstream& fs, FakeWifiScan* fakescanner) {
   unique_ptr<vector<Result>> scans = unique_ptr<vector<Result>>(
       new vector<Result>);
   string line;
-  while (imu_readings < 1000) {
+  while (imu_readings < 10000) {
     if (getline(fs, line)) {
       vector<string> parts = split(line, ',');
       if (parts[0] == "IMU") {
