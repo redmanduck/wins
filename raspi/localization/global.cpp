@@ -56,6 +56,7 @@ bool Global::is_test_ = false;
 void sighandler(int sig)
 {
   FILE_LOG(logCRITICAL) << "Signal received. Initiating clean shut down...\n";
+  Global::SetTestMode();
   Global::SetEventFlag(WINS_EVENT_SHUTTING_DOWN);
 }
 

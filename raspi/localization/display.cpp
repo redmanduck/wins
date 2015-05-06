@@ -390,8 +390,8 @@ Page Display::Splash() {
  //   Flush();
   //  usleep(100000);
 //}
+//
 /*
-
   int corridor[16] = {1,4,7,10,13,0,3,6,9,12,15,2,5,8,11,14};
   std::vector<int> myvector (corridor, corridor+16);  
   std::sort (myvector.begin(), myvector.begin()+16);
@@ -430,6 +430,7 @@ Page Display::Splash() {
    std::vector<int> mv (corridor3, corridor3+28);
    std::sort (mv.begin(), mv.begin()+28);
  //c3 : 3, 4.5
+ // -2 , 24
   for(int i = 0; i < 28; i++){
    MapUpdateIndicator(Coord(ORIGIN_X + mv[i]*3 ,ORIGIN_Y + -2*4.5));
    cout << "pos.x : " << mv[i] << "\n";
@@ -441,7 +442,7 @@ Page Display::Splash() {
    if (system("CLS")) system("clear");
   }
 
-*/
+i*/
   this_thread::sleep_for(chrono::seconds(1));
 
   return PAGE_CALIBRATE_PROMPT;
@@ -556,6 +557,7 @@ Page Display::Navigating() {
   ClearScreen();
   current_page_ = PAGE_NAVIGATING;
   bool inputing = false;
+  bool debug = false;
   SetFont(FONT_SIZE_MEDIUM, ALIGNMENT_LEFT);
   while(true) {
     auto result = Global::BlockForEvent(WINS_EVENT_ALL);
@@ -572,12 +574,22 @@ Page Display::Navigating() {
         IncrmLine();
         PutString("2: Continue", true);
         IncrmLine();
+        if (debug) {
+          PutString("3: Show debug", true);
+        } else {
+          PutString("3: Show map", true);
+        }
+        IncrmLine();
         GetChar();
       } else {
         char input = GetChar();
         if (input == '1') {
           Navigation::ResetDestination();
           return PAGE_MENU;
+        } else if (input == '3') {
+          debug = !debug;
+          inputing = false;
+          ClearScreen();
         } else {
           inputing = false;
           ClearScreen();
@@ -589,36 +601,33 @@ Page Display::Navigating() {
     }
     if (events & WINS_EVENT_POS_CHANGE) {
       auto node = Location::GetCurrentNode();
-/*      char buffer[50];
-      sprintf(buffer, "PREV %3.3f, %3.3f", Location::prev_x, Location::prev_y);
-      SetCurrentLine(1);
-      PutString(buffer, true);
-      sprintf(buffer, "IMU  %3.3f, %3.3f", Location::imu_x, Location::imu_y);
-      SetCurrentLine(2);
-      PutString(buffer, true);
-      sprintf(buffer, "WIFI %3.3f, %3.3f", Location::wifi_x, Location::wifi_y);
-      SetCurrentLine(3);
-      PutString(buffer, true);
-      sprintf(buffer, "KALM %3.3f, %3.3f", Location::kalman_x,
-          Location::kalman_y);
-      SetCurrentLine(4);
-      PutString(buffer, true);
-*/
+      if (debug) {
+        char buffer[50];
+        sprintf(buffer, "PREV %3.3f, %3.3f", Location::prev_x, Location::prev_y);
+        SetCurrentLine(1);
+        PutString(buffer, true);
+        sprintf(buffer, "IMU  %3.3f, %3.3f", Location::imu_x, Location::imu_y);
+        SetCurrentLine(2);
+        PutString(buffer, true);
+        sprintf(buffer, "WIFI %3.3f, %3.3f", Location::wifi_x, Location::wifi_y);
+        SetCurrentLine(3);
+        PutString(buffer, true);
+        sprintf(buffer, "KALM %3.3f, %3.3f", Location::kalman_x,
+            Location::kalman_y);
+        SetCurrentLine(4);
+        PutString(buffer, true);
+      } else {
+        cout <<  node->point->x << " sc: " << node->point->scale_x << "\n";
+        cout << node->point->y << " sc: " << node->point->scale_y << "\n";
+        MapUpdateIndicator(Coord(ORIGIN_X + node->point->y*node->point->scale_x ,ORIGIN_Y + node->point->x*node->point->scale_y));
+        cout << "INDY:" << map_indi_.first << "," << map_indi_.second << "\n";
+        MapDrawVisible();
+      }
 
-     cout <<  node->point->x << " sc: " << node->point->scale_x << "\n";
-
-     cout << node->point->y << " sc: " << node->point->scale_y << "\n";
-//mudgalbalin
-      MapUpdateIndicator(Coord(ORIGIN_X + node->point->x*node->point->scale_x ,ORIGIN_Y + node->point->y*node->point->scale_y));
-      MapDrawVisible();
       Flush();
-
-       usleep(110000);
-
-
       if (node != nullptr) {
         auto point = node->point;
-        SetCurrentLine(6);
+//        SetCurrentLine(6);
 //        PutString("At (" + to_string((int)point->x) + ", " +
   //          to_string((int)point->y) + ")");
    //     IncrmLine();

@@ -73,7 +73,13 @@ vector<PointEstimate> Location::GetWiFiReadings(int count) {
 
 void Location::InitialEstimate() {
   auto estimates = GetWiFiReadings(Global::InitWiFiReadings);
-  DoKalmanUpdate(estimates);
+  if (estimates.size() > 0) {
+    prev_X = Imu::X;
+    prev_P = Imu::P;
+    prev_X(0,0) = estimates[0].x_mean;
+    prev_X(1,0) = estimates[0].y_mean;
+    DoKalmanUpdate(estimates);
+  }
 }
 
 void Location::InitKalman() {
@@ -140,8 +146,21 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   Eigen::MatrixXd R(wifi_estimates.size() * 2, wifi_estimates.size() * 2);
   Eigen::MatrixXd Q(2,2);
 
-  X = Imu::X.block<2,1>(0,0);
-  P = Imu::P.block<2,2>(0,0);
+  bool hasnan = false;
+  for (int i = 0; i < 2; ++i) {
+    //cout << "i = " << i << ",";
+    if (std::isnan((double)X(i,0))) {
+      hasnan = true;
+      break;
+    }
+  }
+  if (hasnan) {
+    X = prev_X.block<2,1>(0,0);
+    P = prev_P.block<2,2>(0,0);
+  } else {
+    X = Imu::X.block<2,1>(0,0);
+    P = Imu::P.block<2,2>(0,0);
+  }
 
   Q = Global::Scale * Eigen::MatrixXd::Identity(2,2) * (msecs / 1000) *
       Global::LocationQFactor;
@@ -158,6 +177,10 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
       R(i*2, i*2) = wifi_estimates[i].x_var;
       R(i*2+1, i*2+1) = wifi_estimates[i].y_var;
     }
+  }
+  if (std::isnan((double)Z(0,0)), std::isnan((double)Z(1,0))) {
+    Z(0,0) = X(0,0);
+    Z(1,0) = X(1,0);
   }
   H_t = H.transpose();
 
@@ -184,33 +207,26 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
     Imu::P.block<2,2>(2,2) = 2 * P.block<2,2>(0,0);
   }
 
-  bool hasnan = false;
-  for (int i = 0; i < SVARS; ++i) {
-    //cout << "i = " << i << ",";
-    if (std::isnan((double)Imu::X(i,0))) {
-      hasnan = true;
-      break;
-    }
-    for (int j = 0; j < SVARS; ++j) {
-      //cout << "j = " << i << ",";
-      if (std::isnan((double)Imu::P(i,j))) {
-        hasnan = true;
-      }
-    }
-  }
-  if (hasnan) {
-    cout <<"hasnan\n";
-    Imu::X.block<2,1>(0,0) = prev_X.block<2,1>(0,0);
-    Imu::P.block<2,2>(0,0) = prev_P.block<2,2>(0,0);
-  }
-
   Imu::X.block<2,1>(0,0) = X;
   Imu::P.block<2,2>(0,0) = P;
   //cout<< "P: " << P.format(CleanFmt) << "\n\n";
 
-  last_update_time_ = new_update_time;
-  prev_X = Imu::X;
-  prev_P = Imu::P;
+  hasnan = false;
+  for (int i = 0; i < SVARS; ++i) {
+    //cout << "i = " << i << ",";
+    if (std::isnan((double)X(i,0))) {
+      hasnan = true;
+      break;
+    }
+  }
+  if (hasnan) {
+    Imu::X = prev_X;
+    Imu::P = prev_P;
+  } else {
+    prev_X = Imu::X;
+    prev_P = Imu::P;
+    last_update_time_ = new_update_time;
+  }
 
   //cout << "L x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   current_node_ = Map::NodeNearest(X(0,0), X(1,0));
