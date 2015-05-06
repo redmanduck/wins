@@ -179,20 +179,20 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   prev_y = prev_X(1,0);
 
   if (last_update_time_ > tp_epoch_) {
-    Eigen::Vector2d V = (X - prev_X) / msecs;
+    Eigen::Vector2d V = (X - prev_X.block<2,1>(0,0)) / msecs;
     Imu::X.block<2,1>(2,0) = V;
-    Imu::P.block<2,2>(2,2) = 2 * P;
+    Imu::P.block<2,2>(2,2) = 2 * P.block<2,2>(0,0);
   }
 
   bool hasnan = false;
   for (int i = 0; i < SVARS; ++i) {
-    cout << "i = " << i << ",";
+    //cout << "i = " << i << ",";
     if (std::isnan((double)Imu::X(i,0))) {
       hasnan = true;
       break;
     }
     for (int j = 0; j < SVARS; ++j) {
-      cout << "j = " << i << ",";
+      //cout << "j = " << i << ",";
       if (std::isnan((double)Imu::P(i,j))) {
         hasnan = true;
       }
@@ -200,8 +200,8 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   }
   if (hasnan) {
     cout <<"hasnan\n";
-    Imu::X = prev_X;
-    Imu::P = prev_P;
+    Imu::X.block<2,1>(0,0) = prev_X.block<2,1>(0,0);
+    Imu::P.block<2,2>(0,0) = prev_P.block<2,2>(0,0);
   }
 
   Imu::X.block<2,1>(0,0) = X;
@@ -209,8 +209,8 @@ bool Location::DoKalmanUpdate(vector<PointEstimate> wifi_estimates) {
   //cout<< "P: " << P.format(CleanFmt) << "\n\n";
 
   last_update_time_ = new_update_time;
-  prev_X = X;
-  prev_P = P;
+  prev_X = Imu::X;
+  prev_P = Imu::P;
 
   //cout << "L x = " << X(0,0) <<", y = " << X(1,0) << "\n";
   current_node_ = Map::NodeNearest(X(0,0), X(1,0));
