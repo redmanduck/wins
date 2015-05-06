@@ -78,9 +78,9 @@ void Map::InitMap(string filename) {
   archive(all_points_);
   is.close();
 
-  for(auto& p : all_points_){
-    cout << p->scale_x << "," << p->scale_y << "\n";
-  }
+  //for(auto& p : all_points_){
+  //  cout << p->scale_x << "," << p->scale_y << "\n";
+  //}
 
   tree_.reset(new kdtree::kdtree<Point*>(&all_points_));
   likely_points_ = tree_->radius_nearest(all_points_[0].get(),

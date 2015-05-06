@@ -605,7 +605,9 @@ Page Display::Navigating() {
       PutString(buffer, true);
 */
 
+     cout <<  node->point->x << " sc: " << node->point->scale_x << "\n";
 
+     cout << node->point->y << " sc: " << node->point->scale_y << "\n";
 //mudgalbalin
       MapUpdateIndicator(Coord(ORIGIN_X + node->point->x*node->point->scale_x ,ORIGIN_Y + node->point->y*node->point->scale_y));
       MapDrawVisible();
@@ -617,11 +619,11 @@ Page Display::Navigating() {
       if (node != nullptr) {
         auto point = node->point;
         SetCurrentLine(6);
-        PutString("At (" + to_string((int)point->x) + ", " +
-            to_string((int)point->y) + ")");
-        IncrmLine();
-	PutString("Scale (" + to_string(point->scale_x) + ", " +
-            to_string(point->scale_y) + ")");
+//        PutString("At (" + to_string((int)point->x) + ", " +
+  //          to_string((int)point->y) + ")");
+   //     IncrmLine();
+//	PutString("Scale (" + to_string(point->scale_x) + ", " +
+  //          to_string(point->scale_y) + ")");
 
         auto node = Navigation::current_begin();
         if (node != Navigation::route_end()) {
