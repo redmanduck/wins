@@ -52,6 +52,7 @@ class Display {
   void setWorldPixel(uint8_t x, uint8_t y, uint8_t color);
   void drawWorldCircle(uint8_t x0, uint8_t y0, uint8_t r,
                         uint8_t color);
+  void drawWorldLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t color);
   void ClearLine(int line);
   void ClearScreen();
   char GetChar();
@@ -64,7 +65,7 @@ class Display {
 
   Coord map_box_ = Coord(0,0); //box location (top left)
   Coord map_indi_ = Coord(64, 32);  //indicator location
- 
+  Coord map_hint_ = Coord(64, 32); 
 //  Coord ToScreenCoordinate(Coord sid);
 //  Coord ToSidCoordinate(Coord screen);
 
@@ -95,7 +96,8 @@ class Display {
 
   void SaveAsBitmap(string saveas);
   unique_ptr<uint8_t> GetBufferCopy();
-
+  void updateBound(Coord N);
+  void MapUpdateHint(Coord sc);
   void MapUpdateIndicator(Coord screen_coord);
   void MapSetVisibleBound(int x, int y);
   void MapDrawVisible();

@@ -15,6 +15,7 @@
 namespace wins {
 
 #define FLUSH_TO_SCREEN 1
+#define st_swap(a, b) { uint8_t t = a; a = b; b = t; }
 
 using namespace std;
 
@@ -179,6 +180,51 @@ void Display::resetWorld(){
    memcpy(WORLD, WORLD_MAP, WORLD_SIZE);
 }
 
+void Display::drawWorldLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,
+                      uint8_t color) {
+    uint8_t steep = abs(y1 - y0) > abs(x1 - x0);
+    if (steep) {
+        st_swap(x0, y0);
+        st_swap(x1, y1);
+    }
+
+    if (x0 > x1) {
+        st_swap(x0, x1);
+        st_swap(y0, y1);
+    }
+
+
+    uint8_t dx, dy;
+    dx = x1 - x0;
+    dy = abs(y1 - y0);
+
+    int8_t err = dx / 2;
+    int8_t ystep;
+
+    if (y0 < y1) {
+        ystep = 1;
+    } else {
+        ystep = -1;}
+
+    int k= 0;
+    for (; x0<=x1; x0++) {
+        if (steep) {
+	    if(k++ % 2)
+	            setWorldPixel(y0, x0, color);
+        } else {
+	    if(k++ % 2)
+	            setWorldPixel(x0, y0, color);
+        }
+        err -= dy;
+        if (err < 0) {
+            y0 += ystep;
+            err += dx;
+        }
+    }
+}
+
+
+
 void Display::setWorldPixel(uint8_t x, uint8_t y, uint8_t color) {
     if ((x >= WORLD_WMAX) || (y >= WORLD_HMAX))
         return;
@@ -248,7 +294,7 @@ void Display::MapDrawVisible(){
 	int world_offset = W*map_box_.second+map_box_.first;
 	cout << "World Offset Y: " << map_box_.second << "\n";
 //	memcpy(glcd_.st7565_buffer,&WORLD[world_offset], 128);
-
+	
 	//Draw indicator
 	//indicator must be drawn in bottom layer
 	resetWorld();
@@ -257,13 +303,17 @@ void Display::MapDrawVisible(){
 	setWorldPixel(map_indi_.first, map_indi_.second, 255);
 	drawWorldCircle(map_indi_.first, map_indi_.second, radii_++,255);
 
+	if(map_indi_.first != map_hint_.first || map_indi_.second != map_hint_.second){
+		drawWorldLine(map_indi_.first, map_indi_.second, map_hint_.first, map_hint_.second, 255);
+	}
+
 	for(int i = 0; i < 8; i++){
 	   int ac = i*128;//(128*7)-i*128;
 
 	   if(128 + world_offset + W*i >= WORLD_SIZE){
 		cout << "World access out of bound!!!";
 	   }
-
+	
 	   memcpy(&glcd_.st7565_buffer[ac],&WORLD[world_offset + W*i], 128);
 	   // Equation to reverse a byte :/
 	   for(int j = 0; j < 128; j++){
@@ -277,8 +327,8 @@ void Display::MapDrawVisible(){
 //	glcd_.drawcircle(map_indi_.first, map_indi_.second, radii_++, 255);
 }
 
-void Display::MapUpdateIndicator(Coord N){
-//	bool doUpdate = false;
+
+void Display::updateBound(Coord N){
 	int new_box_x = map_box_.first;
 	int new_box_y = map_box_.second;
 
@@ -312,10 +362,24 @@ void Display::MapUpdateIndicator(Coord N){
 
 	MapSetVisibleBound(new_box_x, new_box_y);
 
+}
+
+void Display::MapUpdateHint(Coord sc){
+
+       updateBound(sc);
+       map_hint_.first = sc.first;
+       map_hint_.second = sc.second;
+}
+
+void Display::MapUpdateIndicator(Coord N){
+//	bool doUpdate = false;
+
+	updateBound(N);
 	//Update indicator position
 	map_indi_.first = N.first;
 	map_indi_.second = N.second;
-
+	map_hint_.first = N.first;
+	map_hint_.second = N.second;
 	//note indi is within box
 	//and box is what we draw
 
@@ -391,7 +455,24 @@ Page Display::Splash() {
   //  usleep(100000);
 //}
 //
-/*
+  int corridor3[28] = {29 , 32 , 35 , 38 , 41 , 44 , 19 , 22 , 25 , 28 , 31 , 34 , 37 , 40 , 43 , 18 , 21 , 24 , 27 , 30 , 33 , 36 , 39 , 42 , 17 , 20 , 23 , 26};
+
+   std::vector<int> mv (corridor3, corridor3+28);
+   std::sort (mv.begin(), mv.begin()+28);
+ //c3 : 3, 4.5
+ // -2 , 24
+  for(int i = 0; i < 28; i++){
+   MapUpdateIndicator(Coord(ORIGIN_X + mv[i]*3 ,ORIGIN_Y + -2*4.5));
+   cout << "pos.x : " << mv[i] << "\n";
+   MapUpdateHint(Coord(ORIGIN_X + mv[i]*3 + 15,ORIGIN_Y + -2*4.5));
+   MapDrawVisible();
+   Flush();
+ 
+   usleep(190000);
+   //this_thread::sleep_for(chrono::seconds(1));
+   if (system("CLS")) system("clear");
+  }
+
   int corridor[16] = {1,4,7,10,13,0,3,6,9,12,15,2,5,8,11,14};
   std::vector<int> myvector (corridor, corridor+16);
   std::sort (myvector.begin(), myvector.begin()+16);
@@ -425,24 +506,8 @@ Page Display::Splash() {
    if (system("CLS")) system("clear");
   }
 
-  int corridor3[28] = {29 , 32 , 35 , 38 , 41 , 44 , 19 , 22 , 25 , 28 , 31 , 34 , 37 , 40 , 43 , 18 , 21 , 24 , 27 , 30 , 33 , 36 , 39 , 42 , 17 , 20 , 23 , 26};
 
-   std::vector<int> mv (corridor3, corridor3+28);
-   std::sort (mv.begin(), mv.begin()+28);
- //c3 : 3, 4.5
- // -2 , 24
-  for(int i = 0; i < 28; i++){
-   MapUpdateIndicator(Coord(ORIGIN_X + mv[i]*3 ,ORIGIN_Y + -2*4.5));
-   cout << "pos.x : " << mv[i] << "\n";
-   MapDrawVisible();
-   Flush();
 
-   usleep(190000);
-   //this_thread::sleep_for(chrono::seconds(1));
-   if (system("CLS")) system("clear");
-  }
-
-i*/
   this_thread::sleep_for(chrono::seconds(1));
 
   return PAGE_CALIBRATE_PROMPT;
