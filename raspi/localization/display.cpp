@@ -684,6 +684,10 @@ Page Display::Navigating() {
             Location::kalman_y);
         SetCurrentLine(4);
         PutString(buffer, true);
+/*
+        IncrmLine();
+        PutString("Go to (" + to_string((int)point->x) + ", "+ to_string((int)point->y) + ")");
+*/
       } else {
         cout <<  node->point->x << " sc: " << node->point->scale_x << "\n";
         cout << node->point->y << " sc: " << node->point->scale_y << "\n";
@@ -705,9 +709,7 @@ Page Display::Navigating() {
         auto node = Navigation::current_begin();
         if (node != Navigation::route_end()) {
           auto point = (*next(node))->point;
-          IncrmLine();
-          PutString("Go to (" + to_string((int)point->x) + ", " +
-              to_string((int)point->y) + ")");
+          MapUpdateHint(Coord(ORIGIN_X + point->y*point->scale_x ,ORIGIN_Y + point->x*point->scale_y));
         }
       } else {
         PutString("Location Unknown");
