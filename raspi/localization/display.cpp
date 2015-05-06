@@ -299,12 +299,12 @@ void Display::MapUpdateIndicator(Coord N){
 	}
 
 
-	if(N.first <= map_box_.first - 128){
+	if(N.first <= map_box_.first){
 	 	cout << "Shifting -X\n";
 		new_box_x -= X_DELTA;
 	}
 
-	if(N.second <= map_box_.second - 64){
+	if(N.second <= map_box_.second){
 		cout << "Shifting -Y\n";
 		new_box_y -= Y_DELTA;
 	}
